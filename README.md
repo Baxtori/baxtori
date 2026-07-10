@@ -1,35 +1,48 @@
-# Glimpse
+# Baxtori
 
-**A quiet weekly briefing for understanding the code you and your agents just made.**
+**The backstory behind your code.**
 
-Glimpse is not a notification feed or a code-review bot. It is a small, personal
-reading surface that turns a week of change into a few evidence-backed stories:
-what changed, why it matters, what tradeoff remains, and what is worth your time.
+Baxtori is a calm personal briefing that explains what changed across selected
+repositories, why it matters, and where to start reading. It is designed for a
+world where agents can produce more code than a person wants to review day by
+day.
 
-## What this first version includes
+The product started as **Glimpse** and is being rebranded around
+[baxtori.com](https://baxtori.com).
 
-- An editorial weekly briefing with ranked change stories
-- A chronological timeline for the same work
-- Evidence drawers with likely intent, verification prompts, affected files, and deliberate tradeoffs
-- Personal triage controls: mark understood, watch, and mute
-- Device-local reading progress that survives refreshes
-- Focus mode, a next-unread flow, and keyboard navigation for batch reading
-- Edition history, including a real quiet-week view
-- Per-project filtering and a quiet-week state that refuses to manufacture updates
+## Current capabilities
+
+- A deliberately concise weekly briefing with details on demand
+- Separate signals for learning value, code quality, and deliberate tradeoffs
+- Mark-understood, watch, quiet-project, focus, and keyboard-reading flows
+- A chronological activity view without notification or inbox behavior
+- Device-local reading state
+- GitHub account sign-in with an encrypted, HttpOnly server session
+- Fine-grained GitHub App access to repositories the user explicitly chooses
+- Recent commit activity for selected private or public repositories
 - Responsive layouts for desktop, tablet, and mobile
-
-The interface currently uses realistic sample data. Repository collection,
-change clustering, and scheduled local generation are deliberately the next
-layer—not hidden behind pretend automation.
 
 ## Run it locally
 
 ```bash
 npm install
+cp .env.example .env.local
 npm run dev
 ```
 
-Then open the local address printed by the development server.
+Create a GitHub App, then copy the values in `.env.example` to `.env.local`.
+Configure the app with:
+
+- Homepage URL: your Baxtori deployment
+- Callback URL: `<deployment>/api/auth/github/callback`
+- Setup URL (after installation): your Baxtori deployment
+- Repository permissions: **Contents: Read-only** and **Metadata: Read-only**
+- User-to-server token expiration: enabled
+
+The GitHub App lets each person select the repositories Baxtori may read. User
+access and refresh tokens are encrypted inside an HttpOnly cookie and never
+sent to browser JavaScript. Use a random value of at least 32 bytes for
+`GITHUB_SESSION_SECRET`.
 
 ## Validate a production build
 
@@ -37,18 +50,16 @@ Then open the local address printed by the development server.
 npm run build
 ```
 
-## Product direction
-
-The intended foundation is local-first:
+## Direction
 
 ```text
-Selected local Git repositories
-  → incremental commit-range collector
-  → change clustering and evidence extraction
-  → structured weekly rundown
-  → a calm, opt-in Glimpse briefing
+Selected GitHub or local repositories
+  → incremental commit-range collection
+  → related-change clustering
+  → evidence-backed explanations
+  → a quiet Baxtori briefing
 ```
 
-The product should stay quiet by default: no email, no push notifications, and
-no empty weekly summaries. A project with nothing materially new simply remains
-quiet.
+The next layer is the rundown compiler: track a per-repository Git cursor,
+cluster related commits into stories, cite exact files and hunks, and publish
+nothing when a project has no meaningful new context.
