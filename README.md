@@ -10,8 +10,11 @@ what changed, why it matters, what tradeoff remains, and what is worth your time
 
 - An editorial weekly briefing with ranked change stories
 - A chronological timeline for the same work
-- Evidence drawers with affected files, commit coverage, and deliberate tradeoffs
+- Evidence drawers with likely intent, verification prompts, affected files, and deliberate tradeoffs
 - Personal triage controls: mark understood, watch, and mute
+- Device-local reading progress that survives refreshes
+- Focus mode, a next-unread flow, and keyboard navigation for batch reading
+- Edition history, including a real quiet-week view
 - Per-project filtering and a quiet-week state that refuses to manufacture updates
 - Responsive layouts for desktop, tablet, and mobile
 
