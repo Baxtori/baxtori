@@ -24,6 +24,8 @@ The product started as **Glimpse** and is being rebranded around
 - A living Repo Map with an evidence-backed comprehension frontier
 - Guided execution-path walkthroughs with an invariant at every step
 - A durable question ledger that preserves uncertainty instead of guessing
+- An append-only map review history anchored to exact commits
+- A 5, 15, or 30-minute study queue assembled from walkthroughs, frontiers, and open questions
 
 ## Run it locally
 
@@ -63,9 +65,9 @@ Selected GitHub or local repositories
   → a quiet Baxtori briefing
 ```
 
-The next layer is the rundown compiler: track a per-repository Git cursor,
-cluster related commits into stories, cite exact files and hunks, and publish
-nothing when a project has no meaningful new context.
+The next compiler layer is per-repository Git cursors and related-change
+clustering: cite exact files and hunks, connect changes to existing map areas,
+and publish nothing when a project has no meaningful new context.
 
 ## Weekly compiler
 
@@ -96,7 +98,9 @@ rewrites repository knowledge.
 concepts, and decisions. The Repo Map combines breadth, depth, confidence, and
 freshness into an explicitly estimated coverage score, then uses the reader's
 understood, revisit, and not-worth-it feedback to choose a comprehension
-frontier. Validate it with:
+frontier. Review events retain the exact through-commit and files that were
+classified, while the study queue packs unfinished walkthroughs and questions
+into a reader-selected time budget. Validate it with:
 
 ```bash
 npm run map:validate

@@ -1,7 +1,30 @@
 {
   "repository": "teamleaderleo/glimpse",
-  "generatedAt": "2026-07-11T08:30:00.000Z",
+  "generatedAt": "2026-07-11T17:50:30.000Z",
   "summary": "Baxtori is a private GitHub lens that turns selected repository activity into quiet, evidence-backed code backstories.",
+  "reviews": [
+    {
+      "id": "review-2026-07-12-map-learning-loop",
+      "reviewedAt": "2026-07-11T17:50:30.000Z",
+      "summary": "The Repo Map became an active learning loop: changed evidence reopens review, walkthroughs teach execution paths, and questions preserve uncertainty.",
+      "affectedAreaIds": ["rundown-engine", "reading-loop", "repo-map-engine"],
+      "newAreaIds": ["repo-map-engine"],
+      "unmappedFilesReviewed": [
+        "app/repo-map.tsx",
+        "data/repo-map.json",
+        "package.json",
+        "scripts/validate-repo-map.mjs",
+        "db/index.ts",
+        "tsconfig.json"
+      ],
+      "throughCommit": {
+        "sha": "8d9e814939d2f05a3cdd2e56e96a62628499b7a9",
+        "shortSha": "8d9e814",
+        "subject": "Make the Baxtori map evolve and teach (#6)",
+        "url": "https://github.com/teamleaderleo/glimpse/commit/8d9e814939d2f05a3cdd2e56e96a62628499b7a9"
+      }
+    }
+  ],
   "questions": [
     {
       "id": "unattended-github-access",
@@ -26,6 +49,14 @@
       "whyItMatters": "Keeping two build paths is useful during migration but becomes maintenance debt after the Vercel deployment is proven.",
       "status": "open",
       "evidence": ["vercel.json", ".openai/hosting.json"]
+    },
+    {
+      "id": "portable-understanding-state",
+      "areaId": "reading-loop",
+      "question": "When should personal understanding move from device-local state to a private account-backed history?",
+      "whyItMatters": "Local state is simple and private, but it cannot preserve a long-running study history across browsers or devices.",
+      "status": "open",
+      "evidence": ["app/page.tsx", "app/repo-map.tsx"]
     }
   ],
   "areas": [
@@ -131,6 +162,58 @@
       "verdict": "Good ergonomics; comprehension feedback is the missing layer",
       "evidence": ["app/page.tsx", "app/globals.css"],
       "concepts": ["progressive disclosure", "local reading state", "attention budget"]
+    },
+    {
+      "id": "repo-map-engine",
+      "name": "Repository comprehension engine",
+      "kind": "Learning system",
+      "purpose": "Connects exact Git changes to mapped systems, preserves review history, and turns repository knowledge into a time-boxed study path.",
+      "importance": 5,
+      "breadth": 68,
+      "depth": 52,
+      "confidence": 86,
+      "freshness": 100,
+      "changed": "Reviewed today",
+      "verdict": "High-leverage core; deterministic impact and judgment are kept deliberately separate",
+      "evidence": [
+        "scripts/lib/map-impact.mjs",
+        "scripts/collect-backstory.mjs",
+        "scripts/validate-repo-map.mjs",
+        "data/repo-map.json",
+        "app/repo-map.tsx"
+      ],
+      "walkthrough": {
+        "title": "Follow a diff into the study queue",
+        "outcome": "See how Baxtori uses Git as a review trigger without pretending a changed filename explains what the code means.",
+        "estimatedMinutes": 5,
+        "steps": [
+          {
+            "label": "Collect exact repository evidence",
+            "file": "scripts/collect-backstory.mjs",
+            "explanation": "The deterministic prepass records commits and touched files from the configured review window.",
+            "invariant": "The collector describes observable Git history and does not invent an explanation."
+          },
+          {
+            "label": "Match changes to mapped evidence",
+            "file": "scripts/lib/map-impact.mjs",
+            "explanation": "Changed paths are matched against each area's evidence after the map's review cursor.",
+            "invariant": "A match can reopen review, but cannot change confidence or meaning by itself."
+          },
+          {
+            "label": "Record reviewed knowledge",
+            "file": "data/repo-map.json",
+            "explanation": "The judgment-heavy review updates areas, questions, and an append-only review event with an exact through-commit.",
+            "invariant": "Every durable map claim retains inspectable evidence and an explicit uncertainty boundary."
+          },
+          {
+            "label": "Fit the next lesson to the reader",
+            "file": "app/repo-map.tsx",
+            "explanation": "The interface ranks unfinished areas and open questions, then packs them into the reader's chosen time budget.",
+            "invariant": "The queue stays small enough to consume and always allows the reader to skip or defer work."
+          }
+        ]
+      },
+      "concepts": ["review cursor", "evidence-to-area impact", "append-only map history", "time-boxed study queue"]
     },
     {
       "id": "hosting-transition",
