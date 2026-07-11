@@ -2,9 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import latestEdition from "@/data/latest.json";
+import repositoryMap from "@/data/repo-map.json";
+import { RepoMap, type RepoArea, type RepoMapData, type UnderstandingState } from "./repo-map";
 
 type Tone = "blue" | "green" | "rust";
-type View = "briefing" | "timeline" | "repositories";
+type View = "briefing" | "map" | "timeline" | "repositories";
 
 type Story = {
   id: string;
@@ -94,6 +96,7 @@ type ActivityResponse = {
 
 type SavedState = {
   hideUnderstood: boolean;
+  mapStates: Record<string, UnderstandingState>;
   selectedRepositories: string[];
   states: Record<string, StoryState>;
   view: View;
@@ -163,6 +166,7 @@ const DEMO_STORIES: Story[] = [
 
 const EDITION = latestEdition as Edition;
 const STORIES: Story[] = EDITION.stories.length ? EDITION.stories : DEMO_STORIES;
+const REPOSITORY_MAP = repositoryMap as RepoMapData;
 
 function formatEditionDate(value: string) {
   return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
@@ -194,6 +198,7 @@ export default function Home() {
   const [view, setView] = useState<View>("briefing");
   const [states, setStates] = useState<Record<string, StoryState>>({});
   const [hideUnderstood, setHideUnderstood] = useState(false);
+  const [mapStates, setMapStates] = useState<Record<string, UnderstandingState>>({});
   const [focusMode, setFocusMode] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [focusedStoryId, setFocusedStoryId] = useState<string | null>(null);
@@ -236,6 +241,7 @@ export default function Home() {
       try {
         setStates({});
         setHideUnderstood(false);
+        setMapStates({});
         setView("briefing");
         setSelectedRepositories([]);
         const saved = window.localStorage.getItem(accountStorageKey) ??
@@ -246,8 +252,9 @@ export default function Home() {
             selectedRepoIds?: string[];
           };
           if (parsed.states) setStates(parsed.states);
+          if (parsed.mapStates) setMapStates(parsed.mapStates);
           if (typeof parsed.hideUnderstood === "boolean") setHideUnderstood(parsed.hideUnderstood);
-          if (parsed.view === "briefing" || parsed.view === "timeline" || parsed.view === "repositories") {
+          if (parsed.view === "briefing" || parsed.view === "map" || parsed.view === "timeline" || parsed.view === "repositories") {
             setView(parsed.view);
           }
           const savedRepositories = parsed.selectedRepositories ?? parsed.selectedRepoIds;
@@ -263,9 +270,9 @@ export default function Home() {
 
   useEffect(() => {
     if (!hasHydrated || !accountStorageKey) return;
-    const saved: SavedState = { hideUnderstood, selectedRepositories, states, view };
+    const saved: SavedState = { hideUnderstood, mapStates, selectedRepositories, states, view };
     window.localStorage.setItem(accountStorageKey, JSON.stringify(saved));
-  }, [accountStorageKey, hasHydrated, hideUnderstood, selectedRepositories, states, view]);
+  }, [accountStorageKey, hasHydrated, hideUnderstood, mapStates, selectedRepositories, states, view]);
 
   useEffect(() => {
     if (!auth?.authenticated) return;
@@ -382,6 +389,18 @@ export default function Home() {
       }
       return [...current, repository];
     });
+  };
+
+  const updateUnderstanding = (area: RepoArea, state: UnderstandingState) => {
+    setMapStates((current) => ({ ...current, [area.id]: state }));
+    const messages: Record<UnderstandingState, string> = {
+      introduced: `${area.name} is now your comprehension frontier.`,
+      revisit: `${area.name} will come back with more depth.`,
+      skipped: `${area.name} is out of your learning denominator.`,
+      understood: `${area.name} added to your understood map.`,
+      unexplored: `${area.name} reset.`,
+    };
+    setNotice(messages[state]);
   };
 
   const moveStoryFocus = (direction: 1 | -1) => {
@@ -540,6 +559,9 @@ export default function Home() {
           <button className={view === "briefing" ? "is-active" : ""} onClick={() => setView("briefing")} type="button">
             <span>Briefing</span><small>{STORIES.length - understoodCount}</small>
           </button>
+          <button className={view === "map" ? "is-active" : ""} onClick={() => setView("map")} type="button">
+            <span>Repo map</span><small>{Object.values(mapStates).filter((state) => state === "understood").length}</small>
+          </button>
           <button className={view === "timeline" ? "is-active" : ""} onClick={() => setView("timeline")} type="button">
             <span>Timeline</span><small>7d</small>
           </button>
@@ -572,20 +594,22 @@ export default function Home() {
               <button aria-expanded={showHelp} onClick={() => setShowHelp((current) => !current)} type="button">?</button>
             </div>
           </div>
-          <h1>{view === "repositories" ? "Choose what deserves a backstory." : "What changed—and what it means."}</h1>
+          <h1>{view === "repositories" ? "Choose what deserves a backstory." : view === "map" ? "What you know—and what comes next." : "What changed—and what it means."}</h1>
           <p className="dek">
             {view === "repositories"
               ? "Live GitHub sources, kept intentionally narrow. Pick the repositories you actually want to understand."
+              : view === "map"
+                ? "A living dossier of systems, concepts, decisions, and evidence—shaped by what you actually want to understand."
               : `${STORIES.length} ${STORIES.length === 1 ? "decision" : "decisions"} from the week. Everything routine stayed quiet.`}
           </p>
 
-          {view !== "repositories" && (
+          {view !== "repositories" && view !== "map" && (
             <p className="edition-provenance">
               Generated {formatGeneratedAt(EDITION.generatedAt)} · Scheduled review every Monday · {STORIES.length} evidence-backed {STORIES.length === 1 ? "story" : "stories"}
             </p>
           )}
 
-          {view !== "repositories" && <div className="source-banner">{renderSourceBanner()}</div>}
+          {view !== "repositories" && view !== "map" && <div className="source-banner">{renderSourceBanner()}</div>}
 
           {showHelp && (
             <div className="shortcut-help">
@@ -708,6 +732,10 @@ export default function Home() {
               <p>If nothing introduced a new behavior, boundary, or open tradeoff, Baxtori publishes no story.</p>
             </div>
           </section>
+        )}
+
+        {view === "map" && (
+          <RepoMap data={REPOSITORY_MAP} onStateChange={updateUnderstanding} states={mapStates} />
         )}
 
         {view === "timeline" && (

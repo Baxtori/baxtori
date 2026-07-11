@@ -81,6 +81,18 @@ concise, validated `data/latest.json` and archives the same edition under
 `data/editions/`. Committing that edition updates the deployed app without any
 separate model API billing.
 
+## Progressive repository comprehension
+
+`data/repo-map.json` keeps a small, evidence-backed dossier of important systems,
+concepts, and decisions. The Repo Map combines breadth, depth, confidence, and
+freshness into an explicitly estimated coverage score, then uses the reader's
+understood, revisit, and not-worth-it feedback to choose a comprehension
+frontier. Validate it with:
+
+```bash
+npm run map:validate
+```
+
 The hosted application remains a standard Next.js app. `vercel.json` selects a
 native Next.js build on Vercel, while the existing Sites build scripts remain
 available during the hosting transition.
