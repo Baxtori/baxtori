@@ -1,0 +1,109 @@
+{
+  "repository": "teamleaderleo/glimpse",
+  "generatedAt": "2026-07-11T08:30:00.000Z",
+  "summary": "Baxtori is a private GitHub lens that turns selected repository activity into quiet, evidence-backed code backstories.",
+  "areas": [
+    {
+      "id": "github-boundary",
+      "name": "GitHub identity boundary",
+      "kind": "System",
+      "purpose": "Signs the reader in, limits private-code access to explicit GitHub App grants, and keeps credentials server-side.",
+      "importance": 5,
+      "breadth": 78,
+      "depth": 58,
+      "confidence": 92,
+      "freshness": 96,
+      "changed": "This week",
+      "verdict": "Strong boundary; worth understanding first",
+      "evidence": [
+        "lib/github-auth.ts",
+        "app/api/auth/github/callback/route.ts",
+        "app/api/github/repos/route.ts"
+      ],
+      "concepts": ["OAuth callback integrity", "encrypted HttpOnly session", "least-privilege repository access"]
+    },
+    {
+      "id": "rundown-engine",
+      "name": "Weekly rundown engine",
+      "kind": "Workflow",
+      "purpose": "Collects deterministic repository activity, lets the scheduled Codex review choose meaningful changes, and emits a versioned edition.",
+      "importance": 5,
+      "breadth": 64,
+      "depth": 42,
+      "confidence": 78,
+      "freshness": 94,
+      "changed": "This week",
+      "verdict": "Promising workflow with orchestration still outside the app",
+      "evidence": [
+        "scripts/collect-backstory.mjs",
+        "scripts/validate-edition.mjs",
+        "baxtori.sources.json"
+      ],
+      "concepts": ["deterministic prepass", "quiet-week threshold", "human-sized reading budget"]
+    },
+    {
+      "id": "evidence-model",
+      "name": "Edition and evidence model",
+      "kind": "Data model",
+      "purpose": "Stores each explanation beside repository, commit, file, tradeoff, and verification evidence so claims stay inspectable.",
+      "importance": 4,
+      "breadth": 82,
+      "depth": 68,
+      "confidence": 90,
+      "freshness": 95,
+      "changed": "This week",
+      "verdict": "Simple, legible, and appropriately versioned",
+      "evidence": [
+        "data/latest.json",
+        "data/editions/",
+        "scripts/validate-edition.mjs"
+      ],
+      "concepts": ["claim-to-commit traceability", "append-only backstory", "schema-level brevity"]
+    },
+    {
+      "id": "reading-loop",
+      "name": "Human reading loop",
+      "kind": "Experience",
+      "purpose": "Turns a generated edition into a small reading queue with focus controls, remembered progress, and permission to ignore low-value material.",
+      "importance": 4,
+      "breadth": 70,
+      "depth": 38,
+      "confidence": 74,
+      "freshness": 88,
+      "changed": "This week",
+      "verdict": "Good ergonomics; comprehension feedback is the missing layer",
+      "evidence": ["app/page.tsx", "app/globals.css"],
+      "concepts": ["progressive disclosure", "local reading state", "attention budget"]
+    },
+    {
+      "id": "hosting-transition",
+      "name": "Hosting transition",
+      "kind": "Operations",
+      "purpose": "Keeps the existing Sites deployment working while preparing a native Next.js build and custom domain on Vercel.",
+      "importance": 3,
+      "breadth": 55,
+      "depth": 32,
+      "confidence": 80,
+      "freshness": 92,
+      "changed": "This week",
+      "verdict": "Deliberate transition, not yet operationally complete",
+      "evidence": ["vercel.json", ".openai/hosting.json", "README.md"],
+      "concepts": ["dual-build migration", "runtime-neutral application core", "deployment verification"]
+    },
+    {
+      "id": "agent-context",
+      "name": "Agent context export",
+      "kind": "Future surface",
+      "purpose": "Could distill accepted repository knowledge into reviewable context for agents without silently turning uncertain summaries into instructions.",
+      "importance": 2,
+      "breadth": 12,
+      "depth": 5,
+      "confidence": 45,
+      "freshness": 100,
+      "changed": "Not built",
+      "verdict": "Useful frontier, intentionally speculative",
+      "evidence": ["README.md"],
+      "concepts": ["reviewable context package", "uncertainty preservation", "skill update proposals"]
+    }
+  ]
+}
