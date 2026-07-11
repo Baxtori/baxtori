@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 
 export type UnderstandingState = "unexplored" | "introduced" | "understood" | "revisit" | "skipped";
 export type QuestionDisposition = "open" | "resolved" | "irrelevant";
@@ -43,11 +43,27 @@ export type RepoQuestion = {
   evidence: string[];
 };
 
+type MapReview = {
+  id: string;
+  reviewedAt: string;
+  summary: string;
+  affectedAreaIds: string[];
+  newAreaIds: string[];
+  unmappedFilesReviewed: string[];
+  throughCommit: {
+    sha: string;
+    shortSha: string;
+    subject: string;
+    url: string;
+  };
+};
+
 export type RepoMapData = {
   repository: string;
   generatedAt: string;
   summary: string;
   questions: RepoQuestion[];
+  reviews: MapReview[];
   areas: RepoArea[];
 };
 
@@ -59,6 +75,13 @@ type RepoMapProps = {
   onStateChange: (area: RepoArea, state: UnderstandingState) => void;
 };
 
+type StudyTask = {
+  description: string;
+  id: string;
+  minutes: number;
+  type: string;
+} & ({ kind: "area"; area: RepoArea } | { kind: "question"; area?: RepoArea; question: RepoQuestion });
+
 const STATE_LABELS: Record<UnderstandingState, string> = {
   introduced: "Introduced",
   revisit: "Revisit",
@@ -66,6 +89,15 @@ const STATE_LABELS: Record<UnderstandingState, string> = {
   understood: "Understood",
   unexplored: "Unexplored",
 };
+
+const STUDY_BUDGETS = [5, 15, 30] as const;
+
+function formatReviewDate(value: string, compact = false) {
+  return new Intl.DateTimeFormat("en-US", compact
+    ? { day: "numeric", month: "short", timeZone: "UTC" }
+    : { day: "numeric", month: "short", timeZone: "UTC", year: "numeric" }
+  ).format(new Date(value));
+}
 
 function areaCoverage(area: RepoArea) {
   return Math.round(area.breadth * 0.35 + area.depth * 0.35 + area.confidence * 0.2 + area.freshness * 0.1);
@@ -81,6 +113,7 @@ function adjustedCoverage(area: RepoArea, state: UnderstandingState) {
 }
 
 export function RepoMap({ data, onQuestionChange, onStateChange, questionStates, states }: RepoMapProps) {
+  const [studyBudget, setStudyBudget] = useState<(typeof STUDY_BUDGETS)[number]>(15);
   const stateFor = (area: RepoArea) => states[area.id] ?? "unexplored";
   const questionStateFor = (question: RepoQuestion) => questionStates[question.id] ?? question.status;
   const includedAreas = data.areas.filter((area) => stateFor(area) !== "skipped");
@@ -96,6 +129,57 @@ export function RepoMap({ data, onQuestionChange, onStateChange, questionStates,
       const stateBoost = (area: RepoArea) => stateFor(area) === "revisit" ? 30 : stateFor(area) === "introduced" ? 10 : 0;
       return (b.importance * 20 + b.freshness + stateBoost(b)) - (a.importance * 20 + a.freshness + stateBoost(a));
     })[0];
+  const latestReview = data.reviews[0];
+  const areaById = new Map(data.areas.map((area) => [area.id, area]));
+  const rankedAreas = [...includedAreas]
+    .filter((area) => stateFor(area) !== "understood")
+    .sort((a, b) => {
+      const boost = (area: RepoArea) => stateFor(area) === "revisit" ? 40 : area.id === frontier?.id ? 25 : 0;
+      return (b.importance * 20 + b.freshness + boost(b)) - (a.importance * 20 + a.freshness + boost(a));
+    });
+  const studyCandidates: StudyTask[] = [
+    ...rankedAreas.map((area) => ({
+      area,
+      description: area.walkthrough?.outcome ?? area.purpose,
+      id: `area-${area.id}`,
+      kind: "area" as const,
+      minutes: area.walkthrough?.estimatedMinutes ?? 8,
+      type: area.walkthrough ? "Walkthrough" : "Area brief",
+    })),
+    ...openQuestions.map((question) => ({
+      area: areaById.get(question.areaId),
+      description: question.whyItMatters,
+      id: `question-${question.id}`,
+      kind: "question" as const,
+      minutes: 5,
+      question,
+      type: "Open question",
+    })),
+  ];
+  let minutesPlanned = 0;
+  const studyPlan = studyCandidates.filter((task) => {
+    if (minutesPlanned + task.minutes > studyBudget) return false;
+    minutesPlanned += task.minutes;
+    return true;
+  });
+
+  const openStudyTask = (task: StudyTask) => {
+    if (task.kind === "question") {
+      document.getElementById(`question-${task.question.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    if (!task.area) return;
+    onStateChange(task.area, "introduced");
+    const area = document.getElementById(`area-${task.area.id}`) as HTMLDetailsElement | null;
+    if (area) area.open = true;
+    if (task.area.walkthrough) {
+      const walkthrough = document.getElementById(`walkthrough-${task.area.id}`) as HTMLDetailsElement | null;
+      if (walkthrough) walkthrough.open = true;
+      walkthrough?.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else {
+      area?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
 
   return (
     <section className="map-view" aria-labelledby="map-heading">
@@ -114,29 +198,55 @@ export function RepoMap({ data, onQuestionChange, onStateChange, questionStates,
         </div>
       </div>
 
-      {frontier ? (
-        <article className="frontier-card">
-          <div>
-            <span className="eyebrow">Your comprehension frontier</span>
-            <h3>{frontier.name}</h3>
-            <p>{frontier.purpose}</p>
+      {latestReview ? (
+        <article className="review-pulse">
+          <div className="review-pulse-main">
+            <span className="eyebrow">Latest map review · {formatReviewDate(latestReview.reviewedAt, true)}</span>
+            <h3>{latestReview.summary}</h3>
+            <div className="review-area-list">
+              {latestReview.affectedAreaIds.map((id) => <span key={id}>{areaById.get(id)?.name ?? id}</span>)}
+            </div>
           </div>
-          <div className="frontier-reason">
-            <strong>Why this next</strong>
-            <span>{frontier.importance}/5 importance · {frontier.freshness}% fresh · {STATE_LABELS[stateFor(frontier)]}</span>
-            <button onClick={() => onStateChange(frontier, "introduced")} type="button">Start here</button>
+          <div className="review-pulse-proof">
+            <strong>{latestReview.newAreaIds.length} new area · {latestReview.unmappedFilesReviewed.length} files classified</strong>
+            <a href={latestReview.throughCommit.url} rel="noreferrer" target="_blank">Through {latestReview.throughCommit.shortSha} ↗</a>
+            <details>
+              <summary>Review history</summary>
+              <ol>{data.reviews.map((review) => <li key={review.id}><time>{formatReviewDate(review.reviewedAt)}</time><span>{review.summary}</span></li>)}</ol>
+            </details>
           </div>
         </article>
-      ) : (
-        <div className="frontier-card is-complete"><strong>No frontier right now.</strong><span>You have understood or deliberately skipped every mapped area.</span></div>
-      )}
+      ) : null}
+
+      <section className="study-session" aria-labelledby="study-session-heading">
+        <div className="study-session-heading">
+          <div>
+            <span className="eyebrow">Low-effort study mode</span>
+            <h2 id="study-session-heading">Your next {studyBudget} minutes</h2>
+            <p>{frontier ? `${frontier.name} is the current frontier. ` : "Your mapped areas are settled. "}The queue fits the time you actually have.</p>
+          </div>
+          <div className="budget-picker" aria-label="Study time budget">
+            {STUDY_BUDGETS.map((minutes) => <button aria-pressed={studyBudget === minutes} key={minutes} onClick={() => setStudyBudget(minutes)} type="button">{minutes}m</button>)}
+          </div>
+        </div>
+        {studyPlan.length ? (
+          <ol className="study-plan">
+            {studyPlan.map((task) => (
+              <li key={task.id}>
+                <div><span>{task.type} · {task.minutes} min</span><strong>{task.kind === "question" ? task.question.question : task.area.name}</strong><p>{task.description}</p></div>
+                <button onClick={() => openStudyTask(task)} type="button">Open</button>
+              </li>
+            ))}
+          </ol>
+        ) : <div className="study-complete"><strong>No study queue right now.</strong><span>You have understood or deliberately skipped every mapped area and cleared its questions.</span></div>}
+      </section>
 
       <div className="map-list" aria-label="Mapped repository areas">
         {data.areas.map((area) => {
           const state = stateFor(area);
           const score = adjustedCoverage(area, state);
           return (
-            <details className={`map-area is-${state}`} key={area.id} open={area.id === frontier?.id}>
+            <details className={`map-area is-${state}`} id={`area-${area.id}`} key={area.id} open={area.id === frontier?.id}>
               <summary>
                 <div className="map-area-main">
                   <span>{area.kind}</span>
@@ -179,7 +289,7 @@ export function RepoMap({ data, onQuestionChange, onStateChange, questionStates,
                   <button aria-pressed={state === "skipped"} onClick={() => onStateChange(area, "skipped")} type="button">Not worth it</button>
                 </div>
                 {area.walkthrough ? (
-                  <details className="walkthrough">
+                  <details className="walkthrough" id={`walkthrough-${area.id}`}>
                     <summary>
                       <div><span className="eyebrow">Code walkthrough · {area.walkthrough.estimatedMinutes} min</span><strong>{area.walkthrough.title}</strong></div>
                       <span>Follow the path</span>
@@ -217,7 +327,7 @@ export function RepoMap({ data, onQuestionChange, onStateChange, questionStates,
             const disposition = questionStateFor(question);
             const area = data.areas.find((item) => item.id === question.areaId);
             return (
-              <article className={`question-card is-${disposition}`} key={question.id}>
+              <article className={`question-card is-${disposition}`} id={`question-${question.id}`} key={question.id}>
                 <div className="question-meta"><span>{area?.name ?? question.areaId}</span><strong>{disposition}</strong></div>
                 <h3>{question.question}</h3>
                 <p>{question.whyItMatters}</p>

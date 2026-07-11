@@ -9,6 +9,16 @@ if (!map.repository?.includes("/") || !map.summary || !Array.isArray(map.areas) 
 
 if (!Array.isArray(map.questions)) throw new Error("Repository map needs a question ledger.");
 const areaIds = new Set(map.areas.map((area) => area.id));
+if (!Array.isArray(map.reviews)) throw new Error("Repository map needs an append-only review history.");
+for (const review of map.reviews) {
+  const referencedAreas = [...(review.affectedAreaIds ?? []), ...(review.newAreaIds ?? [])];
+  if (!review.id || !Date.parse(review.reviewedAt) || !review.summary || !review.throughCommit?.sha || !review.throughCommit?.url) {
+    throw new Error(`Invalid map review: ${review.id}`);
+  }
+  if (!referencedAreas.length || referencedAreas.some((areaId) => !areaIds.has(areaId)) || !Array.isArray(review.unmappedFilesReviewed)) {
+    throw new Error(`${review.id} has invalid area or unmapped-file references.`);
+  }
+}
 for (const question of map.questions) {
   if (!question.id || !areaIds.has(question.areaId) || !question.question || !question.whyItMatters) {
     throw new Error(`Invalid repository question: ${question.id}`);

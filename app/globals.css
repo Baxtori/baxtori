@@ -1160,6 +1160,109 @@ kbd {
 .frontier-card.is-complete { display: flex; flex-direction: column; }
 .frontier-card.is-complete span { color: var(--muted); font-family: var(--serif); }
 
+.review-pulse {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, 0.38fr);
+  gap: 1.25rem;
+  padding: 1rem 1.1rem;
+  background: #e9eee8;
+  border-left: 4px solid var(--green);
+}
+
+.review-pulse h3 {
+  max-width: 45rem;
+  margin: 0.4rem 0 0.7rem;
+  font-family: var(--serif);
+  font-size: clamp(1.15rem, 2.4vw, 1.6rem);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.review-area-list { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.review-area-list span { padding: 0.28rem 0.4rem; color: var(--green); background: rgb(255 255 255 / 55%); font-size: 0.61rem; font-weight: 750; }
+
+.review-pulse-proof {
+  display: grid;
+  align-content: start;
+  gap: 0.45rem;
+  padding-left: 1rem;
+  border-left: 1px solid rgb(47 101 75 / 20%);
+  font-size: 0.66rem;
+}
+
+.review-pulse-proof > strong { line-height: 1.4; }
+.review-pulse-proof > a { color: var(--blue); font-weight: 750; text-decoration: none; }
+.review-pulse-proof details { margin-top: 0.2rem; color: var(--muted); }
+.review-pulse-proof summary { cursor: pointer; font-weight: 750; }
+.review-pulse-proof ol { display: grid; gap: 0.45rem; margin: 0.6rem 0 0; padding-left: 1rem; }
+.review-pulse-proof li { padding-left: 0.15rem; }
+.review-pulse-proof li time { display: block; color: var(--green); font-size: 0.58rem; text-transform: uppercase; }
+.review-pulse-proof li span { display: block; margin-top: 0.12rem; line-height: 1.35; }
+
+.study-session {
+  padding: clamp(1rem, 3vw, 1.35rem);
+  color: var(--paper-light);
+  background: var(--ink);
+}
+
+.study-session-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.study-session-heading h2 {
+  margin: 0.35rem 0 0.3rem;
+  font-family: var(--serif);
+  font-size: clamp(1.6rem, 3.2vw, 2.25rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+}
+
+.study-session-heading p { margin: 0; color: #bdc8c1; font-family: var(--serif); font-size: 0.82rem; }
+
+.budget-picker { display: flex; flex-shrink: 0; }
+.budget-picker button {
+  min-width: 2.8rem;
+  min-height: 2.35rem;
+  color: #bdc8c1;
+  background: transparent;
+  border: 1px solid rgb(255 255 255 / 25%);
+  cursor: pointer;
+  font-size: 0.66rem;
+  font-weight: 760;
+}
+.budget-picker button + button { border-left: 0; }
+.budget-picker button[aria-pressed="true"] { color: var(--ink); background: var(--paper); }
+
+.study-plan { display: grid; gap: 0; margin: 1rem 0 0; padding: 0; counter-reset: study; list-style: none; }
+.study-plan li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid rgb(255 255 255 / 15%);
+  counter-increment: study;
+}
+.study-plan li > div { min-width: 0; }
+.study-plan li > div > span { color: #9fb4a7; font-size: 0.6rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.study-plan li strong { display: block; margin-top: 0.25rem; font-family: var(--serif); font-size: 1rem; font-weight: 500; }
+.study-plan li p { max-width: 45rem; margin: 0.25rem 0 0; color: #bdc8c1; font-family: var(--serif); font-size: 0.76rem; line-height: 1.35; }
+.study-plan li > button {
+  min-width: 4rem;
+  min-height: 2.4rem;
+  color: var(--ink);
+  background: var(--paper);
+  border: 0;
+  cursor: pointer;
+  font-size: 0.67rem;
+  font-weight: 780;
+}
+.study-complete { display: grid; gap: 0.2rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgb(255 255 255 / 15%); }
+.study-complete span { color: #bdc8c1; font-family: var(--serif); font-size: 0.8rem; }
+
 .map-list { border-top: 1px solid var(--line); }
 
 .map-area {
@@ -1544,6 +1647,11 @@ kbd {
   .coverage-dial { width: 7.5rem; }
   .frontier-card { grid-template-columns: 1fr; }
   .frontier-reason { padding: 0.8rem 0 0; border-top: 1px solid rgb(47 101 75 / 25%); border-left: 0; }
+  .review-pulse { grid-template-columns: 1fr; }
+  .review-pulse-proof { padding: 0.8rem 0 0; border-top: 1px solid rgb(47 101 75 / 20%); border-left: 0; }
+  .study-session-heading { align-items: flex-start; flex-direction: column; }
+  .study-plan li { grid-template-columns: 1fr; }
+  .study-plan li > button { justify-self: start; }
   .signal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .map-columns { grid-template-columns: 1fr; }
   .understanding-actions > span { width: 100%; }
