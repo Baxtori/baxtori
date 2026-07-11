@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import latestEdition from "@/data/latest.json";
 import repositoryMap from "@/data/repo-map.json";
+import reviewScope from "@/data/review-scope.json";
 import { RepoMap, type QuestionDisposition, type RepoArea, type RepoMapData, type RepoQuestion, type UnderstandingState } from "./repo-map";
 
 type Tone = "blue" | "green" | "rust";
@@ -87,11 +88,28 @@ type Commit = {
 };
 
 type ActivityResponse = {
-  commits: Commit[];
-  days: number;
+  commits?: Commit[];
+  days?: number;
   error?: string;
-  repository: string;
-  since: string;
+  repository?: string;
+  since?: string;
+  truncated?: boolean;
+  window?: "rolling" | "since-review";
+};
+
+type ScopedRepository = {
+  fullName: string;
+  name: string;
+  priority: "core" | "normal" | "low";
+  mapStatus: "mapped" | "unmapped";
+};
+
+type ReviewScope = {
+  updatedAt: string;
+  lastReviewedAt: string;
+  schedule: string;
+  windowDays: number;
+  repositories: ScopedRepository[];
 };
 
 type SavedState = {
@@ -168,6 +186,8 @@ const DEMO_STORIES: Story[] = [
 const EDITION = latestEdition as Edition;
 const STORIES: Story[] = EDITION.stories.length ? EDITION.stories : DEMO_STORIES;
 const REPOSITORY_MAP = repositoryMap as RepoMapData;
+const REVIEW_SCOPE = reviewScope as ReviewScope;
+const SCHEDULED_REPOSITORIES = REVIEW_SCOPE.repositories.map((repository) => repository.fullName);
 
 function formatEditionDate(value: string) {
   return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
@@ -181,6 +201,10 @@ function formatGeneratedAt(value: string) {
     month: "short",
     timeZoneName: "short",
   }).format(new Date(value));
+}
+
+function formatReviewCursor(value: string) {
+  return new Intl.DateTimeFormat("en", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(value));
 }
 
 function formatRelativeDate(value: string | null) {
@@ -246,7 +270,7 @@ export default function Home() {
         setMapStates({});
         setQuestionStates({});
         setView("briefing");
-        setSelectedRepositories([]);
+        setSelectedRepositories(SCHEDULED_REPOSITORIES);
         const saved = window.localStorage.getItem(accountStorageKey) ??
           window.localStorage.getItem(STORAGE_KEY) ??
           window.localStorage.getItem(LEGACY_STORAGE_KEY);
@@ -320,7 +344,7 @@ export default function Home() {
     });
     Promise.all(
       selectedRepositories.slice(0, MAX_SELECTED_REPOSITORIES).map(async (repository) => {
-        const response = await fetch(`/api/github/activity?repo=${encodeURIComponent(repository)}&days=14`);
+        const response = await fetch(`/api/github/activity?repo=${encodeURIComponent(repository)}&since=${encodeURIComponent(REVIEW_SCOPE.lastReviewedAt)}`);
         const payload = (await response.json()) as ActivityResponse;
         return [repository, payload] as const;
       }),
@@ -353,10 +377,22 @@ export default function Home() {
   const selectedRepositoryData = repositories.filter((repository) =>
     selectedRepositories.includes(repository.fullName),
   );
+  const scheduledRepositorySet = new Set(SCHEDULED_REPOSITORIES);
+  const selectedRepositorySet = new Set(selectedRepositories);
+  const previewOnlyRepositories = selectedRepositories.filter((repository) => !scheduledRepositorySet.has(repository));
+  const hiddenScheduledRepositories = SCHEDULED_REPOSITORIES.filter((repository) => !selectedRepositorySet.has(repository));
+  const inaccessibleScheduledRepositories = SCHEDULED_REPOSITORIES.filter((repository) =>
+    repositories.length > 0 && !repositories.some((candidate) => candidate.fullName === repository),
+  );
   const recentCommitCount = Object.values(activity).reduce(
     (total, item) => total + (item.commits?.length ?? 0),
     0,
   );
+  const candidateRepositoryCount = selectedRepositoryData.filter((repository) => (activity[repository.fullName]?.commits?.length ?? 0) > 0).length;
+  const quietRepositoryCount = selectedRepositoryData.filter((repository) => {
+    const repositoryActivity = activity[repository.fullName];
+    return repositoryActivity && !repositoryActivity.error && (repositoryActivity.commits?.length ?? 0) === 0;
+  }).length;
 
   const filteredRepositories = useMemo(() => {
     const query = repositorySearch.trim().toLowerCase();
@@ -516,7 +552,7 @@ export default function Home() {
       <>
         <p>
           <strong>{selectedRepositories.length} {selectedRepositories.length === 1 ? "repository" : "repositories"} in view.</strong>{" "}
-          {activityLoading ? "Reading recent activity…" : `${recentCommitCount} commits in the last 14 days.`}
+          {activityLoading ? "Reading changes since the last review…" : `${recentCommitCount} candidate commits since ${formatReviewCursor(REVIEW_SCOPE.lastReviewedAt)}.`}
         </p>
         <button onClick={() => setView("repositories")} type="button">Manage</button>
       </>
@@ -798,6 +834,85 @@ export default function Home() {
               </div>
             </div>
 
+            <section className="review-preview" aria-labelledby="review-preview-heading">
+              <div className="review-preview-heading">
+                <div>
+                  <span className="eyebrow">Next scheduled review · {REVIEW_SCOPE.schedule}</span>
+                  <h2 id="review-preview-heading">What Monday will inspect</h2>
+                  <p>GitHub supplies the candidate commits. The scheduled review still applies the quiet rule before anything reaches your briefing.</p>
+                </div>
+                <div className="review-preview-metrics" aria-label="Scheduled review preview">
+                  <div><strong>{recentCommitCount}{Object.values(activity).some((item) => item.truncated) ? "+" : ""}</strong><span>candidate commits</span></div>
+                  <div><strong>{candidateRepositoryCount}</strong><span>active repositories</span></div>
+                  <div><strong>{quietRepositoryCount}</strong><span>likely quiet</span></div>
+                </div>
+              </div>
+
+              {(previewOnlyRepositories.length > 0 || hiddenScheduledRepositories.length > 0) && (
+                <div className="scope-drift" role="status">
+                  <div>
+                    <strong>Device preview differs from the scheduled scope.</strong>
+                    <span>{previewOnlyRepositories.length} preview-only · {hiddenScheduledRepositories.length} scheduled but hidden</span>
+                  </div>
+                  <button onClick={() => setSelectedRepositories(SCHEDULED_REPOSITORIES)} type="button">Use scheduled scope</button>
+                </div>
+              )}
+
+              <div className="scope-list">
+                {selectedRepositoryData.map((repository) => {
+                  const repositoryActivity = activity[repository.fullName];
+                  const scheduled = scheduledRepositorySet.has(repository.fullName);
+                  const scope = REVIEW_SCOPE.repositories.find((item) => item.fullName === repository.fullName);
+                  const commitCount = repositoryActivity?.commits?.length ?? 0;
+                  return (
+                    <article className="scope-row" key={repository.fullName}>
+                      <div className="scope-row-main">
+                        <div className="scope-row-title">
+                          <strong>{repository.name}</strong>
+                          <span className={scheduled ? "is-scheduled" : "is-preview"}>{scheduled ? "Scheduled" : "Preview only"}</span>
+                          {scope?.mapStatus === "mapped" && <span>Mapped</span>}
+                        </div>
+                        <p>
+                          {activityLoading && !repositoryActivity
+                            ? "Checking GitHub activity…"
+                            : repositoryActivity?.error
+                              ? repositoryActivity.error
+                              : commitCount
+                                ? `${commitCount}${repositoryActivity?.truncated ? "+" : ""} commits await the quiet-rule screen.`
+                                : `No commits since ${formatReviewCursor(REVIEW_SCOPE.lastReviewedAt)}; likely quiet.`}
+                        </p>
+                        {repositoryActivity?.commits?.length ? (
+                          <details>
+                            <summary>Preview candidate commits</summary>
+                            <ul>
+                              {repositoryActivity.commits.slice(0, 3).map((commit) => (
+                                <li key={commit.sha}><a href={commit.url} rel="noreferrer" target="_blank">{commit.message}</a><span>{commit.sha} · {commit.author}</span></li>
+                              ))}
+                            </ul>
+                          </details>
+                        ) : null}
+                      </div>
+                      <div className="scope-row-actions">
+                        <a href={repository.url} rel="noreferrer" target="_blank">GitHub ↗</a>
+                        <button onClick={() => toggleRepository(repository.fullName)} type="button">Remove</button>
+                      </div>
+                    </article>
+                  );
+                })}
+                {inaccessibleScheduledRepositories.map((repository) => (
+                  <article className="scope-row is-inaccessible" key={repository}>
+                    <div className="scope-row-main"><div className="scope-row-title"><strong>{repository}</strong><span>Needs GitHub access</span></div><p>Scheduled locally, but not visible to the current GitHub App installation.</p></div>
+                    {auth.appSlug && <a href={`https://github.com/apps/${auth.appSlug}/installations/new`} rel="noreferrer" target="_blank">Manage access ↗</a>}
+                  </article>
+                ))}
+                {repositoryLoading && <div className="scope-empty"><strong>Checking the scheduled scope…</strong><span>Reading repository access and post-review activity from GitHub.</span></div>}
+                {!repositoryLoading && !selectedRepositoryData.length && !inaccessibleScheduledRepositories.length && (
+                  <div className="scope-empty"><strong>No repositories in this device preview.</strong><span>Add a source below or restore the scheduled scope.</span></div>
+                )}
+              </div>
+              <p className="scope-boundary">Scheduled means the repository is present in Baxtori&apos;s validated local compiler manifest. Preview-only selections stay on this device until that manifest is deliberately updated.</p>
+            </section>
+
             <div className="repo-toolbar">
               <div>
                 <span>Sources</span>
@@ -831,7 +946,7 @@ export default function Home() {
                         <p>{repository.language ?? "Unspecified"} · {formatRelativeDate(repository.pushedAt)} · {repository.defaultBranch}</p>
                       </div>
                       <button aria-pressed={selected} onClick={() => toggleRepository(repository.fullName)} type="button">
-                        {selected ? "Watching ✓" : "Add"}
+                        {selected ? "Included ✓" : "Include"}
                       </button>
                     </article>
                   );
@@ -850,38 +965,6 @@ export default function Home() {
               </div>
             )}
 
-            {selectedRepositoryData.length > 0 && (
-              <section className="live-activity" aria-labelledby="activity-heading">
-                <div className="section-heading"><div><span>Live signal</span><h2 id="activity-heading">Recent activity</h2></div></div>
-                {selectedRepositoryData.map((repository) => {
-                  const repositoryActivity = activity[repository.fullName];
-                  return (
-                    <article key={repository.fullName}>
-                      <div className="activity-title">
-                        <div><strong>{repository.name}</strong><span>{repositoryActivity?.commits.length ?? 0} commits / 14 days</span></div>
-                        <a href={repository.url} rel="noreferrer" target="_blank">GitHub ↗</a>
-                      </div>
-                      {activityLoading && !repositoryActivity ? (
-                        <p>Reading activity…</p>
-                      ) : repositoryActivity?.error ? (
-                        <p>{repositoryActivity.error}</p>
-                      ) : repositoryActivity?.commits.length ? (
-                        <ul>
-                          {repositoryActivity.commits.slice(0, 3).map((commit) => (
-                            <li key={commit.sha}>
-                              <a href={commit.url} rel="noreferrer" target="_blank">{commit.message}</a>
-                              <span>{commit.sha} · {commit.author}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p>No commits in the last 14 days. Baxtori would keep this repository quiet.</p>
-                      )}
-                    </article>
-                  );
-                })}
-              </section>
-            )}
           </section>
         )}
       </main>

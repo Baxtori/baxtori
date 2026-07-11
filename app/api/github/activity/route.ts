@@ -1,4 +1,5 @@
 import { getGitHubSession, githubHeaders, withSessionCookie } from "@/lib/github-auth";
+import { resolveActivityWindow } from "@/lib/github-activity";
 
 type GitHubCommit = {
   sha: string;
@@ -23,15 +24,13 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const repository = requestUrl.searchParams.get("repo")?.trim() ?? "";
   const requestedDays = Number(requestUrl.searchParams.get("days") ?? "14");
-  const days = Number.isFinite(requestedDays)
-    ? Math.min(Math.max(Math.round(requestedDays), 1), 90)
-    : 14;
+  const requestedSince = requestUrl.searchParams.get("since")?.trim() ?? "";
 
   if (!REPOSITORY_PATTERN.test(repository)) {
     return Response.json({ error: "Invalid repository name." }, { status: 400 });
   }
 
-  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  const { days, since, window } = resolveActivityWindow({ requestedDays, requestedSince });
   const endpoint = new URL(`https://api.github.com/repos/${repository}/commits`);
   endpoint.searchParams.set("since", since);
   endpoint.searchParams.set("per_page", "40");
@@ -42,7 +41,7 @@ export async function GET(request: Request) {
   });
 
   if (response.status === 409) {
-    return withSessionCookie(Response.json({ commits: [], days, repository, since }), setCookie);
+    return withSessionCookie(Response.json({ commits: [], days, repository, since, truncated: false, window }), setCookie);
   }
 
   if (!response.ok) {
@@ -55,6 +54,8 @@ export async function GET(request: Request) {
           : "Recent commits could not be loaded.",
         repository,
         since,
+        truncated: false,
+        window,
       },
       { status: response.status === 404 ? 404 : 502 },
     ), setCookie);
@@ -70,7 +71,7 @@ export async function GET(request: Request) {
   }));
 
   return withSessionCookie(Response.json(
-    { commits, days, repository, since },
+    { commits, days, repository, since, truncated: rawCommits.length === 40, window },
     { headers: { "Cache-Control": "private, max-age=60" } },
   ), setCookie);
 }
