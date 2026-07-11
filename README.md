@@ -80,3 +80,7 @@ npm run backstory:validate
 concise, validated `data/latest.json` and archives the same edition under
 `data/editions/`. Committing that edition updates the deployed app without any
 separate model API billing.
+
+The hosted application remains a standard Next.js app. `vercel.json` selects a
+native Next.js build on Vercel, while the existing Sites build scripts remain
+available during the hosting transition.

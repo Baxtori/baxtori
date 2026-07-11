@@ -168,6 +168,16 @@ function formatEditionDate(value: string) {
   return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
 }
 
+function formatGeneratedAt(value: string) {
+  return new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    month: "short",
+    timeZoneName: "short",
+  }).format(new Date(value));
+}
+
 function formatRelativeDate(value: string | null) {
   if (!value) return "No recent push";
   const days = Math.max(0, Math.floor((Date.now() - Date.parse(value)) / 86_400_000));
@@ -569,6 +579,12 @@ export default function Home() {
               : `${STORIES.length} ${STORIES.length === 1 ? "decision" : "decisions"} from the week. Everything routine stayed quiet.`}
           </p>
 
+          {view !== "repositories" && (
+            <p className="edition-provenance">
+              Generated {formatGeneratedAt(EDITION.generatedAt)} · Scheduled review every Monday · {STORIES.length} evidence-backed {STORIES.length === 1 ? "story" : "stories"}
+            </p>
+          )}
+
           {view !== "repositories" && <div className="source-banner">{renderSourceBanner()}</div>}
 
           {showHelp && (
@@ -636,6 +652,15 @@ export default function Home() {
                               <summary>Tradeoff and evidence</summary>
                               <p>{story.tradeoff}</p>
                               <strong>{story.evidence}</strong>
+                              {story.commits?.length ? (
+                                <div className="commit-list" aria-label="Supporting commits">
+                                  {story.commits.map((commit) => (
+                                    <a href={commit.url} key={commit.sha} rel="noreferrer" target="_blank">
+                                      {commit.sha} ↗
+                                    </a>
+                                  ))}
+                                </div>
+                              ) : null}
                               <div className="file-list">
                                 {story.files.map((file) => <code key={file}>{file}</code>)}
                               </div>
@@ -716,7 +741,7 @@ export default function Home() {
                 <span className={`status-dot ${repositoryError ? "is-error" : ""}`} aria-hidden="true" />
                 <div>
                   <strong>Connected as @{auth.user?.login}</strong>
-                  <p>Baxtori can only read repositories granted to its GitHub App.</p>
+                  <p>Public repositories are visible; private repositories require explicit GitHub App access.</p>
                 </div>
               </div>
               <div className="connection-actions">

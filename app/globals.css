@@ -418,6 +418,13 @@ h1 {
   line-height: 1.4;
 }
 
+.edition-provenance {
+  margin: 0.8rem 0 0;
+  color: var(--muted);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
 .source-banner {
   display: flex;
   align-items: center;
@@ -716,6 +723,24 @@ kbd {
   gap: 0.35rem;
   margin-top: 0.65rem;
 }
+
+.commit-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.7rem;
+}
+
+.commit-list a {
+  padding: 0.25rem 0.4rem;
+  color: var(--tone);
+  background: rgb(255 255 255 / 45%);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.66rem;
+  text-decoration: none;
+}
+
+.commit-list a:hover { text-decoration: underline; }
 
 .file-list code {
   max-width: 100%;
