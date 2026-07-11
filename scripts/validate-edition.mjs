@@ -22,6 +22,12 @@ for (const story of edition.stories) {
     throw new Error(`${story.id} has an invalid learning value.`);
   }
   if (!story.files.length || !story.commits.length) throw new Error(`${story.id} lacks evidence.`);
+  if (!story.commits.every((commit) => /^[0-9a-f]{7,40}$/i.test(commit.sha) && commit.url.includes(`github.com/${story.repository}/commit/`))) {
+    throw new Error(`${story.id} has commit evidence that does not match its repository.`);
+  }
+  if (story.title.length > 110 || story.brief.length > 320) {
+    throw new Error(`${story.id} is too verbose for the briefing.`);
+  }
 }
 
 console.log(`Edition ${edition.id} is valid with ${edition.stories.length} stories.`);
