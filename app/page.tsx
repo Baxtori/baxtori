@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import latestEdition from "@/data/latest.json";
 
 type Tone = "blue" | "green" | "rust";
 type View = "briefing" | "timeline" | "repositories";
@@ -20,6 +21,17 @@ type Story = {
   tradeoff: string;
   evidence: string;
   files: string[];
+  repository?: string;
+  commits?: { sha: string; url: string }[];
+};
+
+type Edition = {
+  generatedAt: string;
+  id: string;
+  periodEnd: string;
+  periodStart: string;
+  quietRepositories: string[];
+  stories: Story[];
 };
 
 type StoryState = {
@@ -98,7 +110,7 @@ const EMPTY_STORY_STATE: StoryState = {
   watching: false,
 };
 
-const STORIES: Story[] = [
+const DEMO_STORIES: Story[] = [
   {
     id: "checkout",
     project: "Checkout",
@@ -148,6 +160,13 @@ const STORIES: Story[] = [
     files: ["lib/motion/timing.ts", "components/canvas/use-transition.ts", "components/canvas/motion-compat.ts"],
   },
 ];
+
+const EDITION = latestEdition as Edition;
+const STORIES: Story[] = EDITION.stories.length ? EDITION.stories : DEMO_STORIES;
+
+function formatEditionDate(value: string) {
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
+}
 
 function formatRelativeDate(value: string | null) {
   if (!value) return "No recent push";
@@ -534,7 +553,7 @@ export default function Home() {
       <main id="content">
         <header className="masthead">
           <div className="masthead-top">
-            <span>Weekly backstory · Jul 6–12</span>
+            <span>Weekly backstory · {formatEditionDate(EDITION.periodStart)}–{formatEditionDate(EDITION.periodEnd)}</span>
             <div>
               <button aria-pressed={focusMode} onClick={() => setFocusMode((current) => !current)} type="button">
                 {focusMode ? "Exit focus" : "Focus"}
@@ -547,7 +566,7 @@ export default function Home() {
           <p className="dek">
             {view === "repositories"
               ? "Live GitHub sources, kept intentionally narrow. Pick the repositories you actually want to understand."
-              : "Three decisions from the week. Everything routine stayed quiet."}
+              : `${STORIES.length} ${STORIES.length === 1 ? "decision" : "decisions"} from the week. Everything routine stayed quiet.`}
           </p>
 
           {view !== "repositories" && <div className="source-banner">{renderSourceBanner()}</div>}
@@ -684,7 +703,7 @@ export default function Home() {
               ))}
               <li className="routine-rollup">
                 <time>All week</time>
-                <div><span>Routine work</span><h3>Eight small commits stayed out of the briefing.</h3></div>
+                <div><span>Routine work</span><h3>{EDITION.quietRepositories.length || "Other"} quiet {EDITION.quietRepositories.length === 1 ? "repository stayed" : "repositories stayed"} out of the briefing.</h3></div>
               </li>
             </ol>
           </section>

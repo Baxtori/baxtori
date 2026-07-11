@@ -1,0 +1,20 @@
+{
+  "windowDays": 7,
+  "repositories": [
+    {
+      "name": "glimpse",
+      "fullName": "teamleaderleo/glimpse",
+      "path": "."
+    },
+    {
+      "name": "ourchival",
+      "fullName": "teamleaderleo/ourchival",
+      "path": "../ourchival"
+    },
+    {
+      "name": "one-more-legend",
+      "fullName": "teamleaderleo/one-more-legend",
+      "path": "../../Projects/one-more-legend"
+    }
+  ]
+}

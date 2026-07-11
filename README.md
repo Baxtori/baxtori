@@ -63,3 +63,20 @@ Selected GitHub or local repositories
 The next layer is the rundown compiler: track a per-repository Git cursor,
 cluster related commits into stories, cite exact files and hunks, and publish
 nothing when a project has no meaningful new context.
+
+## Weekly compiler
+
+Baxtori keeps model inference outside the hosted app. A local Codex automation
+uses the existing subscription to run the judgment-heavy review, while the
+repository supplies a deterministic evidence pre-pass:
+
+```bash
+npm run backstory:collect
+npm run backstory:validate
+```
+
+`baxtori.sources.json` defines the local repositories in scope.
+`data/candidates.json` is ignored scratch evidence. The automation writes a
+concise, validated `data/latest.json` and archives the same edition under
+`data/editions/`. Committing that edition updates the deployed app without any
+separate model API billing.

@@ -1,0 +1,37 @@
+{
+  "id": "2026-07-11",
+  "generatedAt": "2026-07-11T00:00:00.000Z",
+  "periodStart": "2026-07-04",
+  "periodEnd": "2026-07-11",
+  "quietRepositories": [],
+  "stories": [
+    {
+      "id": "glimpse-baxtori-foundation",
+      "project": "glimpse",
+      "repository": "teamleaderleo/glimpse",
+      "tone": "green",
+      "timing": "Jul 11",
+      "title": "Glimpse became Baxtori—and gained a real GitHub boundary.",
+      "brief": "The prototype now signs in through a private GitHub App, limits private-code access to chosen repositories, and keeps credentials in an encrypted server session.",
+      "learningValue": 5,
+      "verdict": "A meaningful product boundary worth understanding",
+      "whatChanged": "The public repository fallback was replaced by GitHub App authorization, authenticated repository APIs, encrypted HttpOnly sessions, and account-scoped reading state.",
+      "whyItMatters": "Baxtori is no longer merely displaying GitHub-shaped demo data. Identity, repository visibility, and the product's promise of being personal now agree with one another.",
+      "verify": "Sign out, sign back in, and confirm the private glimpse repository appears while an ungranted private repository does not.",
+      "tradeoff": "The GitHub session currently lives in a cookie, which is excellent for interactive use but cannot power unattended reviews by itself; the scheduled Codex job supplies that missing execution context.",
+      "evidence": "1 squash merge · 18 files · auth and repository API tests",
+      "files": [
+        "lib/github-auth.ts",
+        "app/api/auth/github/callback/route.ts",
+        "app/api/github/repos/route.ts",
+        "app/page.tsx"
+      ],
+      "commits": [
+        {
+          "sha": "05a5bfe",
+          "url": "https://github.com/teamleaderleo/glimpse/commit/05a5bfec76f404dac5426f4d4dc48c3c0415c076"
+        }
+      ]
+    }
+  ]
+}
