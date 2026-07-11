@@ -26,6 +26,8 @@ The product started as **Glimpse** and is being rebranded around
 - A durable question ledger that preserves uncertainty instead of guessing
 - An append-only map review history anchored to exact commits
 - A 5, 15, or 30-minute study queue assembled from walkthroughs, frontiers, and open questions
+- A validated scheduled-review scope with an honest preview-only state for device-local additions
+- Candidate-versus-likely-quiet signals measured from the last completed rundown cursor
 
 ## Run it locally
 
@@ -81,6 +83,10 @@ npm run backstory:validate
 ```
 
 `baxtori.sources.json` defines the local repositories in scope.
+`data/review-scope.json` is the safe, client-visible half of that configuration:
+it names the scheduled repositories, priorities, map coverage, review cursor, and
+schedule without exposing local checkout paths. `npm run scope:validate` prevents
+the visible scope and deterministic collector from drifting apart.
 `data/candidates.json` is ignored scratch evidence. The automation writes a
 concise, validated `data/latest.json` and archives the same edition under
 `data/editions/`. Committing that edition updates the deployed app without any
