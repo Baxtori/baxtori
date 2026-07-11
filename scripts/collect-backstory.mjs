@@ -2,9 +2,11 @@ import { execFileSync } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildMapImpact } from "./lib/map-impact.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const config = JSON.parse(await readFile(resolve(root, "baxtori.sources.json"), "utf8"));
+const repositoryMap = JSON.parse(await readFile(resolve(root, "data/repo-map.json"), "utf8"));
 const since = new Date(Date.now() - config.windowDays * 86_400_000).toISOString();
 
 function git(repositoryPath, args) {
@@ -101,13 +103,16 @@ function collectRepository(source) {
 }
 
 const repositories = config.repositories.map(collectRepository);
+const mapImpact = buildMapImpact(repositoryMap, repositories);
 const output = {
   collectedAt: new Date().toISOString(),
   instructions: {
     evidenceRule: "Every claim must be supported by the listed commits and files. Do not infer unobserved behavior.",
     quietRule: "Publish no story for repositories with no commits or only routine lockfile/documentation churn unless that churn changes behavior.",
     storyLimit: 5,
+    mapRule: "Review every affected map area against its exact commits before changing confidence, freshness, verdict, walkthrough, or questions. New unmapped files may suggest a new area, but are not proof of one.",
   },
+  mapImpact,
   periodEnd: new Date().toISOString().slice(0, 10),
   periodStart: since.slice(0, 10),
   repositories,
@@ -119,3 +124,4 @@ await writeFile(resolve(root, "data/candidates.json"), `${JSON.stringify(output,
 
 const active = repositories.filter((repository) => repository.commits.length && !repository.routineOnly).length;
 console.log(`Collected ${repositories.length} repositories; ${active} have potentially meaningful changes.`);
+console.log(`Map impact: ${mapImpact.affectedAreas.length} affected areas; ${mapImpact.unmappedFiles.length} changed files remain unmapped.`);

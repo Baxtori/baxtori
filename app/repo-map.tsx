@@ -3,6 +3,19 @@
 import type { CSSProperties } from "react";
 
 export type UnderstandingState = "unexplored" | "introduced" | "understood" | "revisit" | "skipped";
+export type QuestionDisposition = "open" | "resolved" | "irrelevant";
+
+type Walkthrough = {
+  title: string;
+  outcome: string;
+  estimatedMinutes: number;
+  steps: {
+    label: string;
+    file: string;
+    explanation: string;
+    invariant: string;
+  }[];
+};
 
 export type RepoArea = {
   id: string;
@@ -18,18 +31,31 @@ export type RepoArea = {
   verdict: string;
   evidence: string[];
   concepts: string[];
+  walkthrough?: Walkthrough;
+};
+
+export type RepoQuestion = {
+  id: string;
+  areaId: string;
+  question: string;
+  whyItMatters: string;
+  status: "open" | "resolved";
+  evidence: string[];
 };
 
 export type RepoMapData = {
   repository: string;
   generatedAt: string;
   summary: string;
+  questions: RepoQuestion[];
   areas: RepoArea[];
 };
 
 type RepoMapProps = {
   data: RepoMapData;
+  questionStates: Record<string, QuestionDisposition>;
   states: Record<string, UnderstandingState>;
+  onQuestionChange: (question: RepoQuestion, state: QuestionDisposition) => void;
   onStateChange: (area: RepoArea, state: UnderstandingState) => void;
 };
 
@@ -54,14 +80,16 @@ function adjustedCoverage(area: RepoArea, state: UnderstandingState) {
   return Math.min(observed, 42);
 }
 
-export function RepoMap({ data, states, onStateChange }: RepoMapProps) {
+export function RepoMap({ data, onQuestionChange, onStateChange, questionStates, states }: RepoMapProps) {
   const stateFor = (area: RepoArea) => states[area.id] ?? "unexplored";
+  const questionStateFor = (question: RepoQuestion) => questionStates[question.id] ?? question.status;
   const includedAreas = data.areas.filter((area) => stateFor(area) !== "skipped");
   const totalWeight = includedAreas.reduce((total, area) => total + area.importance, 0);
   const coverage = totalWeight
     ? Math.round(includedAreas.reduce((total, area) => total + adjustedCoverage(area, stateFor(area)) * area.importance, 0) / totalWeight)
     : 0;
   const understood = data.areas.filter((area) => stateFor(area) === "understood").length;
+  const openQuestions = data.questions.filter((question) => questionStateFor(question) === "open");
   const frontier = [...includedAreas]
     .filter((area) => stateFor(area) !== "understood")
     .sort((a, b) => {
@@ -150,11 +178,60 @@ export function RepoMap({ data, states, onStateChange }: RepoMapProps) {
                   <button aria-pressed={state === "revisit"} onClick={() => onStateChange(area, "revisit")} type="button">Go deeper</button>
                   <button aria-pressed={state === "skipped"} onClick={() => onStateChange(area, "skipped")} type="button">Not worth it</button>
                 </div>
+                {area.walkthrough ? (
+                  <details className="walkthrough">
+                    <summary>
+                      <div><span className="eyebrow">Code walkthrough · {area.walkthrough.estimatedMinutes} min</span><strong>{area.walkthrough.title}</strong></div>
+                      <span>Follow the path</span>
+                    </summary>
+                    <p>{area.walkthrough.outcome}</p>
+                    <ol>
+                      {area.walkthrough.steps.map((step, index) => (
+                        <li key={step.file}>
+                          <span aria-hidden="true">{index + 1}</span>
+                          <div>
+                            <strong>{step.label}</strong>
+                            <code>{step.file}</code>
+                            <p>{step.explanation}</p>
+                            <small><b>Invariant</b> {step.invariant}</small>
+                          </div>
+                        </li>
+                      ))}
+                    </ol>
+                  </details>
+                ) : null}
               </div>
             </details>
           );
         })}
       </div>
+
+      <section className="question-ledger" aria-labelledby="question-ledger-heading">
+        <div>
+          <span className="eyebrow">Preserved uncertainty</span>
+          <h2 id="question-ledger-heading">Question ledger</h2>
+          <p>{openQuestions.length} open {openQuestions.length === 1 ? "question" : "questions"}. Baxtori keeps ambiguity visible instead of inventing an answer.</p>
+        </div>
+        <div className="question-list">
+          {data.questions.map((question) => {
+            const disposition = questionStateFor(question);
+            const area = data.areas.find((item) => item.id === question.areaId);
+            return (
+              <article className={`question-card is-${disposition}`} key={question.id}>
+                <div className="question-meta"><span>{area?.name ?? question.areaId}</span><strong>{disposition}</strong></div>
+                <h3>{question.question}</h3>
+                <p>{question.whyItMatters}</p>
+                <div className="question-evidence">{question.evidence.map((file) => <code key={file}>{file}</code>)}</div>
+                <div className="question-actions">
+                  <button aria-pressed={disposition === "resolved"} onClick={() => onQuestionChange(question, "resolved")} type="button">Resolved</button>
+                  <button aria-pressed={disposition === "open"} onClick={() => onQuestionChange(question, "open")} type="button">Keep open</button>
+                  <button aria-pressed={disposition === "irrelevant"} onClick={() => onQuestionChange(question, "irrelevant")} type="button">Not relevant</button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
 
       <p className="coverage-note">This is a learning estimate, not a code-scanning score. Skipped areas leave the denominator; changed evidence can lower confidence or put an area back on your frontier.</p>
     </section>

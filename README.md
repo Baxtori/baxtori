@@ -21,6 +21,9 @@ The product started as **Glimpse** and is being rebranded around
 - Fine-grained GitHub App access to repositories the user explicitly chooses
 - Recent commit activity for selected private or public repositories
 - Responsive layouts for desktop, tablet, and mobile
+- A living Repo Map with an evidence-backed comprehension frontier
+- Guided execution-path walkthroughs with an invariant at every step
+- A durable question ledger that preserves uncertainty instead of guessing
 
 ## Run it locally
 
@@ -80,6 +83,12 @@ npm run backstory:validate
 concise, validated `data/latest.json` and archives the same edition under
 `data/editions/`. Committing that edition updates the deployed app without any
 separate model API billing.
+
+The same prepass now compares changed files with each Repo Map area's evidence.
+Its `mapImpact` output names affected areas, exact commits, and unmapped files.
+The scheduled review must inspect those changes before adjusting confidence,
+freshness, concepts, walkthroughs, or questions; a filename match alone never
+rewrites repository knowledge.
 
 ## Progressive repository comprehension
 

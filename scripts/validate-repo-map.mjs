@@ -7,6 +7,17 @@ if (!map.repository?.includes("/") || !map.summary || !Array.isArray(map.areas) 
   throw new Error("Repository map needs a repository, summary, and at least one mapped area.");
 }
 
+if (!Array.isArray(map.questions)) throw new Error("Repository map needs a question ledger.");
+const areaIds = new Set(map.areas.map((area) => area.id));
+for (const question of map.questions) {
+  if (!question.id || !areaIds.has(question.areaId) || !question.question || !question.whyItMatters) {
+    throw new Error(`Invalid repository question: ${question.id}`);
+  }
+  if (!["open", "resolved"].includes(question.status) || !question.evidence?.length) {
+    throw new Error(`${question.id} lacks a valid status or evidence.`);
+  }
+}
+
 const ids = new Set();
 for (const area of map.areas) {
   if (!area.id || ids.has(area.id)) throw new Error(`Duplicate or missing area id: ${area.id}`);
@@ -17,6 +28,14 @@ for (const area of map.areas) {
     throw new Error(`${area.id} has an invalid coverage signal.`);
   }
   if (!area.evidence?.length || !area.concepts?.length) throw new Error(`${area.id} lacks evidence or surfaced concepts.`);
+  if (area.walkthrough) {
+    if (!area.walkthrough.title || !area.walkthrough.outcome || !Number.isInteger(area.walkthrough.estimatedMinutes)) {
+      throw new Error(`${area.id} has an invalid walkthrough summary.`);
+    }
+    if (!Array.isArray(area.walkthrough.steps) || area.walkthrough.steps.length < 2 || area.walkthrough.steps.some((step) =>
+      !step.label || !step.file || !step.explanation || !step.invariant
+    )) throw new Error(`${area.id} has an incomplete walkthrough.`);
+  }
 }
 
 console.log(`Repository map is valid with ${map.areas.length} areas.`);
