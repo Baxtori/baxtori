@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import latestEdition from "@/data/latest.json";
 import repositoryMap from "@/data/repo-map.json";
-import { RepoMap, type RepoArea, type RepoMapData, type UnderstandingState } from "./repo-map";
+import { RepoMap, type QuestionDisposition, type RepoArea, type RepoMapData, type RepoQuestion, type UnderstandingState } from "./repo-map";
 
 type Tone = "blue" | "green" | "rust";
 type View = "briefing" | "map" | "timeline" | "repositories";
@@ -97,6 +97,7 @@ type ActivityResponse = {
 type SavedState = {
   hideUnderstood: boolean;
   mapStates: Record<string, UnderstandingState>;
+  questionStates: Record<string, QuestionDisposition>;
   selectedRepositories: string[];
   states: Record<string, StoryState>;
   view: View;
@@ -199,6 +200,7 @@ export default function Home() {
   const [states, setStates] = useState<Record<string, StoryState>>({});
   const [hideUnderstood, setHideUnderstood] = useState(false);
   const [mapStates, setMapStates] = useState<Record<string, UnderstandingState>>({});
+  const [questionStates, setQuestionStates] = useState<Record<string, QuestionDisposition>>({});
   const [focusMode, setFocusMode] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [focusedStoryId, setFocusedStoryId] = useState<string | null>(null);
@@ -242,6 +244,7 @@ export default function Home() {
         setStates({});
         setHideUnderstood(false);
         setMapStates({});
+        setQuestionStates({});
         setView("briefing");
         setSelectedRepositories([]);
         const saved = window.localStorage.getItem(accountStorageKey) ??
@@ -253,6 +256,7 @@ export default function Home() {
           };
           if (parsed.states) setStates(parsed.states);
           if (parsed.mapStates) setMapStates(parsed.mapStates);
+          if (parsed.questionStates) setQuestionStates(parsed.questionStates);
           if (typeof parsed.hideUnderstood === "boolean") setHideUnderstood(parsed.hideUnderstood);
           if (parsed.view === "briefing" || parsed.view === "map" || parsed.view === "timeline" || parsed.view === "repositories") {
             setView(parsed.view);
@@ -270,9 +274,9 @@ export default function Home() {
 
   useEffect(() => {
     if (!hasHydrated || !accountStorageKey) return;
-    const saved: SavedState = { hideUnderstood, mapStates, selectedRepositories, states, view };
+    const saved: SavedState = { hideUnderstood, mapStates, questionStates, selectedRepositories, states, view };
     window.localStorage.setItem(accountStorageKey, JSON.stringify(saved));
-  }, [accountStorageKey, hasHydrated, hideUnderstood, mapStates, selectedRepositories, states, view]);
+  }, [accountStorageKey, hasHydrated, hideUnderstood, mapStates, questionStates, selectedRepositories, states, view]);
 
   useEffect(() => {
     if (!auth?.authenticated) return;
@@ -399,6 +403,16 @@ export default function Home() {
       skipped: `${area.name} is out of your learning denominator.`,
       understood: `${area.name} added to your understood map.`,
       unexplored: `${area.name} reset.`,
+    };
+    setNotice(messages[state]);
+  };
+
+  const updateQuestion = (question: RepoQuestion, state: QuestionDisposition) => {
+    setQuestionStates((current) => ({ ...current, [question.id]: state }));
+    const messages: Record<QuestionDisposition, string> = {
+      irrelevant: "Removed from your open questions.",
+      open: "Question kept visible for a future review.",
+      resolved: "Question marked resolved on this device.",
     };
     setNotice(messages[state]);
   };
@@ -735,7 +749,13 @@ export default function Home() {
         )}
 
         {view === "map" && (
-          <RepoMap data={REPOSITORY_MAP} onStateChange={updateUnderstanding} states={mapStates} />
+          <RepoMap
+            data={REPOSITORY_MAP}
+            onQuestionChange={updateQuestion}
+            onStateChange={updateUnderstanding}
+            questionStates={questionStates}
+            states={mapStates}
+          />
         )}
 
         {view === "timeline" && (

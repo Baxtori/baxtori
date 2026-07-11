@@ -2,6 +2,32 @@
   "repository": "teamleaderleo/glimpse",
   "generatedAt": "2026-07-11T08:30:00.000Z",
   "summary": "Baxtori is a private GitHub lens that turns selected repository activity into quiet, evidence-backed code backstories.",
+  "questions": [
+    {
+      "id": "unattended-github-access",
+      "areaId": "github-boundary",
+      "question": "Should unattended reviews eventually use a GitHub App installation token instead of depending on the local checkout?",
+      "whyItMatters": "The browser session is intentionally interactive, while the scheduled review currently gets repository access from the local machine.",
+      "status": "open",
+      "evidence": ["lib/github-auth.ts", "scripts/collect-backstory.mjs"]
+    },
+    {
+      "id": "map-source-of-truth",
+      "areaId": "rundown-engine",
+      "question": "Which map changes are safe to make deterministically, and which should always require review judgment?",
+      "whyItMatters": "Freshness can be derived from Git history, but concepts, decisions, and confidence should not be rewritten from filenames alone.",
+      "status": "open",
+      "evidence": ["scripts/lib/map-impact.mjs", "data/repo-map.json"]
+    },
+    {
+      "id": "hosting-cutover",
+      "areaId": "hosting-transition",
+      "question": "When can the legacy Sites build path be removed without losing a working fallback?",
+      "whyItMatters": "Keeping two build paths is useful during migration but becomes maintenance debt after the Vercel deployment is proven.",
+      "status": "open",
+      "evidence": ["vercel.json", ".openai/hosting.json"]
+    }
+  ],
   "areas": [
     {
       "id": "github-boundary",
@@ -20,6 +46,37 @@
         "app/api/auth/github/callback/route.ts",
         "app/api/github/repos/route.ts"
       ],
+      "walkthrough": {
+        "title": "Follow a private repository request",
+        "outcome": "See where identity becomes repository access—and where the browser is deliberately prevented from receiving the GitHub token.",
+        "estimatedMinutes": 4,
+        "steps": [
+          {
+            "label": "Start GitHub authorization",
+            "file": "app/api/auth/github/start/route.ts",
+            "explanation": "Baxtori creates a signed OAuth state value and redirects the browser to the private GitHub App.",
+            "invariant": "A callback is accepted only when it belongs to the authorization flow Baxtori started."
+          },
+          {
+            "label": "Exchange and seal the session",
+            "file": "app/api/auth/github/callback/route.ts",
+            "explanation": "The callback verifies state, exchanges the temporary code, fetches the GitHub identity, and stores the result in an encrypted HttpOnly cookie.",
+            "invariant": "The access token stays server-side and is never returned to browser JavaScript."
+          },
+          {
+            "label": "Recover server identity",
+            "file": "lib/github-auth.ts",
+            "explanation": "Authenticated route handlers decrypt the cookie, validate its lifetime, and refresh GitHub access when required.",
+            "invariant": "Every repository request begins from a valid, unexpired server session."
+          },
+          {
+            "label": "Ask GitHub for the allowed set",
+            "file": "app/api/github/repos/route.ts",
+            "explanation": "The server uses the recovered credential to list repositories visible to the signed-in user and the app installation.",
+            "invariant": "Private repositories appear only when access was explicitly granted through GitHub."
+          }
+        ]
+      },
       "concepts": ["OAuth callback integrity", "encrypted HttpOnly session", "least-privilege repository access"]
     },
     {
