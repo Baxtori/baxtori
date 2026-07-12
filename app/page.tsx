@@ -767,40 +767,45 @@ export default function Home() {
                         <p className="story-brief">{story.brief}</p>
 
                         {state.expanded && (
-                          <div className="backstory-panel">
-                            <div>
-                              <span>What changed</span>
-                              <p>{story.whatChanged}</p>
-                            </div>
-                            <div>
-                              <span>Why it matters</span>
-                              <p>{story.whyItMatters}</p>
-                            </div>
-                            <div>
-                              <span>Check this</span>
-                              <p>{story.verify}</p>
-                            </div>
+                          <>
                             {story.repository && story.codeEvidence?.length ? (
                               <StoryCode evidence={story.codeEvidence} repository={story.repository} storyId={story.id} />
                             ) : null}
-                            <details>
-                              <summary>Tradeoff and evidence</summary>
-                              <p>{story.tradeoff}</p>
-                              <strong>{story.evidence}</strong>
-                              {story.commits?.length ? (
-                                <div className="commit-list" aria-label="Supporting commits">
-                                  {story.commits.map((commit) => (
-                                    <a href={commit.url} key={commit.sha} rel="noreferrer" target="_blank">
-                                      {commit.sha} ↗
-                                    </a>
-                                  ))}
+                            <details className="story-analysis">
+                              <summary>Explanation, verification, and evidence</summary>
+                              <div className="backstory-panel">
+                                <div>
+                                  <span>What changed</span>
+                                  <p>{story.whatChanged}</p>
                                 </div>
-                              ) : null}
-                              <div className="file-list">
-                                {story.files.map((file) => <code key={file}>{file}</code>)}
+                                <div>
+                                  <span>Why it matters</span>
+                                  <p>{story.whyItMatters}</p>
+                                </div>
+                                <div>
+                                  <span>Check this</span>
+                                  <p>{story.verify}</p>
+                                </div>
+                                <section aria-label="Tradeoff and supporting evidence" className="story-evidence">
+                                  <span>Tradeoff</span>
+                                  <p>{story.tradeoff}</p>
+                                  <strong>{story.evidence}</strong>
+                                  {story.commits?.length ? (
+                                    <div className="commit-list" aria-label="Supporting commits">
+                                      {story.commits.map((commit) => (
+                                        <a href={commit.url} key={commit.sha} rel="noreferrer" target="_blank">
+                                          {commit.sha} ↗
+                                        </a>
+                                      ))}
+                                    </div>
+                                  ) : null}
+                                  <div className="file-list">
+                                    {story.files.map((file) => <code key={file}>{file}</code>)}
+                                  </div>
+                                </section>
                               </div>
                             </details>
-                          </div>
+                          </>
                         )}
 
                         <div className="story-actions">

@@ -89,10 +89,11 @@ npm run backstory:validate
 `baxtori.sources.json` defines the GitHub repositories and default branches in scope.
 Its local paths are fetch caches only: collection fetches each remote and reads
 `origin/<branch>`, so dirty worktrees and unpushed commits never enter a rundown.
-Published stories also retain one to four exact code ranges in `codeEvidence`.
-The reader fetches only those lines through the authenticated `/api/github/code`
-route, so GitHub credentials remain server-side and every excerpt stays anchored
-to the reviewed commit. The full file is always one link away.
+Published stories also retain one to four exact code ranges in `codeEvidence`,
+including the reviewed head and base commits. The reader opens on the matching
+unified diff through authenticated GitHub routes, with the current implementation
+one toggle away. GitHub credentials remain server-side and every line stays
+anchored to an exact comparison. The full file and comparison remain one link away.
 `data/review-scope.json` is the safe, client-visible half of that configuration:
 it names the scheduled repositories, priorities, map coverage, review cursor, and
 schedule without exposing local checkout paths. `npm run scope:validate` prevents

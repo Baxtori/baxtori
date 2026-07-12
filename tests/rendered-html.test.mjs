@@ -35,12 +35,13 @@ test("server-renders the Baxtori briefing", async () => {
 });
 
 test("keeps GitHub credentials in an encrypted server session", async () => {
-  const [page, authLibrary, callbackRoute, repositoriesRoute, activityRoute, envExample, hosting] = await Promise.all([
+  const [page, authLibrary, callbackRoute, repositoriesRoute, activityRoute, diffRoute, envExample, hosting] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../lib/github-auth.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/auth/github/callback/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/github/repos/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/github/activity/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/github/diff/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../.env.example", import.meta.url), "utf8"),
     readFile(new URL("../.openai/hosting.json", import.meta.url), "utf8"),
   ]);
@@ -51,6 +52,7 @@ test("keeps GitHub credentials in an encrypted server session", async () => {
   assert.match(callbackRoute, /sealSession/);
   assert.match(repositoriesRoute, /getGitHubSession/);
   assert.match(activityRoute, /getGitHubSession/);
+  assert.match(diffRoute, /getGitHubSession/);
   assert.match(envExample, /^GITHUB_CLIENT_ID=$/m);
   assert.match(envExample, /^GITHUB_CLIENT_SECRET=$/m);
   assert.match(envExample, /^GITHUB_APP_SLUG=$/m);
@@ -72,4 +74,7 @@ test("requires GitHub authentication before repository access", async () => {
 
   const repositoriesResponse = await render("/api/github/repos");
   assert.equal(repositoriesResponse.status, 401);
+
+  const diffResponse = await render("/api/github/diff");
+  assert.equal(diffResponse.status, 401);
 });
