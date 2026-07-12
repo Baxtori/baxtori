@@ -63,7 +63,7 @@ export function RepositoryMaps({
             <span className="eyebrow">{activeSource?.mapStatus === "empty" ? "Empty repository" : "Comprehension pending"}</span>
             <h2>{activeSource?.fullName}</h2>
             <p>{activeSource?.mapStatus === "empty"
-              ? "There are no commits or files to study yet. Baxtori will keep this quiet until real code exists."
+              ? "There are no commits or files to study yet. This map will begin when code exists."
               : "This repository is scheduled, but it does not have enough reviewed evidence for a trustworthy map yet."}</p>
             <strong>No invented coverage.</strong>
           </div>

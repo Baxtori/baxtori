@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { highlightCodeLines } from "@/lib/code-highlight";
 
 export type CodeEvidence = {
   commit: string;
@@ -29,10 +30,12 @@ export function StoryCode({ evidence, repository, storyId }: StoryCodeProps) {
   const [response, setResponse] = useState<CodeResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [fullScreen, setFullScreen] = useState(false);
   const active = evidence[activeIndex];
   const headingId = `code-heading-${storyId}`;
   const panelId = `code-panel-${storyId}`;
   const activeTabId = `code-tab-${storyId}-${activeIndex}`;
+  const highlightedLines = response?.lines ? highlightCodeLines(response.lines, active?.language) : [];
 
   useEffect(() => {
     if (!active) return;
@@ -64,6 +67,20 @@ export function StoryCode({ evidence, repository, storyId }: StoryCodeProps) {
     return () => controller.abort();
   }, [active, repository]);
 
+  useEffect(() => {
+    if (!fullScreen) return;
+    const previousOverflow = document.documentElement.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFullScreen(false);
+    };
+    document.documentElement.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.documentElement.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [fullScreen]);
+
   if (!active) return null;
 
   const copyExcerpt = async () => {
@@ -74,13 +91,18 @@ export function StoryCode({ evidence, repository, storyId }: StoryCodeProps) {
   };
 
   return (
-    <section className="story-code" aria-labelledby={headingId}>
+    <section className={`story-code ${fullScreen ? "is-fullscreen" : ""}`} aria-labelledby={headingId}>
       <header className="story-code-heading">
         <div>
           <span>Read the actual code</span>
           <h4 id={headingId}>The explanation is attached to exact lines.</h4>
         </div>
-        <small>{active.commit.slice(0, 7)} · reviewed commit</small>
+        <div className="code-heading-actions">
+          <small>{active.commit.slice(0, 7)} · reviewed commit</small>
+          <button aria-pressed={fullScreen} onClick={() => setFullScreen((current) => !current)} type="button">
+            {fullScreen ? "Done" : "Expand"}
+          </button>
+        </div>
       </header>
 
       {evidence.length > 1 && (
@@ -114,12 +136,16 @@ export function StoryCode({ evidence, repository, storyId }: StoryCodeProps) {
         <div className="code-frame" aria-busy={loading}>
           {loading && <div className="code-state">Loading exact lines from GitHub…</div>}
           {!loading && response?.error && <div className="code-state is-error">{response.error}</div>}
-          {!loading && response?.lines && (
+          {!loading && highlightedLines.length > 0 && (
             <pre aria-label={`${active.path}, lines ${active.startLine} through ${active.endLine}`} data-language={active.language}>
-              {response.lines.map((line) => (
+              {highlightedLines.map((line) => (
                 <span className="code-line" key={line.number}>
                   <span aria-hidden="true" className="code-line-number">{line.number}</span>
-                  <code>{line.text || " "}</code>
+                  <code>
+                    {line.tokens.length ? line.tokens.map((token, index) => (
+                      <span className={`syntax-${token.kind}`} key={`${line.number}-${index}`}>{token.text}</span>
+                    )) : " "}
+                  </code>
                 </span>
               ))}
             </pre>
