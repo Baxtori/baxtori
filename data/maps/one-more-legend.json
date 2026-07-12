@@ -1,0 +1,170 @@
+{
+  "repository": "teamleaderleo/one-more-legend",
+  "generatedAt": "2026-07-11T08:20:59.000Z",
+  "summary": "One More Legend is a deterministic text roguelite whose headless engine powers a browser game, simulation harnesses, and a stateless ChatGPT MCP app.",
+  "reviews": [
+    {
+      "id": "review-2026-07-12-initial-map",
+      "reviewedAt": "2026-07-12T07:20:00.000+08:00",
+      "summary": "Initial map established the deterministic engine boundary, thin clients, balance harnesses, MCP replay model, and dual-surface deployment.",
+      "affectedAreaIds": ["deterministic-engine", "browser-client", "balance-harnesses", "mcp-app", "build-and-deploy", "pressure-telemetry"],
+      "newAreaIds": ["deterministic-engine", "browser-client", "balance-harnesses", "mcp-app", "build-and-deploy", "pressure-telemetry"],
+      "unmappedFilesReviewed": [],
+      "throughCommit": {
+        "sha": "a58fdc2",
+        "shortSha": "a58fdc2",
+        "subject": "Differentiate roads and improve decision feedback",
+        "url": "https://github.com/teamleaderleo/one-more-legend/commit/a58fdc2"
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "first-class-fight-result",
+      "areaId": "pressure-telemetry",
+      "question": "When should combat emit a first-class FightResult instead of asking telemetry to reconstruct one from prose logs?",
+      "whyItMatters": "The current parser is observational and intentionally non-invasive, but browser and MCP battle reports need a stable engine contract.",
+      "status": "open",
+      "evidence": ["pressure-report.js", "src/engine.ts", "HANDOFF.md"]
+    },
+    {
+      "id": "run-token-ruleset-version",
+      "areaId": "mcp-app",
+      "question": "How should run tokens identify the exact engine ruleset once multiple deployed versions can coexist?",
+      "whyItMatters": "A token stores seed and choices rather than state, so replay correctness depends on reconstructing under compatible rules.",
+      "status": "open",
+      "evidence": ["mcp-app/src/game.ts", "mcp-app/src/server.ts"]
+    },
+    {
+      "id": "generated-artifact-boundary",
+      "areaId": "build-and-deploy",
+      "question": "Which generated game artifacts should remain committed, and which should be deployment-only outputs?",
+      "whyItMatters": "Keeping the game playable as a single checked-in file is useful, but duplicated generated surfaces increase synchronization risk.",
+      "status": "open",
+      "evidence": ["build.js", "index.html", "public/index.html", "mcp-app/dist/"]
+    }
+  ],
+  "areas": [
+    {
+      "id": "deterministic-engine",
+      "name": "Deterministic game engine",
+      "kind": "Core system",
+      "purpose": "Owns run state, choices, combat, gains, progression, and seeded randomness without depending on a browser, timer, or external service.",
+      "importance": 5,
+      "breadth": 86,
+      "depth": 58,
+      "confidence": 94,
+      "freshness": 98,
+      "changed": "This week",
+      "verdict": "Excellent architectural center; the explicit replay invariant makes every client and simulation easier to trust",
+      "evidence": ["src/engine.ts", "engine.js", "HANDOFF.md"],
+      "walkthrough": {
+        "title": "Follow one choice through a reproducible run",
+        "outcome": "See how the same seed and choice history drive the browser, bots, and ChatGPT without copying game rules into any client.",
+        "estimatedMinutes": 5,
+        "steps": [
+          {
+            "label": "Create the complete initial state",
+            "file": "src/engine.ts",
+            "explanation": "OML.newRun builds a run from a seed, road, and explicit options while storing the RNG state inside GameState.",
+            "invariant": "No engine outcome depends on DOM state, timers, or Math.random."
+          },
+          {
+            "label": "Expose only legal decisions",
+            "file": "src/engine.ts",
+            "explanation": "OML.getOptions derives the numbered choices for the current phase, including the stable ordering consumed by bots.",
+            "invariant": "Every client receives the same options for the same reconstructed state."
+          },
+          {
+            "label": "Advance and remember the choice",
+            "file": "src/engine.ts",
+            "explanation": "OML.step resolves one option through the shared rules and appends its zero-based index to the run history.",
+            "invariant": "Replaying the recorded choices under the same rules reproduces the same log and score."
+          },
+          {
+            "label": "Prove replay outside the UI",
+            "file": "sim.js",
+            "explanation": "The determinism check creates a second run from the original seed and choices, then compares its log and score.",
+            "invariant": "A rules change that breaks reproducibility fails before balance results are trusted."
+          }
+        ]
+      },
+      "concepts": ["seeded state machine", "choice-history replay", "headless domain core", "stable option ordering"]
+    },
+    {
+      "id": "browser-client",
+      "name": "Browser decision client",
+      "kind": "Experience",
+      "purpose": "Renders the hero sheet, odds, decisions, chronicle, persistent Hall, and mobile-first feedback while delegating game rules to the engine.",
+      "importance": 4,
+      "breadth": 72,
+      "depth": 42,
+      "confidence": 88,
+      "freshness": 97,
+      "changed": "This week",
+      "verdict": "Thin in rules and rich in feedback—the right trade for this game",
+      "evidence": ["src/ui.ts", "index.template.html", "manifest.webmanifest"],
+      "concepts": ["thin client", "decision-time odds", "local run legacy", "progressive combat feedback"]
+    },
+    {
+      "id": "balance-harnesses",
+      "name": "Simulation and balance harnesses",
+      "kind": "Quality system",
+      "purpose": "Replays thousands of deterministic runs through named bot strategies to measure win bands, dead turns, techniques, and Long Road outcomes before shipping rule changes.",
+      "importance": 5,
+      "breadth": 78,
+      "depth": 60,
+      "confidence": 93,
+      "freshness": 95,
+      "changed": "This week",
+      "verdict": "Unusually strong for a small game; balance intent is executable instead of anecdotal",
+      "evidence": ["sim.js", "pressure-sim.js", "pressure-report.test.js", ".github/workflows/pressure-report.yml"],
+      "concepts": ["deterministic Monte Carlo", "strategy baselines", "dead-turn metric", "target-priority audit"]
+    },
+    {
+      "id": "mcp-app",
+      "name": "ChatGPT MCP game surface",
+      "kind": "Integration",
+      "purpose": "Exposes start, inspect, and choose tools plus a live widget while reconstructing runs from bounded tokens instead of maintaining server sessions.",
+      "importance": 4,
+      "breadth": 70,
+      "depth": 46,
+      "confidence": 89,
+      "freshness": 92,
+      "changed": "This week",
+      "verdict": "Elegant stateless adapter; engine-version compatibility is the main boundary to watch",
+      "evidence": ["mcp-app/src/game.ts", "mcp-app/src/server.ts", "mcp-app/src/widget.ts", "api/mcp.js"],
+      "concepts": ["stateless run token", "choice replay", "structured tool output", "MCP Apps widget"]
+    },
+    {
+      "id": "build-and-deploy",
+      "name": "Dual-surface build and deployment",
+      "kind": "Operations",
+      "purpose": "Compiles one engine into a self-contained browser game and a bundled MCP service, then deploys both from one Vercel project.",
+      "importance": 3,
+      "breadth": 74,
+      "depth": 38,
+      "confidence": 86,
+      "freshness": 91,
+      "changed": "This week",
+      "verdict": "Pragmatic and legible, with deliberate generated-artifact duplication",
+      "evidence": ["build.js", "index.template.html", "vercel.json", "mcp-app/scripts/build.mjs", ".github/workflows/mcp-app.yml"],
+      "concepts": ["single-file browser build", "shared engine artifact", "Vercel rewrite", "generated deploy surface"]
+    },
+    {
+      "id": "pressure-telemetry",
+      "name": "Fight pressure telemetry",
+      "kind": "Emerging system",
+      "purpose": "Derives rounds, health pressure, damage, morale, techniques, and observational grades from combat logs without changing gameplay behavior.",
+      "importance": 4,
+      "breadth": 56,
+      "depth": 44,
+      "confidence": 84,
+      "freshness": 96,
+      "changed": "This week",
+      "verdict": "Useful first slice; intentionally transitional until FightResult becomes an engine contract",
+      "evidence": ["pressure-report.js", "pressure-report.test.js", "pressure-sim.js", "HANDOFF.md"],
+      "concepts": ["observational telemetry", "log-derived schema", "combat grade", "non-invasive instrumentation"]
+    }
+  ]
+}

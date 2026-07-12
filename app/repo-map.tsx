@@ -114,8 +114,9 @@ function adjustedCoverage(area: RepoArea, state: UnderstandingState) {
 
 export function RepoMap({ data, onQuestionChange, onStateChange, questionStates, states }: RepoMapProps) {
   const [studyBudget, setStudyBudget] = useState<(typeof STUDY_BUDGETS)[number]>(15);
-  const stateFor = (area: RepoArea) => states[area.id] ?? "unexplored";
-  const questionStateFor = (question: RepoQuestion) => questionStates[question.id] ?? question.status;
+  const acceptsLegacyState = data.repository === "teamleaderleo/glimpse";
+  const stateFor = (area: RepoArea) => states[`${data.repository}:${area.id}`] ?? (acceptsLegacyState ? states[area.id] : undefined) ?? "unexplored";
+  const questionStateFor = (question: RepoQuestion) => questionStates[`${data.repository}:${question.id}`] ?? (acceptsLegacyState ? questionStates[question.id] : undefined) ?? question.status;
   const includedAreas = data.areas.filter((area) => stateFor(area) !== "skipped");
   const totalWeight = includedAreas.reduce((total, area) => total + area.importance, 0);
   const coverage = totalWeight
@@ -208,7 +209,11 @@ export function RepoMap({ data, onQuestionChange, onStateChange, questionStates,
             </div>
           </div>
           <div className="review-pulse-proof">
-            <strong>{latestReview.newAreaIds.length} new area · {latestReview.unmappedFilesReviewed.length} files classified</strong>
+            <strong>
+              {latestReview.newAreaIds.length} new {latestReview.newAreaIds.length === 1 ? "area" : "areas"} · {latestReview.unmappedFilesReviewed.length
+                ? `${latestReview.unmappedFilesReviewed.length} files classified`
+                : "evidence baseline"}
+            </strong>
             <a href={latestReview.throughCommit.url} rel="noreferrer" target="_blank">Through {latestReview.throughCommit.shortSha} ↗</a>
             <details>
               <summary>Review history</summary>
@@ -297,7 +302,7 @@ export function RepoMap({ data, onQuestionChange, onStateChange, questionStates,
                     <p>{area.walkthrough.outcome}</p>
                     <ol>
                       {area.walkthrough.steps.map((step, index) => (
-                        <li key={step.file}>
+                        <li key={step.label}>
                           <span aria-hidden="true">{index + 1}</span>
                           <div>
                             <strong>{step.label}</strong>
