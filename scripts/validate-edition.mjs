@@ -30,8 +30,9 @@ for (const story of edition.stories) {
   }
   for (const excerpt of story.codeEvidence) {
     const validCommit = /^[0-9a-f]{7,40}$/i.test(excerpt.commit) && story.commits.some((commit) => commit.sha.startsWith(excerpt.commit) || excerpt.commit.startsWith(commit.sha));
+    const validBaseCommit = /^[0-9a-f]{7,40}$/i.test(excerpt.baseCommit) && excerpt.baseCommit !== excerpt.commit;
     const validRange = Number.isInteger(excerpt.startLine) && Number.isInteger(excerpt.endLine) && excerpt.startLine >= 1 && excerpt.endLine >= excerpt.startLine && excerpt.endLine - excerpt.startLine < 160;
-    if (!excerpt.title || !excerpt.why || !excerpt.path || !excerpt.language || !validCommit || !validRange) {
+    if (!excerpt.title || !excerpt.why || !excerpt.path || !excerpt.language || !validBaseCommit || !validCommit || !validRange) {
       throw new Error(`${story.id} has invalid code evidence.`);
     }
   }

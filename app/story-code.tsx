@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { highlightCodeLines } from "@/lib/code-highlight";
+import type { DiffLine } from "@/lib/code-diff";
+import { highlightCodeLines, type SyntaxToken } from "@/lib/code-highlight";
 
 export type CodeEvidence = {
+  baseCommit: string;
   commit: string;
   endLine: number;
   language: string;
@@ -19,15 +21,31 @@ type CodeResponse = {
   sourceUrl?: string;
 };
 
+type DiffResponse = {
+  additions?: number;
+  deletions?: number;
+  error?: string;
+  lines?: DiffLine[];
+  sourceUrl?: string;
+};
+
+type HighlightedDiffLine = DiffLine & {
+  tokens: SyntaxToken[];
+};
+
 type StoryCodeProps = {
   evidence: CodeEvidence[];
   repository: string;
   storyId: string;
 };
 
+type ViewMode = "current" | "diff";
+
 export function StoryCode({ evidence, repository, storyId }: StoryCodeProps) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [response, setResponse] = useState<CodeResponse | null>(null);
+  const [codeResponse, setCodeResponse] = useState<CodeResponse | null>(null);
+  const [diffResponse, setDiffResponse] = useState<DiffResponse | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("diff");
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [fullScreen, setFullScreen] = useState(false);
@@ -35,31 +53,60 @@ export function StoryCode({ evidence, repository, storyId }: StoryCodeProps) {
   const headingId = `code-heading-${storyId}`;
   const panelId = `code-panel-${storyId}`;
   const activeTabId = `code-tab-${storyId}-${activeIndex}`;
-  const highlightedLines = response?.lines ? highlightCodeLines(response.lines, active?.language) : [];
+  const highlightedLines = codeResponse?.lines ? highlightCodeLines(codeResponse.lines, active?.language) : [];
+  const highlightedDiffLines: HighlightedDiffLine[] = diffResponse?.lines?.map((line, index) => ({
+    ...line,
+    tokens: line.kind === "hunk" || line.kind === "meta"
+      ? []
+      : highlightCodeLines([{ number: index, text: line.text }], active?.language)[0].tokens,
+  })) ?? [];
 
   useEffect(() => {
     if (!active) return;
     const controller = new AbortController();
-    const query = new URLSearchParams({
+    const codeQuery = new URLSearchParams({
       commit: active.commit,
       end: String(active.endLine),
       path: active.path,
       repo: repository,
       start: String(active.startLine),
     });
+    const diffQuery = new URLSearchParams({
+      base: active.baseCommit,
+      end: String(active.endLine),
+      head: active.commit,
+      path: active.path,
+      repo: repository,
+      start: String(active.startLine),
+    });
     queueMicrotask(() => {
       setLoading(true);
-      setResponse(null);
+      setCodeResponse(null);
+      setDiffResponse(null);
+      setViewMode("diff");
       setCopied(false);
     });
-    fetch(`/api/github/code?${query}`, { signal: controller.signal })
-      .then(async (result) => {
-        const payload = (await result.json()) as CodeResponse;
-        if (!result.ok) throw new Error(payload.error ?? "This code excerpt could not be loaded.");
-        setResponse(payload);
+
+    Promise.all([
+      fetch(`/api/github/code?${codeQuery}`, { signal: controller.signal }),
+      fetch(`/api/github/diff?${diffQuery}`, { signal: controller.signal }),
+    ])
+      .then(async ([codeResult, diffResult]) => {
+        const [codePayload, diffPayload] = await Promise.all([
+          codeResult.json() as Promise<CodeResponse>,
+          diffResult.json() as Promise<DiffResponse>,
+        ]);
+        if (controller.signal.aborted) return;
+        setCodeResponse(codeResult.ok ? codePayload : { error: codePayload.error ?? "This code excerpt could not be loaded." });
+        setDiffResponse(diffResult.ok ? diffPayload : { error: diffPayload.error ?? "This diff could not be loaded." });
+        if (!diffResult.ok) setViewMode("current");
       })
       .catch((error: Error) => {
-        if (error.name !== "AbortError") setResponse({ error: error.message });
+        if (error.name !== "AbortError") {
+          setCodeResponse({ error: error.message });
+          setDiffResponse({ error: error.message });
+          setViewMode("current");
+        }
       })
       .finally(() => {
         if (!controller.signal.aborted) setLoading(false);
@@ -83,22 +130,36 @@ export function StoryCode({ evidence, repository, storyId }: StoryCodeProps) {
 
   if (!active) return null;
 
-  const copyExcerpt = async () => {
-    if (!response?.lines) return;
-    const source = response.lines.map((line) => line.text).join("\n");
-    await navigator.clipboard.writeText(`${active.path}:${active.startLine}-${active.endLine}\n\n${source}`);
+  const copyVisibleCode = async () => {
+    let source: string;
+    let label: string;
+    if (viewMode === "diff" && diffResponse?.lines) {
+      const markers = { addition: "+", context: " ", deletion: "-", hunk: "", meta: "" } as const;
+      source = diffResponse.lines.map((line) => `${markers[line.kind]}${line.text}`).join("\n");
+      label = `${active.path} · ${active.baseCommit.slice(0, 7)}...${active.commit.slice(0, 7)}`;
+    } else if (codeResponse?.lines) {
+      source = codeResponse.lines.map((line) => line.text).join("\n");
+      label = `${active.path}:${active.startLine}-${active.endLine}`;
+    } else {
+      return;
+    }
+    await navigator.clipboard.writeText(`${label}\n\n${source}`);
     setCopied(true);
   };
+
+  const visibleSourceUrl = viewMode === "diff" ? diffResponse?.sourceUrl : codeResponse?.sourceUrl;
+  const visibleError = viewMode === "diff" ? diffResponse?.error : codeResponse?.error;
+  const hasVisibleCode = viewMode === "diff" ? highlightedDiffLines.length > 0 : highlightedLines.length > 0;
 
   return (
     <section className={`story-code ${fullScreen ? "is-fullscreen" : ""}`} aria-labelledby={headingId}>
       <header className="story-code-heading">
         <div>
-          <span>Read the actual code</span>
-          <h4 id={headingId}>The explanation is attached to exact lines.</h4>
+          <span>See what changed</span>
+          <h4 id={headingId}>The diff comes first. Current code is one tap away.</h4>
         </div>
         <div className="code-heading-actions">
-          <small>{active.commit.slice(0, 7)} · reviewed commit</small>
+          <small>{active.baseCommit.slice(0, 7)} → {active.commit.slice(0, 7)}</small>
           <button aria-pressed={fullScreen} onClick={() => setFullScreen((current) => !current)} type="button">
             {fullScreen ? "Done" : "Expand"}
           </button>
@@ -125,6 +186,14 @@ export function StoryCode({ evidence, repository, storyId }: StoryCodeProps) {
       )}
 
       <div aria-labelledby={evidence.length > 1 ? activeTabId : headingId} id={panelId} role="tabpanel">
+        <div className="code-view-bar">
+          <div aria-label="Code view" className="code-view-toggle">
+            <button aria-pressed={viewMode === "diff"} disabled={loading || !diffResponse?.lines} onClick={() => { setViewMode("diff"); setCopied(false); }} type="button">Change</button>
+            <button aria-pressed={viewMode === "current"} disabled={loading || !codeResponse?.lines} onClick={() => { setViewMode("current"); setCopied(false); }} type="button">Current code</button>
+          </div>
+          {diffResponse?.lines && <span><strong>+{diffResponse.additions}</strong> <em>−{diffResponse.deletions}</em></span>}
+        </div>
+
         <div className="code-context">
           <div>
             <strong>{active.title}</strong>
@@ -134,18 +203,30 @@ export function StoryCode({ evidence, repository, storyId }: StoryCodeProps) {
         </div>
 
         <div className="code-frame" aria-busy={loading}>
-          {loading && <div className="code-state">Loading exact lines from GitHub…</div>}
-          {!loading && response?.error && <div className="code-state is-error">{response.error}</div>}
-          {!loading && highlightedLines.length > 0 && (
+          {loading && <div className="code-state">Loading the reviewed change from GitHub…</div>}
+          {!loading && visibleError && <div className="code-state is-error">{visibleError}</div>}
+          {!loading && viewMode === "diff" && highlightedDiffLines.length > 0 && (
+            <pre aria-label={`${active.path}, changes near lines ${active.startLine} through ${active.endLine}`} className="code-diff" data-language={active.language}>
+              {highlightedDiffLines.map((line, lineIndex) => line.kind === "hunk" || line.kind === "meta" ? (
+                <span className={`diff-line is-${line.kind}`} key={`${line.kind}-${lineIndex}`}>
+                  <span className="diff-hunk">{line.text}</span>
+                </span>
+              ) : (
+                <span className={`diff-line is-${line.kind}`} key={`${line.kind}-${line.oldNumber}-${line.newNumber}-${lineIndex}`}>
+                  <span aria-hidden="true" className="diff-marker">{line.kind === "addition" ? "+" : line.kind === "deletion" ? "−" : " "}</span>
+                  <span aria-hidden="true" className="diff-number">{line.oldNumber ?? ""}</span>
+                  <span aria-hidden="true" className="diff-number">{line.newNumber ?? ""}</span>
+                  <code>{line.tokens.length ? line.tokens.map((token, tokenIndex) => <span className={`syntax-${token.kind}`} key={`${lineIndex}-${tokenIndex}`}>{token.text}</span>) : " "}</code>
+                </span>
+              ))}
+            </pre>
+          )}
+          {!loading && viewMode === "current" && highlightedLines.length > 0 && (
             <pre aria-label={`${active.path}, lines ${active.startLine} through ${active.endLine}`} data-language={active.language}>
               {highlightedLines.map((line) => (
                 <span className="code-line" key={line.number}>
                   <span aria-hidden="true" className="code-line-number">{line.number}</span>
-                  <code>
-                    {line.tokens.length ? line.tokens.map((token, index) => (
-                      <span className={`syntax-${token.kind}`} key={`${line.number}-${index}`}>{token.text}</span>
-                    )) : " "}
-                  </code>
+                  <code>{line.tokens.length ? line.tokens.map((token, tokenIndex) => <span className={`syntax-${token.kind}`} key={`${line.number}-${tokenIndex}`}>{token.text}</span>) : " "}</code>
                 </span>
               ))}
             </pre>
@@ -153,8 +234,8 @@ export function StoryCode({ evidence, repository, storyId }: StoryCodeProps) {
         </div>
 
         <footer className="code-actions">
-          <button disabled={!response?.lines} onClick={() => void copyExcerpt()} type="button">{copied ? "Copied ✓" : "Copy excerpt"}</button>
-          {response?.sourceUrl && <a href={response.sourceUrl} rel="noreferrer" target="_blank">Open full file on GitHub ↗</a>}
+          <button disabled={!hasVisibleCode} onClick={() => void copyVisibleCode()} type="button">{copied ? "Copied ✓" : viewMode === "diff" ? "Copy diff" : "Copy excerpt"}</button>
+          {visibleSourceUrl && <a href={visibleSourceUrl} rel="noreferrer" target="_blank">{viewMode === "diff" ? "Open comparison on GitHub ↗" : "Open full file on GitHub ↗"}</a>}
         </footer>
       </div>
     </section>
