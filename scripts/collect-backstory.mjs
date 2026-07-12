@@ -3,6 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildMapImpacts } from "./lib/map-impact.mjs";
+import { sourceReviewRef } from "./lib/source-ref.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const config = JSON.parse(await readFile(resolve(root, "baxtori.sources.json"), "utf8"));
@@ -23,25 +24,35 @@ function git(repositoryPath, args) {
 function collectRepository(source) {
   const repositoryPath = resolve(root, source.path);
   try {
+    const { branch, reviewRef } = sourceReviewRef(source);
+    let fetchError = null;
     try {
-      git(repositoryPath, ["rev-parse", "--verify", "HEAD"]);
+      git(repositoryPath, ["fetch", "--quiet", "origin", branch]);
+    } catch (error) {
+      fetchError = error instanceof Error ? error.message.split("\n")[0] : "GitHub fetch failed.";
+    }
+    try {
+      git(repositoryPath, ["rev-parse", "--verify", reviewRef]);
     } catch {
       return {
         additions: 0,
         commits: [],
         deletions: 0,
         empty: true,
-        error: null,
+        error: fetchError ?? `GitHub branch origin/${branch} is unavailable.`,
+        fetchError,
         fullName: source.fullName,
         name: source.name,
         repositoryPath,
         routineOnly: false,
+        sourceMode: "github-origin",
         testFiles: [],
         touchedFiles: [],
       };
     }
     const commits = git(repositoryPath, [
       "log",
+      reviewRef,
       `--since=${since}`,
       "--no-merges",
       "--date=iso-strict",
@@ -86,10 +97,13 @@ function collectRepository(source) {
       commits: entries,
       deletions,
       error: null,
+      fetchError,
       fullName: source.fullName,
+      headSha: git(repositoryPath, ["rev-parse", reviewRef]),
       name: source.name,
       repositoryPath,
       routineOnly,
+      sourceMode: "github-origin",
       testFiles,
       touchedFiles,
     };
@@ -97,9 +111,11 @@ function collectRepository(source) {
     return {
       commits: [],
       error: error instanceof Error ? error.message.split("\n")[0] : "Repository could not be read.",
+      fetchError: null,
       fullName: source.fullName,
       name: source.name,
       repositoryPath,
+      sourceMode: "github-origin",
       touchedFiles: [],
     };
   }

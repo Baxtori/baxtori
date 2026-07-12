@@ -27,6 +27,9 @@ for (const repository of scope.repositories) {
   scheduled.add(repository.fullName);
 }
 
+if (sources.repositories.some((repository) => !repository.path || !repository.branch)) {
+  throw new Error("Every collector source needs a local cache path and explicit GitHub branch.");
+}
 const configured = new Set(sources.repositories.map((repository) => repository.fullName));
 const missingFromCollector = [...scheduled].filter((repository) => !configured.has(repository));
 const missingFromScope = [...configured].filter((repository) => !scheduled.has(repository));

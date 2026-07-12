@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-12T07:20:00.000+08:00",
+  "updatedAt": "2026-07-12T20:10:00.000+08:00",
   "lastReviewedAt": "2026-07-11T00:00:00.000Z",
   "schedule": "Mondays at 9:00 AM",
   "windowDays": 7,
@@ -14,7 +14,7 @@
       "fullName": "teamleaderleo/ourchival",
       "name": "ourchival",
       "priority": "normal",
-      "mapStatus": "empty"
+      "mapStatus": "mapped"
     },
     {
       "fullName": "teamleaderleo/one-more-legend",

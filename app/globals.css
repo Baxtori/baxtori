@@ -573,6 +573,7 @@ kbd {
 }
 
 .story.is-understood { opacity: 0.68; }
+.story.is-locked { box-shadow: inset 3px 0 var(--green); opacity: 1; }
 
 .story-index {
   display: grid;
@@ -657,6 +658,30 @@ kbd {
   margin-left: auto;
   border-color: transparent;
 }
+.story-actions button:disabled { cursor: not-allowed; opacity: 0.42; }
+
+.revision-panel {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.65fr) minmax(10rem, 0.35fr);
+  gap: 0.85rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--ink);
+  color: var(--paper-light);
+}
+.revision-panel > div:first-child { grid-column: 1 / -1; }
+.revision-panel > div:first-child span { color: #a8c8b3; font-size: 0.59rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.revision-panel > div:first-child strong { display: block; margin-top: 0.3rem; font-family: var(--serif); font-size: 1.15rem; font-weight: 500; }
+.revision-panel > div:first-child p { margin: 0.25rem 0 0; color: #b9c8bf; font-family: var(--serif); font-size: 0.75rem; }
+.revision-panel label { display: grid; align-content: start; gap: 0.35rem; color: #a8c8b3; font-size: 0.62rem; font-weight: 760; }
+.revision-panel select,
+.revision-panel textarea { width: 100%; padding: 0.55rem; color: var(--paper-light); background: rgb(255 255 255 / 8%); border: 1px solid rgb(255 255 255 / 22%); border-radius: 0; font: inherit; }
+.revision-panel textarea { min-height: 5.2rem; resize: vertical; font-family: var(--serif); font-size: 0.78rem; line-height: 1.35; }
+.revision-panel option { color: var(--ink); background: var(--paper); }
+.revision-actions { grid-column: 1 / -1; display: flex; gap: 0.4rem; }
+.revision-actions button { min-height: 2.4rem; color: #b9c8bf; background: transparent; border: 1px solid rgb(255 255 255 / 22%); cursor: pointer; font-size: 0.67rem; font-weight: 760; }
+.revision-actions button.primary { color: var(--ink); background: var(--paper); border-color: var(--paper); }
+.review-requested { margin: 0.65rem 0 0; color: var(--green); font-size: 0.64rem; font-weight: 740; }
 
 .story-verdict {
   margin: 0.65rem 0 0;
@@ -1691,6 +1716,9 @@ kbd {
 
   .backstory-panel { grid-template-columns: 1fr; }
   .backstory-panel details { grid-column: auto; }
+  .revision-panel { grid-template-columns: 1fr; }
+  .revision-panel > div:first-child,
+  .revision-actions { grid-column: auto; }
 
   .story-actions button.quiet-action {
     width: 100%;
