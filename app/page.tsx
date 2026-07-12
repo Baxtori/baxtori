@@ -601,7 +601,7 @@ export default function Home() {
     if (!selectedRepositories.length) {
       return (
         <>
-          <p><strong>{repositories.length} available repositories.</strong> Choose only the ones that deserve a weekly backstory.</p>
+          <p><strong>{repositories.length} available repositories.</strong> Choose which ones to include in the weekly review.</p>
           <button onClick={() => setView("repositories")} type="button">Choose sources</button>
         </>
       );
@@ -631,9 +631,9 @@ export default function Home() {
       <main className="auth-shell">
         <section className="auth-card" aria-labelledby="auth-heading">
           <div className="auth-brand"><span className="brand-mark" aria-hidden="true">B</span><strong>Baxtori</strong></div>
-          <span className="auth-kicker">Your personal GitHub lens</span>
-          <h1 id="auth-heading">Understand the code you&apos;re shipping.</h1>
-          <p>Baxtori turns activity across the repositories you choose into a quiet, useful backstory, showing what changed, why it matters, and what is worth reading.</p>
+          <span className="auth-kicker">Sign in</span>
+          <h1 id="auth-heading">Review your repositories.</h1>
+          <p>Connect GitHub to choose repositories and read the weekly review.</p>
           {auth.configured ? (
             <a className="github-button" href="/api/auth/github/start">
               <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.11.79-.25.79-.56v-2.24c-3.22.7-3.9-1.37-3.9-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.16.08 1.78 1.2 1.78 1.2 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.57-.29-5.27-1.29-5.27-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.47.11-3.05 0 0 .97-.31 3.16 1.18A11 11 0 0 1 12 6.11c.98 0 1.95.13 2.87.39 2.2-1.49 3.16-1.18 3.16-1.18.63 1.58.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.4-2.71 5.38-5.29 5.67.42.36.79 1.07.79 2.15v3.27c0 .31.21.68.8.56A11.5 11.5 0 0 0 12 .7Z" /></svg>
@@ -661,7 +661,7 @@ export default function Home() {
             <span>baxtori.com</span>
           </div>
         </div>
-        <p className="brand-line">The backstory behind your code.</p>
+        <p className="brand-line">Repository review.</p>
 
         <nav className="primary-nav" aria-label="Primary">
           <button className={view === "briefing" ? "is-active" : ""} onClick={() => setView("briefing")} type="button">
@@ -687,7 +687,7 @@ export default function Home() {
           <button onClick={signOut} type="button">Sign out</button>
         </div>
 
-        <p className="rail-note">Open it when you want context. Baxtori stays quiet the rest of the time.</p>
+        <p className="rail-note">Open it when you want context. Nothing else competes for your attention.</p>
       </aside>
 
       <main id="content">
@@ -702,13 +702,13 @@ export default function Home() {
               <button aria-expanded={showHelp} onClick={() => setShowHelp((current) => !current)} type="button">?</button>
             </div>
           </div>
-          <h1>{view === "repositories" ? "Choose what deserves a backstory." : view === "map" ? "What you know, and what comes next." : "What changed, and what it means."}</h1>
+          <h1>{view === "repositories" ? "Choose repositories." : view === "map" ? "Repository coverage." : "This week’s changes."}</h1>
           <p className="dek">
             {view === "repositories"
-              ? "Live GitHub sources, kept intentionally narrow. Pick the repositories you actually want to understand."
+              ? "Select the repositories included in review."
               : view === "map"
-                ? "A living dossier of systems, concepts, decisions, and evidence, shaped by what you actually want to understand."
-              : `${STORIES.length} ${STORIES.length === 1 ? "decision" : "decisions"} from the week. Everything routine stayed quiet.`}
+                ? "Coverage, open questions, and the next areas to study."
+              : `${STORIES.length} ${STORIES.length === 1 ? "item" : "items"} to read from this week’s repository activity.`}
           </p>
 
           {view !== "repositories" && view !== "map" && (
@@ -751,7 +751,7 @@ export default function Home() {
                   const state = storyState(story.id);
                   return (
                     <article
-                      className={`story ${story.tone} ${index === 0 ? "is-first" : ""} ${state.understood ? "is-understood" : ""} ${state.locked ? "is-locked" : ""} ${focusedStoryId === story.id ? "is-focused" : ""}`}
+                      className={`story ${story.tone} ${index === 0 ? "is-first" : ""} ${state.expanded ? "is-expanded" : ""} ${state.understood ? "is-understood" : ""} ${state.locked ? "is-locked" : ""} ${focusedStoryId === story.id ? "is-focused" : ""}`}
                       id={`story-${story.id}`}
                       key={story.id}
                       onFocusCapture={() => setFocusedStoryId(story.id)}
@@ -867,7 +867,7 @@ export default function Home() {
             )}
 
             <div className="quiet-note">
-              <span>Quiet-week rule</span>
+              <span>Selection rule</span>
               <p>If nothing introduced a new behavior, boundary, or open tradeoff, Baxtori publishes no story.</p>
             </div>
           </section>
@@ -904,7 +904,7 @@ export default function Home() {
               ))}
               <li className="routine-rollup">
                 <time>All week</time>
-                <div><span>Routine work</span><h3>{EDITION.quietRepositories.length || "Other"} quiet {EDITION.quietRepositories.length === 1 ? "repository stayed" : "repositories stayed"} out of the briefing.</h3></div>
+                <div><span>Other repositories</span><h3>{EDITION.quietRepositories.length ? `${EDITION.quietRepositories.length} ${EDITION.quietRepositories.length === 1 ? "repository had" : "repositories had"} no selected changes.` : "No other repositories added an item."}</h3></div>
               </li>
             </ol>
           </section>
@@ -931,12 +931,12 @@ export default function Home() {
                 <div>
                   <span className="eyebrow">Next scheduled review · {REVIEW_SCOPE.schedule}</span>
                   <h2 id="review-preview-heading">What Monday will inspect</h2>
-                  <p>GitHub supplies the candidate commits. The scheduled review still applies the quiet rule before anything reaches your briefing.</p>
+                  <p>GitHub supplies the candidate commits. The scheduled review selects what reaches your briefing.</p>
                 </div>
                 <div className="review-preview-metrics" aria-label="Scheduled review preview">
                   <div><strong>{recentCommitCount}{Object.values(activity).some((item) => item.truncated) ? "+" : ""}</strong><span>candidate commits</span></div>
                   <div><strong>{candidateRepositoryCount}</strong><span>active repositories</span></div>
-                  <div><strong>{quietRepositoryCount}</strong><span>likely quiet</span></div>
+                  <div><strong>{quietRepositoryCount}</strong><span>with no new commits</span></div>
                 </div>
               </div>
 
@@ -970,8 +970,8 @@ export default function Home() {
                             : repositoryActivity?.error
                               ? repositoryActivity.error
                               : commitCount
-                                ? `${commitCount}${repositoryActivity?.truncated ? "+" : ""} commits await the quiet-rule screen.`
-                                : `No commits since ${formatReviewCursor(REVIEW_SCOPE.lastReviewedAt)}; likely quiet.`}
+                                ? `${commitCount}${repositoryActivity?.truncated ? "+" : ""} commits await review.`
+                                : `No commits since ${formatReviewCursor(REVIEW_SCOPE.lastReviewedAt)}.`}
                         </p>
                         {repositoryActivity?.commits?.length ? (
                           <details>

@@ -36,7 +36,7 @@
   ],
   "preservedRules": [
     "Every claim cites exact commits and files.",
-    "Routine work stays quiet unless it changes behavior or exposes a meaningful tradeoff.",
+    "Routine work is omitted unless it changes behavior or exposes a meaningful tradeoff.",
     "Uncertainty remains explicit instead of being silently resolved.",
     "Locked items remain visible until the reader unlocks them."
   ]

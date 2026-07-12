@@ -1,7 +1,7 @@
 {
   "repository": "teamleaderleo/glimpse",
   "generatedAt": "2026-07-11T17:50:30.000Z",
-  "summary": "Baxtori is a private GitHub lens that turns selected repository activity into quiet, evidence-backed code backstories.",
+  "summary": "Baxtori turns selected repository activity into evidence-backed code backstories.",
   "reviews": [
     {
       "id": "review-2026-07-12-map-learning-loop",
@@ -127,7 +127,7 @@
         "scripts/validate-edition.mjs",
         "baxtori.sources.json"
       ],
-      "concepts": ["deterministic prepass", "quiet-week threshold", "human-sized reading budget"]
+      "concepts": ["deterministic prepass", "selection threshold", "human-sized reading budget"]
     },
     {
       "id": "evidence-model",
