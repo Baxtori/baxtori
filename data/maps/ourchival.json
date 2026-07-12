@@ -1,0 +1,170 @@
+{
+  "repository": "teamleaderleo/ourchival",
+  "generatedAt": "2026-07-09T19:02:26.000Z",
+  "summary": "Ourchival is a private visual-reference archive whose browser clipper and Reliquary web app share a Convex catalog while Google Drive remains the preferred home for original files.",
+  "reviews": [
+    {
+      "id": "review-2026-07-12-initial-map",
+      "reviewedAt": "2026-07-12T20:10:00.000+08:00",
+      "summary": "Initial map established the browser-to-vault capture path, Convex catalog, portable Drive storage, Reliquary experience, shared contracts, and unresolved privacy boundary.",
+      "affectedAreaIds": ["capture-pipeline", "convex-catalog", "drive-storage", "reliquary-ui", "shared-contracts", "privacy-boundary"],
+      "newAreaIds": ["capture-pipeline", "convex-catalog", "drive-storage", "reliquary-ui", "shared-contracts", "privacy-boundary"],
+      "unmappedFilesReviewed": [],
+      "throughCommit": {
+        "sha": "b068ba43f9ca25b573f4bd48a35e04d132ce45c9",
+        "shortSha": "b068ba4",
+        "subject": "Rewrite roadmap for handoff",
+        "url": "https://github.com/teamleaderleo/ourchival/commit/b068ba43f9ca25b573f4bd48a35e04d132ce45c9"
+      }
+    }
+  ],
+  "questions": [
+    {
+      "id": "private-http-boundary",
+      "areaId": "privacy-boundary",
+      "question": "What should authenticate the public Convex HTTP capture and vault endpoints before Ourchival is deployed beyond personal development?",
+      "whyItMatters": "The archive is intended to be private, while the committed HTTP actions currently allow broad cross-origin access without an identity gate.",
+      "status": "open",
+      "evidence": ["convex/http.ts", "docs/ROADMAP.md", "docs/DOMAIN.md"]
+    },
+    {
+      "id": "capture-deduplication",
+      "areaId": "capture-pipeline",
+      "question": "Which canonical identity should prevent the same source asset from producing duplicate references?",
+      "whyItMatters": "The intended model is one image with many meanings, but reliable capture needs to distinguish reuse from accidental duplication.",
+      "status": "open",
+      "evidence": ["convex/http.ts", "convex/schema.ts", "docs/ROADMAP.md"]
+    },
+    {
+      "id": "drive-fallback-visibility",
+      "areaId": "drive-storage",
+      "question": "How prominently should Reliquary distinguish Drive originals, Convex fallbacks, linked assets, and metadata-only captures?",
+      "whyItMatters": "Storage fallback is useful only when the user can tell what was preserved and what may require recovery.",
+      "status": "open",
+      "evidence": ["convex/lib/drive.ts", "convex/http.ts", "apps/web/app/ReferenceVault.tsx"]
+    }
+  ],
+  "areas": [
+    {
+      "id": "capture-pipeline",
+      "name": "Browser-to-vault capture pipeline",
+      "kind": "Core workflow",
+      "purpose": "Turns an image, link, page, or selected context from the browser extension into a source-aware reference and optional stored asset.",
+      "importance": 5,
+      "breadth": 76,
+      "depth": 48,
+      "confidence": 90,
+      "freshness": 94,
+      "changed": "Reviewed from origin/main",
+      "verdict": "The essential loop is present; deduplication and richer platform parsing are the next reliability boundaries",
+      "evidence": ["apps/extension/src/background.ts", "apps/extension/src/storage.ts", "convex/http.ts"],
+      "walkthrough": {
+        "title": "Follow one clipped image into Reliquary",
+        "outcome": "See where browser context becomes portable source metadata, a Convex record, and—when configured—a private Drive original.",
+        "estimatedMinutes": 5,
+        "steps": [
+          {
+            "label": "Capture the browser context",
+            "file": "apps/extension/src/background.ts",
+            "explanation": "The extension converts the clicked image, link, page, and selection into a shared capture payload.",
+            "invariant": "Every save retains a source URL even when no file can be stored."
+          },
+          {
+            "label": "Send to the configured vault endpoint",
+            "file": "apps/extension/src/storage.ts",
+            "explanation": "The popup-owned endpoint is normalized and the last capture/result are persisted for visible recovery feedback.",
+            "invariant": "A missing or malformed endpoint fails visibly rather than silently losing the capture."
+          },
+          {
+            "label": "Store the asset or preserve the link",
+            "file": "convex/http.ts",
+            "explanation": "The capture action fetches remote bytes when applicable, prefers Drive, falls back when possible, and creates catalog records.",
+            "invariant": "Reference metadata survives even when remote file retrieval is unavailable."
+          },
+          {
+            "label": "Render the saved reference",
+            "file": "apps/web/app/ReferenceVault.tsx",
+            "explanation": "Reliquary polls the Convex site endpoint, renders the appropriate lane, and exposes source and storage context in the inspector.",
+            "invariant": "The source remains inspectable independently of the stored or proxied image."
+          }
+        ]
+      },
+      "concepts": ["context-menu capture", "source-aware reference", "graceful asset fallback", "visible capture result"]
+    },
+    {
+      "id": "convex-catalog",
+      "name": "Convex catalog and relationships",
+      "kind": "Data system",
+      "purpose": "Stores references, assets, source snapshots, boards, tags, projects, reuse relationships, and export history as the searchable archive catalog.",
+      "importance": 5,
+      "breadth": 82,
+      "depth": 54,
+      "confidence": 93,
+      "freshness": 92,
+      "changed": "Reviewed from origin/main",
+      "verdict": "A strong domain model that already separates one asset from its many project and board meanings",
+      "evidence": ["convex/schema.ts", "convex/references.ts", "convex/boards.ts", "convex/tags.ts", "docs/DATA_MODEL.md"],
+      "concepts": ["reference versus asset", "many-context reuse", "indexed source identity", "soft deletion"]
+    },
+    {
+      "id": "drive-storage",
+      "name": "Portable original-file storage",
+      "kind": "Storage boundary",
+      "purpose": "Keeps originals in private Google Drive when configured while recording Drive identifiers and supporting Convex or linked fallbacks.",
+      "importance": 4,
+      "breadth": 68,
+      "depth": 46,
+      "confidence": 88,
+      "freshness": 91,
+      "changed": "Reviewed from origin/main",
+      "verdict": "The portability decision is sound; operational status and fallback visibility need to become first-class UI",
+      "evidence": ["convex/lib/drive.ts", "scripts/google-drive-auth.mjs", "docs/GOOGLE_DRIVE.md", "convex/http.ts"],
+      "concepts": ["private file proxy", "portable file home", "storage-provider fallback", "metadata sidecar direction"]
+    },
+    {
+      "id": "reliquary-ui",
+      "name": "Reliquary vault experience",
+      "kind": "Experience",
+      "purpose": "Provides dense browsing, lanes, search, favorites, manual capture, editing, source inspection, and the beginnings of boards and project reuse.",
+      "importance": 4,
+      "breadth": 72,
+      "depth": 44,
+      "confidence": 89,
+      "freshness": 93,
+      "changed": "Reviewed from origin/main",
+      "verdict": "The daily-vault center is visible; boards, projects, and upload remain intentionally incomplete",
+      "evidence": ["apps/web/app/ReferenceVault.tsx", "apps/web/app/referenceVaultModel.ts", "apps/web/app/styles.css", "docs/PRODUCT_DIRECTION.md"],
+      "concepts": ["dense visual archive", "source inspector", "reference lanes", "local-first feeling"]
+    },
+    {
+      "id": "shared-contracts",
+      "name": "Shared capture and parsing contracts",
+      "kind": "Boundary",
+      "purpose": "Keeps payload types and platform detection reusable between extension, backend, and future site-specific parsers.",
+      "importance": 3,
+      "breadth": 58,
+      "depth": 32,
+      "confidence": 85,
+      "freshness": 90,
+      "changed": "Reviewed from origin/main",
+      "verdict": "Useful seam with the X/Twitter-specific parser still deliberately ahead",
+      "evidence": ["packages/shared/src/index.ts", "packages/parsers/src/index.ts", "convex/lib/platform.ts", "apps/extension/src/content.ts"],
+      "concepts": ["capture payload contract", "platform detection", "page-context parser", "graceful degradation"]
+    },
+    {
+      "id": "privacy-boundary",
+      "name": "Private deployment boundary",
+      "kind": "Security frontier",
+      "purpose": "Must eventually gate the vault UI and capture endpoints while keeping Drive files private and development setup usable.",
+      "importance": 5,
+      "breadth": 18,
+      "depth": 10,
+      "confidence": 96,
+      "freshness": 100,
+      "changed": "Explicitly not implemented",
+      "verdict": "High-priority missing boundary; the roadmap correctly refuses to imply that the current HTTP surface is private",
+      "evidence": ["convex/http.ts", "docs/ROADMAP.md", "docs/DOMAIN.md", ".env.example"],
+      "concepts": ["private-by-default vault", "HTTP action authentication", "origin policy", "development bypass"]
+    }
+  ]
+}

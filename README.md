@@ -30,6 +30,7 @@ The product started as **Glimpse** and is being rebranded around
 - Candidate-versus-likely-quiet signals measured from the last completed rundown cursor
 - Independent Repo Maps and learning state for every repository with enough reviewed evidence
 - An explicit no-code-yet state instead of fabricated coverage for empty repositories
+- Lock, dismiss, and re-review controls with versioned review lenses and custom guidance
 
 ## Run it locally
 
@@ -84,7 +85,9 @@ npm run backstory:collect
 npm run backstory:validate
 ```
 
-`baxtori.sources.json` defines the local repositories in scope.
+`baxtori.sources.json` defines the GitHub repositories and default branches in scope.
+Its local paths are fetch caches only: collection fetches each remote and reads
+`origin/<branch>`, so dirty worktrees and unpushed commits never enter a rundown.
 `data/review-scope.json` is the safe, client-visible half of that configuration:
 it names the scheduled repositories, priorities, map coverage, review cursor, and
 schedule without exposing local checkout paths. `npm run scope:validate` prevents
@@ -93,6 +96,11 @@ the visible scope and deterministic collector from drifting apart.
 concise, validated `data/latest.json` and archives the same edition under
 `data/editions/`. Committing that edition updates the deployed app without any
 separate model API billing.
+
+`data/review-policy.json` versions the available re-review lenses and rules that
+must survive prompt changes. Story locks, dismissals, and prepared re-review
+requests are account-scoped on the current device; the app labels that boundary
+instead of pretending the local Monday automation can read browser storage.
 
 The same prepass now compares changed files with every registered Repo Map area's evidence.
 Its `mapImpact` output stays attributable by repository while naming affected areas, exact commits, and unmapped files.

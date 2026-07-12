@@ -5,6 +5,10 @@
       "path": "data/repo-map.json"
     },
     {
+      "repository": "teamleaderleo/ourchival",
+      "path": "data/maps/ourchival.json"
+    },
+    {
       "repository": "teamleaderleo/one-more-legend",
       "path": "data/maps/one-more-legend.json"
     }

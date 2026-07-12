@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "updatedAt": "2026-07-12T20:20:00.000+08:00",
+  "defaultLens": "same",
+  "lenses": [
+    {
+      "id": "same",
+      "label": "Same lens",
+      "instruction": "Re-run the existing review intent against the latest exact evidence and explain only material differences."
+    },
+    {
+      "id": "architecture",
+      "label": "Architecture",
+      "instruction": "Prioritize boundaries, data flow, invariants, coupling, and the execution path worth understanding."
+    },
+    {
+      "id": "skeptical",
+      "label": "Skeptical review",
+      "instruction": "Look actively for accidental complexity, fragile assumptions, missing verification, and reasons the change may not be worth studying."
+    },
+    {
+      "id": "teacher",
+      "label": "Teach me",
+      "instruction": "Explain the smallest coherent mental model, then walk through one concrete path with explicit invariants."
+    },
+    {
+      "id": "minimal",
+      "label": "Less detail",
+      "instruction": "Compress the result to the one decision, one tradeoff, and one verification step that deserve attention."
+    },
+    {
+      "id": "custom",
+      "label": "Custom guidance",
+      "instruction": "Follow the reader's custom guidance while retaining evidence and uncertainty requirements."
+    }
+  ],
+  "preservedRules": [
+    "Every claim cites exact commits and files.",
+    "Routine work stays quiet unless it changes behavior or exposes a meaningful tradeoff.",
+    "Uncertainty remains explicit instead of being silently resolved.",
+    "Locked items remain visible until the reader unlocks them."
+  ]
+}

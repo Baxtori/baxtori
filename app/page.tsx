@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import latestEdition from "@/data/latest.json";
+import ourchivalMap from "@/data/maps/ourchival.json";
 import oneMoreLegendMap from "@/data/maps/one-more-legend.json";
 import repositoryMap from "@/data/repo-map.json";
+import reviewPolicy from "@/data/review-policy.json";
 import reviewScope from "@/data/review-scope.json";
 import { RepositoryMaps } from "./repository-maps";
 import { type QuestionDisposition, type RepoArea, type RepoMapData, type RepoQuestion, type UnderstandingState } from "./repo-map";
@@ -41,9 +43,22 @@ type Edition = {
 
 type StoryState = {
   expanded: boolean;
+  locked: boolean;
   understood: boolean;
   watching: boolean;
   muted: boolean;
+  reviewGuidance: string;
+  reviewLens: string;
+  reviewRequestedAt: string | null;
+  revising: boolean;
+};
+
+type ReviewPolicy = {
+  version: number;
+  updatedAt: string;
+  defaultLens: string;
+  lenses: { id: string; label: string; instruction: string }[];
+  preservedRules: string[];
 };
 
 type Repository = {
@@ -130,7 +145,12 @@ const MAX_SELECTED_REPOSITORIES = 8;
 
 const EMPTY_STORY_STATE: StoryState = {
   expanded: false,
+  locked: false,
   muted: false,
+  reviewGuidance: "",
+  reviewLens: reviewPolicy.defaultLens,
+  reviewRequestedAt: null,
+  revising: false,
   understood: false,
   watching: false,
 };
@@ -189,7 +209,8 @@ const DEMO_STORIES: Story[] = [
 const EDITION = latestEdition as Edition;
 const STORIES: Story[] = EDITION.stories.length ? EDITION.stories : DEMO_STORIES;
 const REPOSITORY_MAP = repositoryMap as RepoMapData;
-const REPOSITORY_MAPS = [REPOSITORY_MAP, oneMoreLegendMap as RepoMapData];
+const REPOSITORY_MAPS = [REPOSITORY_MAP, ourchivalMap as RepoMapData, oneMoreLegendMap as RepoMapData];
+const REVIEW_POLICY = reviewPolicy as ReviewPolicy;
 const REVIEW_SCOPE = reviewScope as ReviewScope;
 const SCHEDULED_REPOSITORIES = REVIEW_SCOPE.repositories.map((repository) => repository.fullName);
 
@@ -245,7 +266,7 @@ export default function Home() {
   const [activity, setActivity] = useState<Record<string, ActivityResponse>>({});
   const [activityLoading, setActivityLoading] = useState(false);
 
-  const storyState = (id: string) => states[id] ?? EMPTY_STORY_STATE;
+  const storyState = (id: string): StoryState => ({ ...EMPTY_STORY_STATE, ...states[id] });
   const accountStorageKey = auth?.user ? `${STORAGE_KEY}:${auth.user.id}` : null;
 
   useEffect(() => {
@@ -373,14 +394,14 @@ export default function Home() {
   const updateStory = (id: string, patch: Partial<StoryState>) => {
     setStates((current) => ({
       ...current,
-      [id]: { ...(current[id] ?? EMPTY_STORY_STATE), ...patch },
+      [id]: { ...EMPTY_STORY_STATE, ...current[id], ...patch },
     }));
   };
 
   const understoodCount = STORIES.filter((story) => storyState(story.id).understood).length;
   const watchedStories = STORIES.filter((story) => storyState(story.id).watching);
   const visibleStories = STORIES.filter(
-    (story) => !storyState(story.id).muted && (!hideUnderstood || !storyState(story.id).understood),
+    (story) => storyState(story.id).locked || (!storyState(story.id).muted && (!hideUnderstood || !storyState(story.id).understood)),
   );
 
   const selectedRepositoryData = repositories.filter((repository) =>
@@ -427,6 +448,32 @@ export default function Home() {
     const watching = storyState(story.id).watching;
     updateStory(story.id, { watching: !watching });
     setNotice(watching ? `${story.project} removed from your watch list.` : `${story.project} added to your watch list.`);
+  };
+
+  const toggleStoryLock = (story: Story) => {
+    const locked = storyState(story.id).locked;
+    updateStory(story.id, { locked: !locked, muted: false });
+    setNotice(locked ? `${story.project} unlocked.` : `${story.project} locked in your briefing.`);
+  };
+
+  const requestRereview = async (story: Story) => {
+    const state = storyState(story.id);
+    const lens = REVIEW_POLICY.lenses.find((item) => item.id === state.reviewLens) ?? REVIEW_POLICY.lenses[0];
+    const guidance = state.reviewGuidance.trim();
+    const request = [
+      `Re-review ${story.repository ?? story.project} story \"${story.title}\" from Baxtori edition ${EDITION.id}.`,
+      `Lens: ${lens.label}. ${lens.instruction}`,
+      guidance ? `Custom guidance: ${guidance}` : null,
+      `Preserve policy v${REVIEW_POLICY.version}: ${REVIEW_POLICY.preservedRules.join(" ")}`,
+    ].filter(Boolean).join("\n\n");
+    try {
+      await navigator.clipboard.writeText(request);
+      updateStory(story.id, { reviewRequestedAt: new Date().toISOString(), revising: false });
+      setNotice("Re-review request saved on this device and copied for Codex.");
+    } catch {
+      setNotice("Re-review request is saved here, but clipboard access is unavailable.");
+      updateStory(story.id, { reviewRequestedAt: new Date().toISOString(), revising: false });
+    }
   };
 
   const toggleRepository = (repository: string) => {
@@ -584,7 +631,7 @@ export default function Home() {
           <div className="auth-brand"><span className="brand-mark" aria-hidden="true">B</span><strong>Baxtori</strong></div>
           <span className="auth-kicker">Your personal GitHub lens</span>
           <h1 id="auth-heading">Understand the code you&apos;re shipping.</h1>
-          <p>Baxtori turns activity across the repositories you choose into a quiet, useful backstory—what changed, why it matters, and what is worth reading.</p>
+          <p>Baxtori turns activity across the repositories you choose into a quiet, useful backstory, showing what changed, why it matters, and what is worth reading.</p>
           {auth.configured ? (
             <a className="github-button" href="/api/auth/github/start">
               <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.11.79-.25.79-.56v-2.24c-3.22.7-3.9-1.37-3.9-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.16.08 1.78 1.2 1.78 1.2 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.57-.29-5.27-1.29-5.27-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.47.11-3.05 0 0 .97-.31 3.16 1.18A11 11 0 0 1 12 6.11c.98 0 1.95.13 2.87.39 2.2-1.49 3.16-1.18 3.16-1.18.63 1.58.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.4-2.71 5.38-5.29 5.67.42.36.79 1.07.79 2.15v3.27c0 .31.21.68.8.56A11.5 11.5 0 0 0 12 .7Z" /></svg>
@@ -653,12 +700,12 @@ export default function Home() {
               <button aria-expanded={showHelp} onClick={() => setShowHelp((current) => !current)} type="button">?</button>
             </div>
           </div>
-          <h1>{view === "repositories" ? "Choose what deserves a backstory." : view === "map" ? "What you know—and what comes next." : "What changed—and what it means."}</h1>
+          <h1>{view === "repositories" ? "Choose what deserves a backstory." : view === "map" ? "What you know, and what comes next." : "What changed, and what it means."}</h1>
           <p className="dek">
             {view === "repositories"
               ? "Live GitHub sources, kept intentionally narrow. Pick the repositories you actually want to understand."
               : view === "map"
-                ? "A living dossier of systems, concepts, decisions, and evidence—shaped by what you actually want to understand."
+                ? "A living dossier of systems, concepts, decisions, and evidence, shaped by what you actually want to understand."
               : `${STORIES.length} ${STORIES.length === 1 ? "decision" : "decisions"} from the week. Everything routine stayed quiet.`}
           </p>
 
@@ -702,7 +749,7 @@ export default function Home() {
                   const state = storyState(story.id);
                   return (
                     <article
-                      className={`story ${story.tone} ${index === 0 ? "is-first" : ""} ${state.understood ? "is-understood" : ""} ${focusedStoryId === story.id ? "is-focused" : ""}`}
+                      className={`story ${story.tone} ${index === 0 ? "is-first" : ""} ${state.understood ? "is-understood" : ""} ${state.locked ? "is-locked" : ""} ${focusedStoryId === story.id ? "is-focused" : ""}`}
                       id={`story-${story.id}`}
                       key={story.id}
                       onFocusCapture={() => setFocusedStoryId(story.id)}
@@ -762,9 +809,37 @@ export default function Home() {
                             {state.watching ? "Watching" : "Watch"}
                           </button>
                           {state.expanded && (
-                            <button className="quiet-action" onClick={() => updateStory(story.id, { muted: true })} type="button">Quiet project</button>
+                            <>
+                              <button aria-pressed={state.locked} onClick={() => toggleStoryLock(story)} type="button">{state.locked ? "Locked ✓" : "Lock"}</button>
+                              <button aria-expanded={state.revising} onClick={() => updateStory(story.id, { revising: !state.revising })} type="button">Re-review</button>
+                              <button className="quiet-action" disabled={state.locked} onClick={() => updateStory(story.id, { muted: true })} title={state.locked ? "Unlock this item before dismissing it." : undefined} type="button">Dismiss</button>
+                            </>
                           )}
                         </div>
+                        {state.revising && (
+                          <form className="revision-panel" onSubmit={(event) => { event.preventDefault(); void requestRereview(story); }}>
+                            <div>
+                              <span>Revision request · policy v{REVIEW_POLICY.version}</span>
+                              <strong>Review this again from a different angle.</strong>
+                              <p>The request stays on this device and is copied as a ready-to-run Codex prompt.</p>
+                            </div>
+                            <label>
+                              Review lens
+                              <select value={state.reviewLens} onChange={(event) => updateStory(story.id, { reviewLens: event.target.value })}>
+                                {REVIEW_POLICY.lenses.map((lens) => <option key={lens.id} value={lens.id}>{lens.label}</option>)}
+                              </select>
+                            </label>
+                            <label>
+                              Guidance, optional
+                              <textarea onChange={(event) => updateStory(story.id, { reviewGuidance: event.target.value })} placeholder="What felt wrong, what to preserve, or what view you want instead…" rows={3} value={state.reviewGuidance} />
+                            </label>
+                            <div className="revision-actions">
+                              <button className="primary" type="submit">Copy re-review request</button>
+                              <button onClick={() => updateStory(story.id, { revising: false })} type="button">Cancel</button>
+                            </div>
+                          </form>
+                        )}
+                        {state.reviewRequestedAt && <p className="review-requested">Re-review requested on this device · {new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(state.reviewRequestedAt))}</p>}
                         <p className="story-verdict">{story.verdict}</p>
                       </div>
                     </article>

@@ -4,17 +4,20 @@
     {
       "name": "glimpse",
       "fullName": "teamleaderleo/glimpse",
-      "path": "."
+      "path": ".",
+      "branch": "main"
     },
     {
       "name": "ourchival",
       "fullName": "teamleaderleo/ourchival",
-      "path": "../ourchival"
+      "path": "../../Projects/ourchival",
+      "branch": "main"
     },
     {
       "name": "one-more-legend",
       "fullName": "teamleaderleo/one-more-legend",
-      "path": "../../Projects/one-more-legend"
+      "path": "../../Projects/one-more-legend",
+      "branch": "main"
     }
   ]
 }
