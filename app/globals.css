@@ -727,6 +727,61 @@ kbd {
   grid-column: 1 / -1;
 }
 
+.story-code {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin-top: 0.25rem;
+  overflow: hidden;
+  color: #e8eee9;
+  background: #13201a;
+  border: 1px solid rgb(255 255 255 / 10%);
+}
+
+.story-code-heading,
+.code-context,
+.code-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.story-code-heading { padding: 0.95rem 1rem 0.85rem; }
+.story-code-heading span { color: #9bc4a7; font-size: 0.59rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.story-code-heading h4 { margin: 0.25rem 0 0; font-family: var(--serif); font-size: 1.2rem; font-weight: 500; letter-spacing: -0.025em; }
+.story-code-heading small { flex: 0 0 auto; color: #85988c; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.58rem; }
+
+.code-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-block: 1px solid rgb(255 255 255 / 10%); }
+.code-tabs button { min-width: 0; padding: 0.7rem 0.8rem; color: #94a49a; background: #17251e; border: 0; border-right: 1px solid rgb(255 255 255 / 10%); cursor: pointer; text-align: left; }
+.code-tabs button:last-child { border-right: 0; }
+.code-tabs button[aria-selected="true"] { color: #ecf3ee; background: #22342a; box-shadow: inset 0 -2px #91c19e; }
+.code-tabs strong,
+.code-tabs span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.code-tabs strong { font-size: 0.67rem; }
+.code-tabs span { margin-top: 0.22rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.55rem; }
+
+.code-context { padding: 0.85rem 1rem; border-bottom: 1px solid rgb(255 255 255 / 10%); }
+.code-context strong { font-family: var(--serif); font-size: 1rem; font-weight: 500; }
+.code-context p { max-width: 44rem; margin: 0.22rem 0 0; color: #aebdb4; font-size: 0.76rem; line-height: 1.42; }
+.code-context > code { flex: 0 1 auto; overflow-wrap: anywhere; color: #9bc4a7; font-size: 0.56rem; text-align: right; }
+
+.code-frame { min-height: 9rem; overflow: auto; background: #0c1511; }
+.code-frame pre { min-width: max-content; margin: 0; padding: 0.75rem 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.69rem; line-height: 1.62; tab-size: 2; }
+.code-line { display: grid; grid-template-columns: 3.4rem minmax(0, 1fr); min-height: 1.1rem; }
+.code-line:hover { background: rgb(145 193 158 / 9%); }
+.code-line-number { padding-right: 0.9rem; color: #52635a; border-right: 1px solid rgb(255 255 255 / 7%); text-align: right; user-select: none; }
+.code-line > code { padding-inline: 1rem 1.5rem; color: #d7e3db; white-space: pre; }
+.code-state { display: grid; min-height: 9rem; place-items: center; padding: 1rem; color: #83958a; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.65rem; }
+.code-state.is-error { color: #e0aa8c; }
+
+.code-actions { align-items: center; padding: 0.65rem 1rem; border-top: 1px solid rgb(255 255 255 / 10%); }
+.code-actions button,
+.code-actions a { color: #b8c9bf; background: transparent; border: 0; cursor: pointer; font-size: 0.62rem; font-weight: 740; text-decoration: none; }
+.code-actions button { padding: 0; }
+.code-actions button:disabled { cursor: wait; opacity: 0.45; }
+.code-actions a { color: #9bc4a7; }
+.code-actions a:hover { text-decoration: underline; }
+
 .backstory-panel summary {
   color: var(--tone);
   cursor: pointer;
@@ -1716,6 +1771,14 @@ kbd {
 
   .backstory-panel { grid-template-columns: 1fr; }
   .backstory-panel details { grid-column: auto; }
+  .story-code { grid-column: auto; }
+  .story-code-heading,
+  .code-context { flex-direction: column; gap: 0.45rem; }
+  .code-tabs { display: flex; overflow-x: auto; }
+  .code-tabs button { flex: 0 0 12rem; }
+  .code-context > code { text-align: left; }
+  .code-line { grid-template-columns: 2.7rem minmax(0, 1fr); }
+  .code-line > code { padding-inline: 0.7rem 1rem; }
   .revision-panel { grid-template-columns: 1fr; }
   .revision-panel > div:first-child,
   .revision-actions { grid-column: auto; }

@@ -9,6 +9,7 @@ import reviewPolicy from "@/data/review-policy.json";
 import reviewScope from "@/data/review-scope.json";
 import { RepositoryMaps } from "./repository-maps";
 import { type QuestionDisposition, type RepoArea, type RepoMapData, type RepoQuestion, type UnderstandingState } from "./repo-map";
+import { type CodeEvidence, StoryCode } from "./story-code";
 
 type Tone = "blue" | "green" | "rust";
 type View = "briefing" | "map" | "timeline" | "repositories";
@@ -28,6 +29,7 @@ type Story = {
   tradeoff: string;
   evidence: string;
   files: string[];
+  codeEvidence?: CodeEvidence[];
   repository?: string;
   commits?: { sha: string; url: string }[];
 };
@@ -778,6 +780,9 @@ export default function Home() {
                               <span>Check this</span>
                               <p>{story.verify}</p>
                             </div>
+                            {story.repository && story.codeEvidence?.length ? (
+                              <StoryCode evidence={story.codeEvidence} repository={story.repository} storyId={story.id} />
+                            ) : null}
                             <details>
                               <summary>Tradeoff and evidence</summary>
                               <p>{story.tradeoff}</p>

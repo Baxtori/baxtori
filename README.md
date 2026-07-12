@@ -22,6 +22,7 @@ The product started as **Glimpse** and is being rebranded around
 - Recent commit activity for selected private or public repositories
 - Responsive layouts for desktop, tablet, and mobile
 - A living Repo Map with an evidence-backed comprehension frontier
+- Exact, commit-addressed code excerpts attached to every published explanation
 - Guided execution-path walkthroughs with an invariant at every step
 - A durable question ledger that preserves uncertainty instead of guessing
 - An append-only map review history anchored to exact commits
@@ -88,6 +89,10 @@ npm run backstory:validate
 `baxtori.sources.json` defines the GitHub repositories and default branches in scope.
 Its local paths are fetch caches only: collection fetches each remote and reads
 `origin/<branch>`, so dirty worktrees and unpushed commits never enter a rundown.
+Published stories also retain one to four exact code ranges in `codeEvidence`.
+The reader fetches only those lines through the authenticated `/api/github/code`
+route, so GitHub credentials remain server-side and every excerpt stays anchored
+to the reviewed commit. The full file is always one link away.
 `data/review-scope.json` is the safe, client-visible half of that configuration:
 it names the scheduled repositories, priorities, map coverage, review cursor, and
 schedule without exposing local checkout paths. `npm run scope:validate` prevents

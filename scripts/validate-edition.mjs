@@ -4,7 +4,7 @@ const edition = JSON.parse(await readFile(new URL("../data/latest.json", import.
 const requiredEditionFields = ["id", "generatedAt", "periodStart", "periodEnd", "stories", "quietRepositories"];
 const requiredStoryFields = [
   "id", "project", "repository", "tone", "timing", "title", "brief", "learningValue", "verdict",
-  "whatChanged", "whyItMatters", "verify", "tradeoff", "evidence", "files", "commits",
+  "whatChanged", "whyItMatters", "verify", "tradeoff", "evidence", "files", "codeEvidence", "commits",
 ];
 
 for (const field of requiredEditionFields) {
@@ -22,8 +22,18 @@ for (const story of edition.stories) {
     throw new Error(`${story.id} has an invalid learning value.`);
   }
   if (!story.files.length || !story.commits.length) throw new Error(`${story.id} lacks evidence.`);
+  if (!Array.isArray(story.codeEvidence) || !story.codeEvidence.length || story.codeEvidence.length > 4) {
+    throw new Error(`${story.id} must include one to four code excerpts.`);
+  }
   if (!story.commits.every((commit) => /^[0-9a-f]{7,40}$/i.test(commit.sha) && commit.url.includes(`github.com/${story.repository}/commit/`))) {
     throw new Error(`${story.id} has commit evidence that does not match its repository.`);
+  }
+  for (const excerpt of story.codeEvidence) {
+    const validCommit = /^[0-9a-f]{7,40}$/i.test(excerpt.commit) && story.commits.some((commit) => commit.sha.startsWith(excerpt.commit) || excerpt.commit.startsWith(commit.sha));
+    const validRange = Number.isInteger(excerpt.startLine) && Number.isInteger(excerpt.endLine) && excerpt.startLine >= 1 && excerpt.endLine >= excerpt.startLine && excerpt.endLine - excerpt.startLine < 160;
+    if (!excerpt.title || !excerpt.why || !excerpt.path || !excerpt.language || !validCommit || !validRange) {
+      throw new Error(`${story.id} has invalid code evidence.`);
+    }
   }
   if (story.title.length > 110 || story.brief.length > 320) {
     throw new Error(`${story.id} is too verbose for the briefing.`);
