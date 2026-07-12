@@ -1819,6 +1819,18 @@ kbd {
   }
 
   .story.is-expanded .story-index { display: none; }
+  .story.is-expanded.is-focused { box-shadow: none; }
+
+  .story.is-expanded .story-actions {
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+    padding-inline: 0.8rem;
+  }
+
+  .story.is-expanded .story-verdict {
+    margin: 1rem 0.8rem 0;
+    line-height: 1.35;
+  }
 
   .story-index {
     width: 1.85rem;
@@ -1858,6 +1870,7 @@ kbd {
   .story-actions button.quiet-action {
     width: 100%;
     margin-left: 0;
+    padding-inline: 0;
     text-align: left;
   }
 
