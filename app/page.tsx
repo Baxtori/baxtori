@@ -2,9 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import latestEdition from "@/data/latest.json";
+import oneMoreLegendMap from "@/data/maps/one-more-legend.json";
 import repositoryMap from "@/data/repo-map.json";
 import reviewScope from "@/data/review-scope.json";
-import { RepoMap, type QuestionDisposition, type RepoArea, type RepoMapData, type RepoQuestion, type UnderstandingState } from "./repo-map";
+import { RepositoryMaps } from "./repository-maps";
+import { type QuestionDisposition, type RepoArea, type RepoMapData, type RepoQuestion, type UnderstandingState } from "./repo-map";
 
 type Tone = "blue" | "green" | "rust";
 type View = "briefing" | "map" | "timeline" | "repositories";
@@ -101,7 +103,7 @@ type ScopedRepository = {
   fullName: string;
   name: string;
   priority: "core" | "normal" | "low";
-  mapStatus: "mapped" | "unmapped";
+  mapStatus: "mapped" | "unmapped" | "empty";
 };
 
 type ReviewScope = {
@@ -113,6 +115,7 @@ type ReviewScope = {
 };
 
 type SavedState = {
+  activeMapRepository: string;
   hideUnderstood: boolean;
   mapStates: Record<string, UnderstandingState>;
   questionStates: Record<string, QuestionDisposition>;
@@ -186,6 +189,7 @@ const DEMO_STORIES: Story[] = [
 const EDITION = latestEdition as Edition;
 const STORIES: Story[] = EDITION.stories.length ? EDITION.stories : DEMO_STORIES;
 const REPOSITORY_MAP = repositoryMap as RepoMapData;
+const REPOSITORY_MAPS = [REPOSITORY_MAP, oneMoreLegendMap as RepoMapData];
 const REVIEW_SCOPE = reviewScope as ReviewScope;
 const SCHEDULED_REPOSITORIES = REVIEW_SCOPE.repositories.map((repository) => repository.fullName);
 
@@ -225,6 +229,7 @@ export default function Home() {
   const [hideUnderstood, setHideUnderstood] = useState(false);
   const [mapStates, setMapStates] = useState<Record<string, UnderstandingState>>({});
   const [questionStates, setQuestionStates] = useState<Record<string, QuestionDisposition>>({});
+  const [activeMapRepository, setActiveMapRepository] = useState(REPOSITORY_MAP.repository);
   const [focusMode, setFocusMode] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [focusedStoryId, setFocusedStoryId] = useState<string | null>(null);
@@ -269,6 +274,7 @@ export default function Home() {
         setHideUnderstood(false);
         setMapStates({});
         setQuestionStates({});
+        setActiveMapRepository(REPOSITORY_MAP.repository);
         setView("briefing");
         setSelectedRepositories(SCHEDULED_REPOSITORIES);
         const saved = window.localStorage.getItem(accountStorageKey) ??
@@ -281,6 +287,9 @@ export default function Home() {
           if (parsed.states) setStates(parsed.states);
           if (parsed.mapStates) setMapStates(parsed.mapStates);
           if (parsed.questionStates) setQuestionStates(parsed.questionStates);
+          if (parsed.activeMapRepository && REVIEW_SCOPE.repositories.some((repository) => repository.fullName === parsed.activeMapRepository)) {
+            setActiveMapRepository(parsed.activeMapRepository);
+          }
           if (typeof parsed.hideUnderstood === "boolean") setHideUnderstood(parsed.hideUnderstood);
           if (parsed.view === "briefing" || parsed.view === "map" || parsed.view === "timeline" || parsed.view === "repositories") {
             setView(parsed.view);
@@ -298,9 +307,9 @@ export default function Home() {
 
   useEffect(() => {
     if (!hasHydrated || !accountStorageKey) return;
-    const saved: SavedState = { hideUnderstood, mapStates, questionStates, selectedRepositories, states, view };
+    const saved: SavedState = { activeMapRepository, hideUnderstood, mapStates, questionStates, selectedRepositories, states, view };
     window.localStorage.setItem(accountStorageKey, JSON.stringify(saved));
-  }, [accountStorageKey, hasHydrated, hideUnderstood, mapStates, questionStates, selectedRepositories, states, view]);
+  }, [accountStorageKey, activeMapRepository, hasHydrated, hideUnderstood, mapStates, questionStates, selectedRepositories, states, view]);
 
   useEffect(() => {
     if (!auth?.authenticated) return;
@@ -431,8 +440,8 @@ export default function Home() {
     });
   };
 
-  const updateUnderstanding = (area: RepoArea, state: UnderstandingState) => {
-    setMapStates((current) => ({ ...current, [area.id]: state }));
+  const updateUnderstanding = (repository: string, area: RepoArea, state: UnderstandingState) => {
+    setMapStates((current) => ({ ...current, [`${repository}:${area.id}`]: state }));
     const messages: Record<UnderstandingState, string> = {
       introduced: `${area.name} is now your comprehension frontier.`,
       revisit: `${area.name} will come back with more depth.`,
@@ -443,8 +452,8 @@ export default function Home() {
     setNotice(messages[state]);
   };
 
-  const updateQuestion = (question: RepoQuestion, state: QuestionDisposition) => {
-    setQuestionStates((current) => ({ ...current, [question.id]: state }));
+  const updateQuestion = (repository: string, question: RepoQuestion, state: QuestionDisposition) => {
+    setQuestionStates((current) => ({ ...current, [`${repository}:${question.id}`]: state }));
     const messages: Record<QuestionDisposition, string> = {
       irrelevant: "Removed from your open questions.",
       open: "Question kept visible for a future review.",
@@ -785,11 +794,14 @@ export default function Home() {
         )}
 
         {view === "map" && (
-          <RepoMap
-            data={REPOSITORY_MAP}
+          <RepositoryMaps
+            activeRepository={activeMapRepository}
+            data={REPOSITORY_MAPS}
+            onActiveRepositoryChange={setActiveMapRepository}
             onQuestionChange={updateQuestion}
             onStateChange={updateUnderstanding}
             questionStates={questionStates}
+            sources={REVIEW_SCOPE.repositories}
             states={mapStates}
           />
         )}
@@ -870,7 +882,7 @@ export default function Home() {
                         <div className="scope-row-title">
                           <strong>{repository.name}</strong>
                           <span className={scheduled ? "is-scheduled" : "is-preview"}>{scheduled ? "Scheduled" : "Preview only"}</span>
-                          {scope?.mapStatus === "mapped" && <span>Mapped</span>}
+                          {scope && <span>{scope.mapStatus === "mapped" ? "Mapped" : scope.mapStatus === "empty" ? "No code yet" : "Not mapped"}</span>}
                         </div>
                         <p>
                           {activityLoading && !repositoryActivity

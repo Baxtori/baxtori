@@ -28,6 +28,8 @@ The product started as **Glimpse** and is being rebranded around
 - A 5, 15, or 30-minute study queue assembled from walkthroughs, frontiers, and open questions
 - A validated scheduled-review scope with an honest preview-only state for device-local additions
 - Candidate-versus-likely-quiet signals measured from the last completed rundown cursor
+- Independent Repo Maps and learning state for every repository with enough reviewed evidence
+- An explicit no-code-yet state instead of fabricated coverage for empty repositories
 
 ## Run it locally
 
@@ -92,19 +94,19 @@ concise, validated `data/latest.json` and archives the same edition under
 `data/editions/`. Committing that edition updates the deployed app without any
 separate model API billing.
 
-The same prepass now compares changed files with each Repo Map area's evidence.
-Its `mapImpact` output names affected areas, exact commits, and unmapped files.
+The same prepass now compares changed files with every registered Repo Map area's evidence.
+Its `mapImpact` output stays attributable by repository while naming affected areas, exact commits, and unmapped files.
 The scheduled review must inspect those changes before adjusting confidence,
 freshness, concepts, walkthroughs, or questions; a filename match alone never
 rewrites repository knowledge.
 
 ## Progressive repository comprehension
 
-`data/repo-map.json` keeps a small, evidence-backed dossier of important systems,
-concepts, and decisions. The Repo Map combines breadth, depth, confidence, and
+`data/repository-maps.json` registers the evidence-backed dossiers under
+`data/repo-map.json` and `data/maps/`. Each Repo Map combines breadth, depth, confidence, and
 freshness into an explicitly estimated coverage score, then uses the reader's
 understood, revisit, and not-worth-it feedback to choose a comprehension
-frontier. Review events retain the exact through-commit and files that were
+frontier independently per repository. Review events retain the exact through-commit and files that were
 classified, while the study queue packs unfinished walkthroughs and questions
 into a reader-selected time budget. Validate it with:
 

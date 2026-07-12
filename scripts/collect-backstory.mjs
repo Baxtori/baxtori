@@ -2,11 +2,14 @@ import { execFileSync } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildMapImpact } from "./lib/map-impact.mjs";
+import { buildMapImpacts } from "./lib/map-impact.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const config = JSON.parse(await readFile(resolve(root, "baxtori.sources.json"), "utf8"));
-const repositoryMap = JSON.parse(await readFile(resolve(root, "data/repo-map.json"), "utf8"));
+const mapRegistry = JSON.parse(await readFile(resolve(root, "data/repository-maps.json"), "utf8"));
+const repositoryMaps = await Promise.all(mapRegistry.maps.map(async (entry) =>
+  JSON.parse(await readFile(resolve(root, entry.path), "utf8"))
+));
 const since = new Date(Date.now() - config.windowDays * 86_400_000).toISOString();
 
 function git(repositoryPath, args) {
@@ -103,7 +106,7 @@ function collectRepository(source) {
 }
 
 const repositories = config.repositories.map(collectRepository);
-const mapImpact = buildMapImpact(repositoryMap, repositories);
+const mapImpact = buildMapImpacts(repositoryMaps, repositories);
 const output = {
   collectedAt: new Date().toISOString(),
   instructions: {

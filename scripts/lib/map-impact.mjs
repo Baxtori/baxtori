@@ -45,6 +45,7 @@ export function buildMapImpact(repositoryMap, repositories) {
       commits: commits.map(({ date, sha, shortSha, subject, url }) => ({ date, sha, shortSha, subject, url })),
       previousConfidence: area.confidence,
       previousFreshness: area.freshness,
+      repository: repositoryMap.repository,
       reviewReason: `${changedFiles.length} mapped evidence ${changedFiles.length === 1 ? "file has" : "files have"} changed since the collection window opened.`,
     }];
   });
@@ -55,5 +56,15 @@ export function buildMapImpact(repositoryMap, repositories) {
     repository: repositoryMap.repository,
     reviewedThrough: repositoryMap.generatedAt ?? null,
     unmappedFiles: touchedSinceReview.filter((file) => !coveredFiles.has(file)),
+  };
+}
+
+export function buildMapImpacts(repositoryMaps, repositories) {
+  const repositoryImpacts = repositoryMaps.map((repositoryMap) => buildMapImpact(repositoryMap, repositories));
+  return {
+    affectedAreas: repositoryImpacts.flatMap((impact) => impact.affectedAreas),
+    errors: repositoryImpacts.flatMap((impact) => impact.error ? [{ error: impact.error, repository: impact.repository }] : []),
+    repositories: repositoryImpacts,
+    unmappedFiles: repositoryImpacts.flatMap((impact) => impact.unmappedFiles.map((path) => ({ path, repository: impact.repository }))),
   };
 }

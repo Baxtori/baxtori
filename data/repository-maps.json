@@ -1,0 +1,12 @@
+{
+  "maps": [
+    {
+      "repository": "teamleaderleo/glimpse",
+      "path": "data/repo-map.json"
+    },
+    {
+      "repository": "teamleaderleo/one-more-legend",
+      "path": "data/maps/one-more-legend.json"
+    }
+  ]
+}

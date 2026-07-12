@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildMapImpact } from "../scripts/lib/map-impact.mjs";
+import { buildMapImpact, buildMapImpacts } from "../scripts/lib/map-impact.mjs";
 
 const map = {
   generatedAt: "2026-07-10T00:00:00Z",
@@ -36,6 +36,7 @@ test("connects changed evidence to its mapped area", () => {
   }]);
 
   assert.equal(impact.affectedAreas.length, 1);
+  assert.equal(impact.affectedAreas[0].repository, "owner/repo");
   assert.deepEqual(impact.affectedAreas[0].changedFiles, ["src/auth.ts", "app/api/auth/callback.ts"]);
   assert.deepEqual(impact.unmappedFiles, ["README.md"]);
 });
@@ -62,4 +63,20 @@ test("reports a missing mapped repository without inventing impact", () => {
   const impact = buildMapImpact(map, []);
   assert.equal(impact.affectedAreas.length, 0);
   assert.match(impact.error, /No collected source/);
+});
+
+test("keeps multi-repository impacts attributable", () => {
+  const secondMap = { ...map, repository: "owner/second" };
+  const repositories = [{
+    fullName: "owner/repo",
+    commits: [{ date: "2026-07-11T00:00:00Z", files: [{ path: "README.md" }], sha: "a", shortSha: "a", subject: "Docs", url: "https://example.test/a" }],
+  }, {
+    fullName: "owner/second",
+    commits: [{ date: "2026-07-11T00:00:00Z", files: [{ path: "src/auth.ts" }], sha: "b", shortSha: "b", subject: "Auth", url: "https://example.test/b" }],
+  }];
+  const impact = buildMapImpacts([map, secondMap], repositories);
+
+  assert.deepEqual(impact.unmappedFiles, [{ path: "README.md", repository: "owner/repo" }]);
+  assert.equal(impact.affectedAreas[0].repository, "owner/second");
+  assert.equal(impact.repositories.length, 2);
 });

@@ -3,7 +3,8 @@ import { readFile } from "node:fs/promises";
 const root = new URL("../", import.meta.url);
 const scope = JSON.parse(await readFile(new URL("data/review-scope.json", root), "utf8"));
 const sources = JSON.parse(await readFile(new URL("baxtori.sources.json", root), "utf8"));
-const repositoryMap = JSON.parse(await readFile(new URL("data/repo-map.json", root), "utf8"));
+const mapRegistry = JSON.parse(await readFile(new URL("data/repository-maps.json", root), "utf8"));
+const mappedRepositories = new Set(mapRegistry.maps.map((entry) => entry.repository));
 
 if (!Date.parse(scope.updatedAt) || !Date.parse(scope.lastReviewedAt) || !scope.schedule || !Number.isInteger(scope.windowDays)) {
   throw new Error("Review scope needs valid timestamps, a schedule label, and an integer window.");
@@ -17,11 +18,11 @@ for (const repository of scope.repositories) {
   if (!repository.fullName?.includes("/") || !repository.name || scheduled.has(repository.fullName)) {
     throw new Error(`Invalid or duplicate scoped repository: ${repository.fullName}`);
   }
-  if (!["core", "normal", "low"].includes(repository.priority) || !["mapped", "unmapped"].includes(repository.mapStatus)) {
+  if (!["core", "normal", "low"].includes(repository.priority) || !["mapped", "unmapped", "empty"].includes(repository.mapStatus)) {
     throw new Error(`${repository.fullName} has an invalid priority or map status.`);
   }
-  if (repository.mapStatus === "mapped" && repository.fullName !== repositoryMap.repository) {
-    throw new Error(`${repository.fullName} claims a map that is not present in data/repo-map.json.`);
+  if ((repository.mapStatus === "mapped") !== mappedRepositories.has(repository.fullName)) {
+    throw new Error(`${repository.fullName} map status disagrees with data/repository-maps.json.`);
   }
   scheduled.add(repository.fullName);
 }
