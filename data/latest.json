@@ -26,6 +26,35 @@
         "app/api/github/repos/route.ts",
         "app/page.tsx"
       ],
+      "codeEvidence": [
+        {
+          "title": "Encrypt the server session",
+          "why": "The GitHub token is serialized only inside an AES-GCM-encrypted session value. A fresh IV is generated for every seal, and malformed or undecryptable cookies fail closed.",
+          "path": "lib/github-auth.ts",
+          "commit": "05a5bfec76f404dac5426f4d4dc48c3c0415c076",
+          "startLine": 57,
+          "endLine": 88,
+          "language": "typescript"
+        },
+        {
+          "title": "Use the token server-side",
+          "why": "Repository access begins by resolving the encrypted session in the route handler. The access token is attached to GitHub's server-to-server request and is never included in the JSON sent to the browser.",
+          "path": "app/api/github/repos/route.ts",
+          "commit": "05a5bfec76f404dac5426f4d4dc48c3c0415c076",
+          "startLine": 20,
+          "endLine": 40,
+          "language": "typescript"
+        },
+        {
+          "title": "Return identity, not credentials",
+          "why": "The browser-facing status endpoint exposes only configuration state and the signed-in user's profile. The GitHub access token remains behind the route boundary.",
+          "path": "app/api/auth/github/status/route.ts",
+          "commit": "05a5bfec76f404dac5426f4d4dc48c3c0415c076",
+          "startLine": 3,
+          "endLine": 16,
+          "language": "typescript"
+        }
+      ],
       "commits": [
         {
           "sha": "05a5bfe",
