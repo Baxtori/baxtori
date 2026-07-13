@@ -155,8 +155,8 @@ export function StoryCode({ evidence, repository, storyId }: StoryCodeProps) {
     <section className={`story-code ${fullScreen ? "is-fullscreen" : ""}`} aria-labelledby={headingId}>
       <header className="story-code-heading">
         <div>
-          <span>See what changed</span>
-          <h4 id={headingId}>The diff comes first. Current code is one tap away.</h4>
+          <span>Code evidence {activeIndex + 1}/{evidence.length}</span>
+          <h4 id={headingId}>{active.title}</h4>
         </div>
         <div className="code-heading-actions">
           <small>{active.baseCommit.slice(0, 7)} → {active.commit.slice(0, 7)}</small>
@@ -178,7 +178,7 @@ export function StoryCode({ evidence, repository, storyId }: StoryCodeProps) {
               role="tab"
               type="button"
             >
-              <strong>{item.title}</strong>
+              <strong><small>{String(index + 1).padStart(2, "0")}</small>{item.title}</strong>
               <span>{item.path.split("/").at(-1)} · L{item.startLine}–{item.endLine}</span>
             </button>
           ))}
@@ -195,10 +195,7 @@ export function StoryCode({ evidence, repository, storyId }: StoryCodeProps) {
         </div>
 
         <div className="code-context">
-          <div>
-            <strong>{active.title}</strong>
-            <p>{active.why}</p>
-          </div>
+          <p>{active.why}</p>
           <code>{active.path}:{active.startLine}–{active.endLine}</code>
         </div>
 
