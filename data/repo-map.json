@@ -1,8 +1,33 @@
 {
   "repository": "teamleaderleo/glimpse",
-  "generatedAt": "2026-07-11T17:50:30.000Z",
+  "generatedAt": "2026-07-13T09:19:11+08:00",
   "summary": "Baxtori turns selected repository activity into evidence-backed code backstories.",
   "reviews": [
+    {
+      "id": "review-2026-07-13-account-backed-review-loop",
+      "reviewedAt": "2026-07-13T09:19:11+08:00",
+      "summary": "Origin-backed collection now follows one account's configured repository choices, exact re-review requests, and diff-addressed evidence while keeping reader state in a separate feedback system.",
+      "affectedAreaIds": ["rundown-engine", "evidence-model", "reading-loop", "repo-map-engine"],
+      "newAreaIds": ["feedback-loop"],
+      "unmappedFilesReviewed": [
+        "app/api/feedback/reviews/route.ts",
+        "app/api/feedback/state/route.ts",
+        "app/story-code.tsx",
+        "convex/feedback.ts",
+        "convex/schema.ts",
+        "lib/code-diff.ts",
+        "lib/feedback-contract.ts",
+        "lib/feedback-store.ts",
+        "scripts/complete-feedback.mjs",
+        "scripts/export-feedback.mjs"
+      ],
+      "throughCommit": {
+        "sha": "a15093e0159044bf4fcb41b3a6519f35facdf0d1",
+        "shortSha": "a15093e",
+        "subject": "Refine Baxtori desktop reading layout (#16)",
+        "url": "https://github.com/teamleaderleo/glimpse/commit/a15093e0159044bf4fcb41b3a6519f35facdf0d1"
+      }
+    },
     {
       "id": "review-2026-07-12-map-learning-loop",
       "reviewedAt": "2026-07-11T17:50:30.000Z",
@@ -54,9 +79,17 @@
       "id": "portable-understanding-state",
       "areaId": "reading-loop",
       "question": "When should personal understanding move from device-local state to a private account-backed history?",
-      "whyItMatters": "Local state is simple and private, but it cannot preserve a long-running study history across browsers or devices.",
+      "whyItMatters": "Resolved by persisting versioned reader state behind the signed-in GitHub identity while retaining local fallback behavior when account sync is unavailable.",
+      "status": "resolved",
+      "evidence": ["app/page.tsx", "app/repo-map.tsx", "convex/feedback.ts", "app/api/feedback/state/route.ts"]
+    },
+    {
+      "id": "feedback-compiler-identity",
+      "areaId": "feedback-loop",
+      "question": "When should compiler input use a stable indexed account identifier instead of scanning reader states by GitHub login?",
+      "whyItMatters": "The exported account boundary is explicit, but login-based collection is a personal-scale lookup and GitHub logins can change.",
       "status": "open",
-      "evidence": ["app/page.tsx", "app/repo-map.tsx"]
+      "evidence": ["convex/feedback.ts", "scripts/export-feedback.mjs"]
     }
   ],
   "areas": [
@@ -114,54 +147,56 @@
       "id": "rundown-engine",
       "name": "Weekly rundown engine",
       "kind": "Workflow",
-      "purpose": "Collects deterministic repository activity, lets the scheduled Codex review choose meaningful changes, and emits a versioned edition.",
+      "purpose": "Fetches configured origin branches, intersects them with one reader's selected repositories, and emits a versioned edition from exact commit evidence.",
       "importance": 5,
       "breadth": 64,
       "depth": 42,
-      "confidence": 78,
-      "freshness": 94,
-      "changed": "This week",
-      "verdict": "Promising workflow with orchestration still outside the app",
+      "confidence": 91,
+      "freshness": 100,
+      "changed": "Reviewed today",
+      "verdict": "Strong evidence boundary; publication judgment remains intentionally outside the deterministic collector",
       "evidence": [
         "scripts/collect-backstory.mjs",
+        "scripts/export-feedback.mjs",
         "scripts/validate-edition.mjs",
-        "baxtori.sources.json"
+        "baxtori.sources.json",
+        "scripts/lib/source-ref.mjs"
       ],
-      "concepts": ["deterministic prepass", "selection threshold", "human-sized reading budget"]
+      "concepts": ["origin-backed deterministic prepass", "configured-and-selected scope intersection", "selection threshold", "human-sized reading budget"]
     },
     {
       "id": "evidence-model",
       "name": "Edition and evidence model",
       "kind": "Data model",
-      "purpose": "Stores each explanation beside repository, commit, file, tradeoff, and verification evidence so claims stay inspectable.",
+      "purpose": "Stores each explanation beside repository, comparison commits, changed line ranges, tradeoff, and verification evidence so claims stay inspectable as diffs.",
       "importance": 4,
       "breadth": 82,
       "depth": 68,
       "confidence": 90,
-      "freshness": 95,
-      "changed": "This week",
-      "verdict": "Simple, legible, and appropriately versioned",
+      "freshness": 100,
+      "changed": "Reviewed today",
+      "verdict": "Diff-addressed and versioned; evidence now fails validation when it cannot name a real comparison range",
       "evidence": [
         "data/latest.json",
         "data/editions/",
         "scripts/validate-edition.mjs"
       ],
-      "concepts": ["claim-to-commit traceability", "append-only backstory", "schema-level brevity"]
+      "concepts": ["claim-to-commit traceability", "append-only backstory", "schema-level brevity", "base-to-head code excerpt"]
     },
     {
       "id": "reading-loop",
       "name": "Human reading loop",
       "kind": "Experience",
-      "purpose": "Turns a generated edition into a small reading queue with focus controls, remembered progress, and permission to ignore low-value material.",
+      "purpose": "Turns a generated edition into a small reading queue whose progress, repository choices, map state, and re-review requests can follow the signed-in reader.",
       "importance": 4,
       "breadth": 70,
       "depth": 38,
-      "confidence": 74,
-      "freshness": 88,
-      "changed": "This week",
-      "verdict": "Good ergonomics; comprehension feedback is the missing layer",
-      "evidence": ["app/page.tsx", "app/globals.css"],
-      "concepts": ["progressive disclosure", "local reading state", "attention budget"]
+      "confidence": 90,
+      "freshness": 100,
+      "changed": "Reviewed today",
+      "verdict": "The comprehension loop is now durable; sync conflict behavior remains deliberately simple",
+      "evidence": ["app/page.tsx", "app/globals.css", "app/api/feedback/state/route.ts"],
+      "concepts": ["progressive disclosure", "account-backed reader state", "repository-specific re-review", "attention budget"]
     },
     {
       "id": "repo-map-engine",
@@ -172,9 +207,9 @@
       "breadth": 68,
       "depth": 52,
       "confidence": 86,
-      "freshness": 100,
+      "freshness": 98,
       "changed": "Reviewed today",
-      "verdict": "High-leverage core; deterministic impact and judgment are kept deliberately separate",
+      "verdict": "High-leverage multi-repository core; deterministic impact and judgment remain deliberately separate",
       "evidence": [
         "scripts/lib/map-impact.mjs",
         "scripts/collect-backstory.mjs",
@@ -213,7 +248,67 @@
           }
         ]
       },
-      "concepts": ["review cursor", "evidence-to-area impact", "append-only map history", "time-boxed study queue"]
+      "concepts": ["review cursor", "evidence-to-area impact", "repository map registry", "append-only map history", "time-boxed study queue"]
+    },
+    {
+      "id": "feedback-loop",
+      "name": "Account-backed review feedback loop",
+      "kind": "Control plane",
+      "purpose": "Persists one reader's comprehension state and repository-specific re-review requests, then exports only that account's intent into the scheduled compiler.",
+      "importance": 5,
+      "breadth": 66,
+      "depth": 52,
+      "confidence": 91,
+      "freshness": 100,
+      "changed": "Introduced today",
+      "verdict": "A coherent reader-to-compiler loop with an explicit shared-secret automation boundary",
+      "evidence": [
+        "lib/feedback-contract.ts",
+        "lib/feedback-store.ts",
+        "convex/feedback.ts",
+        "app/api/feedback/reviews/route.ts",
+        "app/api/feedback/state/route.ts",
+        "scripts/export-feedback.mjs",
+        "scripts/complete-feedback.mjs"
+      ],
+      "walkthrough": {
+        "title": "Follow one re-review request into the compiler",
+        "outcome": "See how reader intent remains account-scoped, repository-specific, and explicitly completed after inspection.",
+        "estimatedMinutes": 5,
+        "steps": [
+          {
+            "label": "Validate the reader's request",
+            "file": "app/api/feedback/reviews/route.ts",
+            "explanation": "The signed-in route parses bounded guidance and binds the request to the reader's server-side GitHub identity.",
+            "invariant": "Anonymous or malformed requests never enter the review queue."
+          },
+          {
+            "label": "Persist an exact review target",
+            "file": "convex/feedback.ts",
+            "explanation": "Convex stores edition, story, repository, lens, and guidance together while superseding only an older request for that same story edition.",
+            "invariant": "One request cannot silently change the lens for another repository."
+          },
+          {
+            "label": "Export one account's intent",
+            "file": "scripts/export-feedback.mjs",
+            "explanation": "The automation queries compiler input for the configured GitHub login and writes ignored scratch input.",
+            "invariant": "Reader state is compiler input, not a replacement for the configured cache manifest."
+          },
+          {
+            "label": "Constrain origin-backed collection",
+            "file": "scripts/collect-backstory.mjs",
+            "explanation": "Selected repositories are intersected with configured sources before each origin branch is fetched and inspected.",
+            "invariant": "An unconfigured selection cannot become invented code evidence."
+          },
+          {
+            "label": "Complete only inspected IDs",
+            "file": "scripts/complete-feedback.mjs",
+            "explanation": "The completion script accepts IDs only when they exist in the exported queue and marks those exact requests processed.",
+            "invariant": "Failed, inaccessible, or unrelated requests remain queued."
+          }
+        ]
+      },
+      "concepts": ["account-scoped reader state", "versioned review request", "configured scope intersection", "explicit completion acknowledgement"]
     },
     {
       "id": "hosting-transition",

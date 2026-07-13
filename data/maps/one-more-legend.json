@@ -1,8 +1,25 @@
 {
   "repository": "teamleaderleo/one-more-legend",
-  "generatedAt": "2026-07-11T08:20:59.000Z",
+  "generatedAt": "2026-07-13T09:19:11+08:00",
   "summary": "One More Legend is a deterministic text roguelite whose headless engine powers a browser game, simulation harnesses, and a stateless ChatGPT MCP app.",
   "reviews": [
+    {
+      "id": "review-2026-07-13-origin-pressure-provenance",
+      "reviewedAt": "2026-07-13T09:19:11+08:00",
+      "summary": "Revalidated the balance and fight-pressure systems against origin/main and corrected the review cursor from a later local-branch commit to the exact fetched main commit.",
+      "affectedAreaIds": [
+        "balance-harnesses",
+        "pressure-telemetry"
+      ],
+      "newAreaIds": [],
+      "unmappedFilesReviewed": [],
+      "throughCommit": {
+        "sha": "8334a7755f91d7d9b7ce79e136412251357594e5",
+        "shortSha": "8334a77",
+        "subject": "Add observational fight pressure report",
+        "url": "https://github.com/teamleaderleo/one-more-legend/commit/8334a7755f91d7d9b7ce79e136412251357594e5"
+      }
+    },
     {
       "id": "review-2026-07-12-initial-map",
       "reviewedAt": "2026-07-12T07:20:00.000+08:00",
@@ -115,8 +132,8 @@
       "breadth": 78,
       "depth": 60,
       "confidence": 93,
-      "freshness": 95,
-      "changed": "This week",
+      "freshness": 100,
+      "changed": "Reviewed today from origin/main",
       "verdict": "Unusually strong for a small game; balance intent is executable instead of anecdotal",
       "evidence": ["sim.js", "pressure-sim.js", "pressure-report.test.js", ".github/workflows/pressure-report.yml"],
       "concepts": ["deterministic Monte Carlo", "strategy baselines", "dead-turn metric", "target-priority audit"]
@@ -159,9 +176,9 @@
       "importance": 4,
       "breadth": 56,
       "depth": 44,
-      "confidence": 84,
-      "freshness": 96,
-      "changed": "This week",
+      "confidence": 88,
+      "freshness": 100,
+      "changed": "Reviewed today from origin/main",
       "verdict": "Useful first slice; intentionally transitional until FightResult becomes an engine contract",
       "evidence": ["pressure-report.js", "pressure-report.test.js", "pressure-sim.js", "HANDOFF.md"],
       "concepts": ["observational telemetry", "log-derived schema", "combat grade", "non-invasive instrumentation"]
