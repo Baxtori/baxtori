@@ -452,6 +452,7 @@ export default function Home() {
   };
 
   const understoodCount = STORIES.filter((story) => storyState(story.id).understood).length;
+  const reviewedRepositoryCount = new Set(STORIES.map((story) => story.repository ?? story.project)).size;
   const watchedStories = STORIES.filter((story) => storyState(story.id).watching);
   const queuedReviewRequests = reviewRequests.filter((request) => request.status === "queued");
   const visibleStories = STORIES.filter(
@@ -691,7 +692,7 @@ export default function Home() {
 
   const renderSourceBanner = () => {
     if (repositoryLoading) {
-      return <p>Finding your live GitHub sources…</p>;
+      return <p>Checking GitHub…</p>;
     }
     if (repositoryError) {
       return <p>{repositoryError}</p>;
@@ -699,16 +700,16 @@ export default function Home() {
     if (!selectedRepositories.length) {
       return (
         <>
-          <p><strong>{repositories.length} available repositories.</strong> Choose which ones to include in the weekly review.</p>
-          <button onClick={() => setView("repositories")} type="button">Choose sources</button>
+          <p><strong>{repositories.length} available repositories.</strong></p>
+          <button onClick={() => setView("repositories")} type="button">Choose</button>
         </>
       );
     }
     return (
       <>
         <p>
-          <strong>{selectedRepositories.length} {selectedRepositories.length === 1 ? "repository" : "repositories"} in view.</strong>{" "}
-          {activityLoading ? "Reading changes since the last review…" : `${recentCommitCount} candidate commits since ${formatReviewCursor(REVIEW_SCOPE.lastReviewedAt)}.`}
+          <strong>{selectedRepositories.length} {selectedRepositories.length === 1 ? "repository" : "repositories"}</strong>{" · "}
+          {activityLoading ? "Checking commits…" : `${recentCommitCount} commits since ${formatReviewCursor(REVIEW_SCOPE.lastReviewedAt)}`}
         </p>
         <button onClick={() => setView("repositories")} type="button">Manage</button>
       </>
@@ -759,8 +760,6 @@ export default function Home() {
             <span>baxtori.com</span>
           </div>
         </div>
-        <p className="brand-line">Repository review.</p>
-
         <nav className="primary-nav" aria-label="Primary">
           <button className={view === "briefing" ? "is-active" : ""} onClick={() => setView("briefing")} type="button">
             <span>Briefing</span><small>{STORIES.length - understoodCount}</small>
@@ -785,7 +784,6 @@ export default function Home() {
           <button onClick={signOut} type="button">Sign out</button>
         </div>
 
-        <p className="rail-note">Open it when you want context. Nothing else competes for your attention.</p>
       </aside>
 
       <main id="content">
@@ -800,18 +798,18 @@ export default function Home() {
               <button aria-expanded={showHelp} onClick={() => setShowHelp((current) => !current)} type="button">?</button>
             </div>
           </div>
-          <h1>{view === "repositories" ? "Choose repositories." : view === "map" ? "Repository coverage." : "This week’s changes."}</h1>
+          <h1>{view === "repositories" ? "Repositories." : view === "map" ? "Repository map." : "Weekly review."}</h1>
           <p className="dek">
             {view === "repositories"
-              ? "Select the repositories included in review."
+              ? "Choose what Monday reviews."
               : view === "map"
-                ? "Coverage, open questions, and the next areas to study."
-              : `${STORIES.length} ${STORIES.length === 1 ? "item" : "items"} to read from this week’s repository activity.`}
+                ? "Coverage, questions, and what to study next."
+              : `${STORIES.length} ${STORIES.length === 1 ? "item" : "items"} from ${reviewedRepositoryCount} ${reviewedRepositoryCount === 1 ? "repository" : "repositories"}.`}
           </p>
 
           {view !== "repositories" && view !== "map" && (
             <p className="edition-provenance">
-              Generated {formatGeneratedAt(EDITION.generatedAt)} · Scheduled review every Monday · {STORIES.length} evidence-backed {STORIES.length === 1 ? "story" : "stories"} · <span className={`sync-status is-${feedbackStatus}`}>{feedbackStatus === "loading" ? "Loading your state" : feedbackStatus === "saving" ? "Saving" : feedbackStatus === "saved" ? "Saved to your account" : "Saved on this device"}</span>
+              Generated {formatGeneratedAt(EDITION.generatedAt)} · Mondays · <span className={`sync-status is-${feedbackStatus}`}>{feedbackStatus === "loading" ? "Loading" : feedbackStatus === "saving" ? "Saving" : feedbackStatus === "saved" ? "Saved to account" : "Saved on device"}</span>
             </p>
           )}
 
@@ -834,7 +832,7 @@ export default function Home() {
           <section className="briefing-view" aria-labelledby="briefing-heading">
             <div className="section-heading">
               <div>
-                <span>Start here</span>
+                <span>Reading progress</span>
                 <h2 id="briefing-heading">{understoodCount} of {STORIES.length} understood</h2>
               </div>
               <label>
@@ -986,10 +984,6 @@ export default function Home() {
               </section>
             )}
 
-            <div className="quiet-note">
-              <span>Selection rule</span>
-              <p>If nothing introduced a new behavior, boundary, or open tradeoff, Baxtori publishes no story.</p>
-            </div>
           </section>
         )}
 
@@ -1009,7 +1003,7 @@ export default function Home() {
         {view === "timeline" && (
           <section className="timeline-view" aria-labelledby="timeline-heading">
             <div className="section-heading">
-              <div><span>The raw thread</span><h2 id="timeline-heading">This week, in order</h2></div>
+              <div><span>Changes</span><h2 id="timeline-heading">This week, in order</h2></div>
             </div>
             <ol>
               {STORIES.map((story) => (
@@ -1037,7 +1031,7 @@ export default function Home() {
                 <span className={`status-dot ${repositoryError ? "is-error" : ""}`} aria-hidden="true" />
                 <div>
                   <strong>Connected as @{auth.user?.login}</strong>
-                  <p>Public repositories are visible; private repositories require explicit GitHub App access.</p>
+                  <p>Private repositories appear only when the GitHub App can read them.</p>
                 </div>
               </div>
               <div className="connection-actions">
@@ -1050,8 +1044,8 @@ export default function Home() {
               <div className="review-preview-heading">
                 <div>
                   <span className="eyebrow">Next scheduled review · {REVIEW_SCOPE.schedule}</span>
-                  <h2 id="review-preview-heading">What Monday will inspect</h2>
-                  <p>GitHub supplies the candidate commits. The scheduled review selects what reaches your briefing.</p>
+                  <h2 id="review-preview-heading">Monday’s scope</h2>
+                  <p>Recent commits from the repositories below.</p>
                 </div>
                 <div className="review-preview-metrics" aria-label="Scheduled review preview">
                   <div><strong>{recentCommitCount}{Object.values(activity).some((item) => item.truncated) ? "+" : ""}</strong><span>candidate commits</span></div>
@@ -1122,7 +1116,7 @@ export default function Home() {
                   <div className="scope-empty"><strong>No repositories selected.</strong><span>Add a source below or restore the published scope.</span></div>
                 )}
               </div>
-              <p className="scope-boundary">Selections sync to your Baxtori account and shape the next Monday review. A newly selected repository remains pending until its GitHub fetch cache is configured for the local compiler.</p>
+              <p className="scope-boundary">Selections sync to your account. New repositories stay pending until their review cache is configured.</p>
             </section>
 
             <div className="repo-toolbar">

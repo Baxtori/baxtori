@@ -169,10 +169,10 @@ summary:focus-visible {
 
 .app-shell {
   display: grid;
-  grid-template-columns: 220px minmax(0, 880px);
-  gap: clamp(2.5rem, 6vw, 6rem);
+  grid-template-columns: 184px minmax(0, 1024px);
+  gap: clamp(2.25rem, 4vw, 4.5rem);
   justify-content: center;
-  width: min(100%, 1440px);
+  width: min(100%, 1480px);
   min-height: 100vh;
   margin: 0 auto;
   padding: clamp(1.5rem, 3vw, 2.8rem) clamp(1.1rem, 4vw, 3.5rem) 4rem;
@@ -196,13 +196,13 @@ summary:focus-visible {
 .brand-mark {
   display: grid;
   place-items: center;
-  width: 2.1rem;
-  height: 2.1rem;
+  width: 1.9rem;
+  height: 1.9rem;
   color: var(--paper-light);
   background: var(--green);
   border-radius: 50%;
   font-family: var(--serif);
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 700;
 }
 
@@ -213,7 +213,7 @@ summary:focus-visible {
 
 .brand strong {
   font-family: var(--serif);
-  font-size: 1.65rem;
+  font-size: 1.5rem;
   letter-spacing: -0.055em;
   line-height: 1;
 }
@@ -224,18 +224,9 @@ summary:focus-visible {
   letter-spacing: 0.08em;
 }
 
-.brand-line {
-  margin: 0.8rem 0 0;
-  color: var(--ink-soft);
-  font-family: var(--serif);
-  font-size: 0.96rem;
-  font-style: italic;
-  line-height: 1.35;
-}
-
 .primary-nav {
   display: grid;
-  margin-top: 3.5rem;
+  margin-top: 2.6rem;
   border-top: 1px solid var(--line);
 }
 
@@ -279,10 +270,11 @@ summary:focus-visible {
   display: flex;
   align-items: flex-start;
   gap: 0.65rem;
-  margin-top: 1.8rem;
-  padding: 0.85rem 0.75rem;
-  background: rgb(251 248 241 / 55%);
-  border: 1px solid var(--line);
+  margin-top: 1.4rem;
+  padding: 0.8rem 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
 }
 
 .status-dot {
@@ -336,16 +328,6 @@ summary:focus-visible {
   border: 0;
   cursor: pointer;
   font-size: 0.66rem;
-}
-
-.rail-note {
-  margin: auto 0 0;
-  padding-top: 1.1rem;
-  color: var(--muted);
-  border-top: 1px solid var(--line);
-  font-family: var(--serif);
-  font-size: 0.92rem;
-  line-height: 1.4;
 }
 
 main {
@@ -752,6 +734,11 @@ kbd {
   border: 1px solid rgb(255 255 255 / 10%);
 }
 
+.story.is-expanded .story-code {
+  width: calc(100% + 4rem);
+  margin-left: -4rem;
+}
+
 .story-code-heading,
 .code-context,
 .code-actions {
@@ -761,9 +748,9 @@ kbd {
   gap: 1rem;
 }
 
-.story-code-heading { padding: 0.95rem 1rem 0.85rem; }
+.story-code-heading { padding: 0.8rem 0.9rem; }
 .story-code-heading span { color: #9bc4a7; font-size: 0.59rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
-.story-code-heading h4 { margin: 0.25rem 0 0; font-family: var(--serif); font-size: 1.2rem; font-weight: 500; letter-spacing: -0.025em; }
+.story-code-heading h4 { margin: 0.18rem 0 0; font-family: var(--serif); font-size: 1.05rem; font-weight: 500; letter-spacing: -0.02em; }
 .story-code-heading small { color: #85988c; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.58rem; }
 .code-heading-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 0.8rem; }
 .code-heading-actions button {
@@ -779,13 +766,13 @@ kbd {
 .code-heading-actions button:hover,
 .code-heading-actions button[aria-pressed="true"] { color: #101914; background: #b8d8c0; border-color: #b8d8c0; }
 
-.code-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-block: 1px solid rgb(255 255 255 / 10%); }
-.code-tabs button { min-width: 0; padding: 0.7rem 0.8rem; color: #94a49a; background: #17251e; border: 0; border-right: 1px solid rgb(255 255 255 / 10%); cursor: pointer; text-align: left; }
-.code-tabs button:last-child { border-right: 0; }
-.code-tabs button[aria-selected="true"] { color: #ecf3ee; background: #22342a; box-shadow: inset 0 -2px #91c19e; }
+.code-tabs { display: flex; align-items: stretch; gap: 0.2rem; overflow-x: auto; padding: 0 0.7rem; background: #101a15; border-block: 1px solid rgb(255 255 255 / 9%); }
+.code-tabs button { flex: 0 1 auto; min-width: 0; padding: 0.58rem 0.65rem 0.52rem; color: #87988e; background: transparent; border: 0; border-bottom: 2px solid transparent; cursor: pointer; text-align: left; }
+.code-tabs button[aria-selected="true"] { color: #ecf3ee; border-bottom-color: #91c19e; }
 .code-tabs strong,
 .code-tabs span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .code-tabs strong { font-size: 0.67rem; }
+.code-tabs strong small { margin-right: 0.45rem; color: #63766a; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.5rem; }
 .code-tabs span { margin-top: 0.22rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.55rem; }
 
 .code-view-bar {
@@ -793,7 +780,7 @@ kbd {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.55rem 1rem;
+  padding: 0.45rem 0.9rem;
   border-bottom: 1px solid rgb(255 255 255 / 10%);
 }
 .code-view-toggle { display: flex; gap: 0.25rem; }
@@ -802,20 +789,20 @@ kbd {
   padding: 0.25rem 0.65rem;
   color: #8fa096;
   background: transparent;
-  border: 1px solid transparent;
+  border: 0;
+  border-bottom: 1px solid transparent;
   cursor: pointer;
   font-size: 0.6rem;
   font-weight: 760;
 }
-.code-view-toggle button[aria-pressed="true"] { color: #eef4f0; background: #2a3c32; border-color: rgb(255 255 255 / 12%); }
+.code-view-toggle button[aria-pressed="true"] { color: #eef4f0; background: transparent; border-bottom-color: #91c19e; }
 .code-view-toggle button:disabled { cursor: wait; opacity: 0.42; }
 .code-view-bar > span { color: #71847a; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.58rem; }
 .code-view-bar > span strong { color: #89c89a; }
 .code-view-bar > span em { color: #d38e83; font-style: normal; }
 
-.code-context { padding: 0.85rem 1rem; border-bottom: 1px solid rgb(255 255 255 / 10%); }
-.code-context strong { font-family: var(--serif); font-size: 1rem; font-weight: 500; }
-.code-context p { max-width: 44rem; margin: 0.22rem 0 0; color: #aebdb4; font-size: 0.76rem; line-height: 1.42; }
+.code-context { align-items: center; padding: 0.65rem 0.9rem; border-bottom: 1px solid rgb(255 255 255 / 10%); }
+.code-context p { max-width: 46rem; margin: 0; color: #aebdb4; font-size: 0.72rem; line-height: 1.4; }
 .code-context > code { flex: 0 1 auto; overflow-wrap: anywhere; color: #9bc4a7; font-size: 0.56rem; text-align: right; }
 
 .code-frame {
