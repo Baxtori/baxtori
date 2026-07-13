@@ -7,6 +7,7 @@ import oneMoreLegendMap from "@/data/maps/one-more-legend.json";
 import repositoryMap from "@/data/repo-map.json";
 import reviewPolicy from "@/data/review-policy.json";
 import reviewScope from "@/data/review-scope.json";
+import type { ReaderStatePayload, ReaderStoryState, ReviewRequest } from "@/lib/feedback-contract";
 import { RepositoryMaps } from "./repository-maps";
 import { type QuestionDisposition, type RepoArea, type RepoMapData, type RepoQuestion, type UnderstandingState } from "./repo-map";
 import { type CodeEvidence, StoryCode } from "./story-code";
@@ -43,17 +44,7 @@ type Edition = {
   stories: Story[];
 };
 
-type StoryState = {
-  expanded: boolean;
-  locked: boolean;
-  understood: boolean;
-  watching: boolean;
-  muted: boolean;
-  reviewGuidance: string;
-  reviewLens: string;
-  reviewRequestedAt: string | null;
-  revising: boolean;
-};
+type StoryState = ReaderStoryState;
 
 type ReviewPolicy = {
   version: number;
@@ -131,15 +122,18 @@ type ReviewScope = {
   repositories: ScopedRepository[];
 };
 
-type SavedState = {
-  activeMapRepository: string;
-  hideUnderstood: boolean;
-  mapStates: Record<string, UnderstandingState>;
-  questionStates: Record<string, QuestionDisposition>;
-  selectedRepositories: string[];
-  states: Record<string, StoryState>;
-  view: View;
+type SavedState = ReaderStatePayload;
+
+type FeedbackStateResponse = {
+  configured: boolean;
+  error?: string;
+  reviewRequests: ReviewRequest[];
+  revision?: number;
+  state: ReaderStatePayload | null;
+  updatedAt?: number | null;
 };
+
+type FeedbackStatus = "loading" | "local" | "saved" | "saving";
 
 const STORAGE_KEY = "baxtori:backstory:v1";
 const LEGACY_STORAGE_KEY = "glimpse:rundown:v2";
@@ -258,6 +252,9 @@ export default function Home() {
   const [focusedStoryId, setFocusedStoryId] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
   const [hasHydrated, setHasHydrated] = useState(false);
+  const [feedbackConfigured, setFeedbackConfigured] = useState(false);
+  const [feedbackStatus, setFeedbackStatus] = useState<FeedbackStatus>("loading");
+  const [reviewRequests, setReviewRequests] = useState<ReviewRequest[]>([]);
 
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [repositoryLoading, setRepositoryLoading] = useState(false);
@@ -290,49 +287,103 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!accountStorageKey) return;
-    queueMicrotask(() => {
+    if (!accountStorageKey || !auth?.authenticated) return;
+    const controller = new AbortController();
+    const applySavedState = (parsed: Partial<SavedState> & { selectedRepoIds?: string[] }) => {
+      if (parsed.states) setStates(parsed.states);
+      if (parsed.mapStates) setMapStates(parsed.mapStates);
+      if (parsed.questionStates) setQuestionStates(parsed.questionStates);
+      if (parsed.activeMapRepository && REVIEW_SCOPE.repositories.some((repository) => repository.fullName === parsed.activeMapRepository)) {
+        setActiveMapRepository(parsed.activeMapRepository);
+      }
+      if (typeof parsed.hideUnderstood === "boolean") setHideUnderstood(parsed.hideUnderstood);
+      if (parsed.view === "briefing" || parsed.view === "map" || parsed.view === "timeline" || parsed.view === "repositories") setView(parsed.view);
+      const savedRepositories = parsed.selectedRepositories ?? parsed.selectedRepoIds;
+      if (Array.isArray(savedRepositories)) setSelectedRepositories(savedRepositories);
+    };
+
+    const hydrate = async () => {
+      setStates({});
+      setHideUnderstood(false);
+      setMapStates({});
+      setQuestionStates({});
+      setActiveMapRepository(REPOSITORY_MAP.repository);
+      setView("briefing");
+      setSelectedRepositories(SCHEDULED_REPOSITORIES);
+      setReviewRequests([]);
+      setFeedbackStatus("loading");
+
+      let localState: (Partial<SavedState> & { selectedRepoIds?: string[] }) | null = null;
       try {
-        setStates({});
-        setHideUnderstood(false);
-        setMapStates({});
-        setQuestionStates({});
-        setActiveMapRepository(REPOSITORY_MAP.repository);
-        setView("briefing");
-        setSelectedRepositories(SCHEDULED_REPOSITORIES);
         const saved = window.localStorage.getItem(accountStorageKey) ??
           window.localStorage.getItem(STORAGE_KEY) ??
           window.localStorage.getItem(LEGACY_STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved) as Partial<SavedState> & {
-            selectedRepoIds?: string[];
-          };
-          if (parsed.states) setStates(parsed.states);
-          if (parsed.mapStates) setMapStates(parsed.mapStates);
-          if (parsed.questionStates) setQuestionStates(parsed.questionStates);
-          if (parsed.activeMapRepository && REVIEW_SCOPE.repositories.some((repository) => repository.fullName === parsed.activeMapRepository)) {
-            setActiveMapRepository(parsed.activeMapRepository);
-          }
-          if (typeof parsed.hideUnderstood === "boolean") setHideUnderstood(parsed.hideUnderstood);
-          if (parsed.view === "briefing" || parsed.view === "map" || parsed.view === "timeline" || parsed.view === "repositories") {
-            setView(parsed.view);
-          }
-          const savedRepositories = parsed.selectedRepositories ?? parsed.selectedRepoIds;
-          if (Array.isArray(savedRepositories)) setSelectedRepositories(savedRepositories);
-        }
+        if (saved) localState = JSON.parse(saved) as Partial<SavedState> & { selectedRepoIds?: string[] };
       } catch {
         window.localStorage.removeItem(accountStorageKey);
-      } finally {
-        setHasHydrated(true);
       }
-    });
-  }, [accountStorageKey]);
+
+      try {
+        const response = await fetch("/api/feedback/state", { signal: controller.signal });
+        const remote = (await response.json()) as FeedbackStateResponse;
+        if (!response.ok) throw new Error(remote.error ?? "Account state is unavailable.");
+        if (controller.signal.aborted) return;
+        setFeedbackConfigured(remote.configured);
+        setReviewRequests(remote.reviewRequests ?? []);
+        applySavedState(remote.state ?? localState ?? {});
+        setFeedbackStatus(remote.configured ? "saved" : "local");
+      } catch {
+        if (controller.signal.aborted) return;
+        applySavedState(localState ?? {});
+        setFeedbackConfigured(false);
+        setFeedbackStatus("local");
+      } finally {
+        if (!controller.signal.aborted) setHasHydrated(true);
+      }
+    };
+
+    void hydrate();
+    return () => controller.abort();
+  }, [accountStorageKey, auth?.authenticated]);
 
   useEffect(() => {
     if (!hasHydrated || !accountStorageKey) return;
-    const saved: SavedState = { activeMapRepository, hideUnderstood, mapStates, questionStates, selectedRepositories, states, view };
+    const saved: SavedState = {
+      activeMapRepository,
+      editionId: EDITION.id,
+      hideUnderstood,
+      mapStates,
+      questionStates,
+      selectedRepositories,
+      states,
+      version: 1,
+      view,
+    };
     window.localStorage.setItem(accountStorageKey, JSON.stringify(saved));
-  }, [accountStorageKey, activeMapRepository, hasHydrated, hideUnderstood, mapStates, questionStates, selectedRepositories, states, view]);
+    if (!feedbackConfigured) return;
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => {
+      setFeedbackStatus("saving");
+      fetch("/api/feedback/state", {
+        body: JSON.stringify(saved),
+        headers: { "Content-Type": "application/json" },
+        method: "PUT",
+        signal: controller.signal,
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error("Account state could not be saved.");
+          setFeedbackStatus("saved");
+        })
+        .catch((error: Error) => {
+          if (error.name !== "AbortError") setFeedbackStatus("local");
+        });
+    }, 650);
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [accountStorageKey, activeMapRepository, feedbackConfigured, hasHydrated, hideUnderstood, mapStates, questionStates, selectedRepositories, states, view]);
 
   useEffect(() => {
     if (!auth?.authenticated) return;
@@ -402,6 +453,7 @@ export default function Home() {
 
   const understoodCount = STORIES.filter((story) => storyState(story.id).understood).length;
   const watchedStories = STORIES.filter((story) => storyState(story.id).watching);
+  const queuedReviewRequests = reviewRequests.filter((request) => request.status === "queued");
   const visibleStories = STORIES.filter(
     (story) => storyState(story.id).locked || (!storyState(story.id).muted && (!hideUnderstood || !storyState(story.id).understood)),
   );
@@ -411,8 +463,8 @@ export default function Home() {
   );
   const scheduledRepositorySet = new Set(SCHEDULED_REPOSITORIES);
   const selectedRepositorySet = new Set(selectedRepositories);
-  const previewOnlyRepositories = selectedRepositories.filter((repository) => !scheduledRepositorySet.has(repository));
-  const hiddenScheduledRepositories = SCHEDULED_REPOSITORIES.filter((repository) => !selectedRepositorySet.has(repository));
+  const pendingAddedRepositories = selectedRepositories.filter((repository) => !scheduledRepositorySet.has(repository));
+  const pendingRemovedRepositories = SCHEDULED_REPOSITORIES.filter((repository) => !selectedRepositorySet.has(repository));
   const inaccessibleScheduledRepositories = SCHEDULED_REPOSITORIES.filter((repository) =>
     repositories.length > 0 && !repositories.some((candidate) => candidate.fullName === repository),
   );
@@ -462,19 +514,65 @@ export default function Home() {
     const state = storyState(story.id);
     const lens = REVIEW_POLICY.lenses.find((item) => item.id === state.reviewLens) ?? REVIEW_POLICY.lenses[0];
     const guidance = state.reviewGuidance.trim();
-    const request = [
+    const fallbackPrompt = [
       `Re-review ${story.repository ?? story.project} story \"${story.title}\" from Baxtori edition ${EDITION.id}.`,
       `Lens: ${lens.label}. ${lens.instruction}`,
       guidance ? `Custom guidance: ${guidance}` : null,
       `Preserve policy v${REVIEW_POLICY.version}: ${REVIEW_POLICY.preservedRules.join(" ")}`,
     ].filter(Boolean).join("\n\n");
+
+    if (feedbackConfigured && story.repository) {
+      try {
+        const response = await fetch("/api/feedback/reviews", {
+          body: JSON.stringify({
+            editionId: EDITION.id,
+            guidance,
+            lensId: lens.id,
+            lensInstruction: lens.instruction,
+            lensLabel: lens.label,
+            repository: story.repository,
+            storyId: story.id,
+            storyTitle: story.title,
+          }),
+          headers: { "Content-Type": "application/json" },
+          method: "POST",
+        });
+        const payload = (await response.json()) as { error?: string; request?: ReviewRequest };
+        if (!response.ok || !payload.request) throw new Error(payload.error ?? "The request could not be queued.");
+        setReviewRequests((current) => [
+          payload.request as ReviewRequest,
+          ...current.map((request) => request.storyId === story.id && request.status === "queued" ? { ...request, status: "superseded" as const } : request),
+        ]);
+        updateStory(story.id, { reviewRequestedAt: new Date().toISOString(), revising: false });
+        setNotice("Re-review queued for the next scheduled review.");
+        return;
+      } catch {
+        setNotice("The account queue is unavailable, so the request was copied instead.");
+      }
+    }
+
     try {
-      await navigator.clipboard.writeText(request);
+      await navigator.clipboard.writeText(fallbackPrompt);
       updateStory(story.id, { reviewRequestedAt: new Date().toISOString(), revising: false });
-      setNotice("Re-review request saved on this device and copied for Codex.");
+      setNotice("Re-review request copied for Codex.");
     } catch {
-      setNotice("Re-review request is saved here, but clipboard access is unavailable.");
+      setNotice("The re-review request is saved locally, but clipboard access is unavailable.");
       updateStory(story.id, { reviewRequestedAt: new Date().toISOString(), revising: false });
+    }
+  };
+
+  const cancelQueuedReview = async (requestId: string) => {
+    try {
+      const response = await fetch("/api/feedback/reviews", {
+        body: JSON.stringify({ requestId }),
+        headers: { "Content-Type": "application/json" },
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("The request could not be canceled.");
+      setReviewRequests((current) => current.map((request) => request._id === requestId ? { ...request, status: "canceled" } : request));
+      setNotice("Re-review removed from the queue.");
+    } catch {
+      setNotice("The review queue could not be updated.");
     }
   };
 
@@ -713,7 +811,7 @@ export default function Home() {
 
           {view !== "repositories" && view !== "map" && (
             <p className="edition-provenance">
-              Generated {formatGeneratedAt(EDITION.generatedAt)} · Scheduled review every Monday · {STORIES.length} evidence-backed {STORIES.length === 1 ? "story" : "stories"}
+              Generated {formatGeneratedAt(EDITION.generatedAt)} · Scheduled review every Monday · {STORIES.length} evidence-backed {STORIES.length === 1 ? "story" : "stories"} · <span className={`sync-status is-${feedbackStatus}`}>{feedbackStatus === "loading" ? "Loading your state" : feedbackStatus === "saving" ? "Saving" : feedbackStatus === "saved" ? "Saved to your account" : "Saved on this device"}</span>
             </p>
           )}
 
@@ -831,7 +929,7 @@ export default function Home() {
                             <div>
                               <span>Revision request · policy v{REVIEW_POLICY.version}</span>
                               <strong>Review this again from a different angle.</strong>
-                              <p>The request stays on this device and is copied as a ready-to-run Codex prompt.</p>
+                              <p>{feedbackConfigured ? "Your guidance joins the next scheduled review." : "Without account sync, this is copied as a ready-to-run Codex prompt."}</p>
                             </div>
                             <label>
                               Review lens
@@ -844,12 +942,12 @@ export default function Home() {
                               <textarea onChange={(event) => updateStory(story.id, { reviewGuidance: event.target.value })} placeholder="What felt wrong, what to preserve, or what view you want instead…" rows={3} value={state.reviewGuidance} />
                             </label>
                             <div className="revision-actions">
-                              <button className="primary" type="submit">Copy re-review request</button>
+                              <button className="primary" type="submit">{feedbackConfigured ? "Queue re-review" : "Copy re-review request"}</button>
                               <button onClick={() => updateStory(story.id, { revising: false })} type="button">Cancel</button>
                             </div>
                           </form>
                         )}
-                        {state.reviewRequestedAt && <p className="review-requested">Re-review requested on this device · {new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(state.reviewRequestedAt))}</p>}
+                        {state.reviewRequestedAt && <p className="review-requested">Re-review requested · {new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(state.reviewRequestedAt))}</p>}
                         <p className="story-verdict">{story.verdict}</p>
                       </div>
                     </article>
@@ -860,7 +958,7 @@ export default function Home() {
               <div className="empty-state">
                 <span>All caught up</span>
                 <h3>Nothing else needs your attention.</h3>
-                <p>Your reading state is saved on this device. Routine work stays out of the way.</p>
+                <p>{feedbackConfigured ? "Your reading state is saved to your account." : "Your reading state is saved on this device."}</p>
               </div>
             )}
 
@@ -869,6 +967,23 @@ export default function Home() {
                 <span>Watching</span>
                 {watchedStories.map((story) => <button key={story.id} onClick={() => updateStory(story.id, { expanded: true })} type="button">{story.project}</button>)}
               </div>
+            )}
+
+            {queuedReviewRequests.length > 0 && (
+              <section aria-labelledby="review-queue-heading" className="review-queue">
+                <div>
+                  <span>Next scheduled review</span>
+                  <h3 id="review-queue-heading">{queuedReviewRequests.length} queued {queuedReviewRequests.length === 1 ? "request" : "requests"}</h3>
+                </div>
+                <ul>
+                  {queuedReviewRequests.map((request) => (
+                    <li key={request._id}>
+                      <div><strong>{request.storyTitle}</strong><span>{request.repository} · {request.lensLabel}</span></div>
+                      <button onClick={() => void cancelQueuedReview(request._id)} type="button">Cancel</button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
             )}
 
             <div className="quiet-note">
@@ -945,13 +1060,13 @@ export default function Home() {
                 </div>
               </div>
 
-              {(previewOnlyRepositories.length > 0 || hiddenScheduledRepositories.length > 0) && (
+              {(pendingAddedRepositories.length > 0 || pendingRemovedRepositories.length > 0) && (
                 <div className="scope-drift" role="status">
                   <div>
-                    <strong>Device preview differs from the scheduled scope.</strong>
-                    <span>{previewOnlyRepositories.length} preview-only · {hiddenScheduledRepositories.length} scheduled but hidden</span>
+                    <strong>Your next review scope has changed.</strong>
+                    <span>{pendingAddedRepositories.length} added · {pendingRemovedRepositories.length} removed</span>
                   </div>
-                  <button onClick={() => setSelectedRepositories(SCHEDULED_REPOSITORIES)} type="button">Use scheduled scope</button>
+                  <button onClick={() => setSelectedRepositories(SCHEDULED_REPOSITORIES)} type="button">Restore published scope</button>
                 </div>
               )}
 
@@ -966,7 +1081,7 @@ export default function Home() {
                       <div className="scope-row-main">
                         <div className="scope-row-title">
                           <strong>{repository.name}</strong>
-                          <span className={scheduled ? "is-scheduled" : "is-preview"}>{scheduled ? "Scheduled" : "Preview only"}</span>
+                          <span className={scheduled ? "is-scheduled" : "is-preview"}>{scheduled ? "Published scope" : "Next review"}</span>
                           {scope && <span>{scope.mapStatus === "mapped" ? "Mapped" : scope.mapStatus === "empty" ? "No code yet" : "Not mapped"}</span>}
                         </div>
                         <p>
@@ -998,16 +1113,16 @@ export default function Home() {
                 })}
                 {inaccessibleScheduledRepositories.map((repository) => (
                   <article className="scope-row is-inaccessible" key={repository}>
-                    <div className="scope-row-main"><div className="scope-row-title"><strong>{repository}</strong><span>Needs GitHub access</span></div><p>Scheduled locally, but not visible to the current GitHub App installation.</p></div>
+                    <div className="scope-row-main"><div className="scope-row-title"><strong>{repository}</strong><span>Needs GitHub access</span></div><p>Included in the published scope, but not visible to the current GitHub App installation.</p></div>
                     {auth.appSlug && <a href={`https://github.com/apps/${auth.appSlug}/installations/new`} rel="noreferrer" target="_blank">Manage access ↗</a>}
                   </article>
                 ))}
                 {repositoryLoading && <div className="scope-empty"><strong>Checking the scheduled scope…</strong><span>Reading repository access and post-review activity from GitHub.</span></div>}
                 {!repositoryLoading && !selectedRepositoryData.length && !inaccessibleScheduledRepositories.length && (
-                  <div className="scope-empty"><strong>No repositories in this device preview.</strong><span>Add a source below or restore the scheduled scope.</span></div>
+                  <div className="scope-empty"><strong>No repositories selected.</strong><span>Add a source below or restore the published scope.</span></div>
                 )}
               </div>
-              <p className="scope-boundary">Scheduled means the repository is present in Baxtori&apos;s validated local compiler manifest. Preview-only selections stay on this device until that manifest is deliberately updated.</p>
+              <p className="scope-boundary">Selections sync to your Baxtori account and shape the next Monday review. A newly selected repository remains pending until its GitHub fetch cache is configured for the local compiler.</p>
             </section>
 
             <div className="repo-toolbar">
