@@ -10,16 +10,17 @@
     "build": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
     "test": "npm run build && node --test tests/*.test.mjs && npm run backstory:validate && npm run map:validate && npm run scope:validate && npm run policy:validate",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern convex/_generated",
     "backstory:collect": "node scripts/collect-backstory.mjs",
     "backstory:validate": "node scripts/validate-edition.mjs",
+    "feedback:export": "node scripts/export-feedback.mjs",
+    "feedback:complete": "node scripts/complete-feedback.mjs",
     "map:validate": "node scripts/validate-repo-map.mjs",
     "policy:validate": "node scripts/validate-review-policy.mjs",
-    "scope:validate": "node scripts/validate-review-scope.mjs",
-    "db:generate": "drizzle-kit generate"
+    "scope:validate": "node scripts/validate-review-scope.mjs"
   },
   "dependencies": {
-    "drizzle-orm": "0.45.2",
+    "convex": "^1.42.1",
     "next": "16.2.6",
     "react": "19.2.6",
     "react-dom": "19.2.6"
@@ -32,7 +33,6 @@
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.2",
     "@vitejs/plugin-rsc": "0.5.26",
-    "drizzle-kit": "0.31.10",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.6",
     "react-server-dom-webpack": "19.2.6",

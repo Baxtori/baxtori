@@ -14,9 +14,9 @@ The product started as **Glimpse** and is being rebranded around
 
 - A deliberately concise weekly briefing with details on demand
 - Separate signals for learning value, code quality, and deliberate tradeoffs
-- Mark-understood, watch, quiet-project, focus, and keyboard-reading flows
+- Mark-understood, watch, dismiss-project, focus, and keyboard-reading flows
 - A chronological activity view without notification or inbox behavior
-- Device-local reading state
+- Account-backed reading state with an instant device fallback
 - GitHub account sign-in with an encrypted, HttpOnly server session
 - Fine-grained GitHub App access to repositories the user explicitly chooses
 - Recent commit activity for selected private or public repositories
@@ -27,11 +27,11 @@ The product started as **Glimpse** and is being rebranded around
 - A durable question ledger that preserves uncertainty instead of guessing
 - An append-only map review history anchored to exact commits
 - A 5, 15, or 30-minute study queue assembled from walkthroughs, frontiers, and open questions
-- A validated scheduled-review scope with an honest preview-only state for device-local additions
-- Candidate-versus-likely-quiet signals measured from the last completed rundown cursor
+- A review scope chosen in the app and consumed by the weekly compiler
+- Candidate-versus-no-new-commits signals measured from the last completed rundown cursor
 - Independent Repo Maps and learning state for every repository with enough reviewed evidence
 - An explicit no-code-yet state instead of fabricated coverage for empty repositories
-- Lock, dismiss, and re-review controls with versioned review lenses and custom guidance
+- Lock, dismiss, and re-review controls with versioned review lenses, custom guidance, and a durable review queue
 
 ## Run it locally
 
@@ -68,7 +68,7 @@ Selected GitHub or local repositories
   → incremental commit-range collection
   → related-change clustering
   → evidence-backed explanations
-  → a quiet Baxtori briefing
+  → a concise Baxtori briefing
 ```
 
 The next compiler layer is per-repository Git cursors and related-change
@@ -104,9 +104,18 @@ concise, validated `data/latest.json` and archives the same edition under
 separate model API billing.
 
 `data/review-policy.json` versions the available re-review lenses and rules that
-must survive prompt changes. Story locks, dismissals, and prepared re-review
-requests are account-scoped on the current device; the app labels that boundary
-instead of pretending the local Monday automation can read browser storage.
+must survive prompt changes. Convex stores each GitHub account's reading state,
+repository choices, and queued re-review requests. The browser talks only to
+authenticated Baxtori routes; the Convex URL and bridge secret remain server-side.
+Before collection, the Monday automation exports that state into ignored scratch
+input. Repository choices narrow the configured fetch caches, while review lenses
+and custom guidance become explicit compiler input. Successfully considered
+requests are marked processed after the review. Published editions and Repo Maps
+remain versioned in Git rather than the application database.
+`FEEDBACK_GITHUB_LOGIN` explicitly selects the account the local compiler may
+consume, so another signed-in account can never silently become its input.
+The completion command accepts only explicit request IDs from that export, which
+keeps inaccessible or unhandled requests in the queue instead of discarding them.
 
 The same prepass now compares changed files with every registered Repo Map area's evidence.
 Its `mapImpact` output stays attributable by repository while naming affected areas, exact commits, and unmapped files.

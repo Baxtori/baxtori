@@ -11,6 +11,12 @@ const mapRegistry = JSON.parse(await readFile(resolve(root, "data/repository-map
 const repositoryMaps = await Promise.all(mapRegistry.maps.map(async (entry) =>
   JSON.parse(await readFile(resolve(root, entry.path), "utf8"))
 ));
+let readerFeedback = null;
+try {
+  readerFeedback = JSON.parse(await readFile(resolve(root, "data/feedback-input.json"), "utf8"));
+} catch {
+  // Collection still works before account-backed feedback is configured.
+}
 const since = new Date(Date.now() - config.windowDays * 86_400_000).toISOString();
 
 function git(repositoryPath, args) {
@@ -121,7 +127,12 @@ function collectRepository(source) {
   }
 }
 
-const repositories = config.repositories.map(collectRepository);
+const requestedRepositories = readerFeedback?.readerState?.payload?.selectedRepositories;
+const selectedRepositorySet = Array.isArray(requestedRepositories) ? new Set(requestedRepositories) : null;
+const configuredSources = selectedRepositorySet
+  ? config.repositories.filter((source) => selectedRepositorySet.has(source.fullName))
+  : config.repositories;
+const repositories = configuredSources.map(collectRepository);
 const mapImpact = buildMapImpacts(repositoryMaps, repositories);
 const output = {
   collectedAt: new Date().toISOString(),
@@ -132,6 +143,14 @@ const output = {
     mapRule: "Review every affected map area against its exact commits before changing confidence, freshness, verdict, walkthrough, or questions. New unmapped files may suggest a new area, but are not proof of one.",
   },
   mapImpact,
+  readerFeedback: readerFeedback ? {
+    exportedAt: readerFeedback.exportedAt,
+    readerState: readerFeedback.readerState,
+    reviewRequests: readerFeedback.reviewRequests,
+    unconfiguredSelections: Array.isArray(requestedRepositories)
+      ? requestedRepositories.filter((repository) => !config.repositories.some((source) => source.fullName === repository))
+      : [],
+  } : null,
   periodEnd: new Date().toISOString().slice(0, 10),
   periodStart: since.slice(0, 10),
   repositories,
@@ -142,5 +161,5 @@ await mkdir(resolve(root, "data"), { recursive: true });
 await writeFile(resolve(root, "data/candidates.json"), `${JSON.stringify(output, null, 2)}\n`);
 
 const active = repositories.filter((repository) => repository.commits.length && !repository.routineOnly).length;
-console.log(`Collected ${repositories.length} repositories; ${active} have potentially meaningful changes.`);
+console.log(`Collected ${repositories.length} selected repositories; ${active} have potentially meaningful changes.`);
 console.log(`Map impact: ${mapImpact.affectedAreas.length} affected areas; ${mapImpact.unmappedFiles.length} changed files remain unmapped.`);

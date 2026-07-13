@@ -42,3 +42,4 @@ next-env.d.ts
 /outputs/
 /work/
 /data/candidates.json
+/data/feedback-input.json
