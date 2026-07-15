@@ -1,3 +1,5 @@
+import { canonicalRepository } from "./repository-identity";
+
 const REPOSITORY_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const COMMIT_PATTERN = /^[0-9a-f]{7,40}$/i;
 const SAFE_PATH_SEGMENT = /^[^\0/]+$/;
@@ -21,7 +23,7 @@ type ParsedHunk = {
 };
 
 export function parseCodeDiffRequest(url: URL) {
-  const repository = url.searchParams.get("repo")?.trim() ?? "";
+  const repository = canonicalRepository(url.searchParams.get("repo")?.trim() ?? "");
   const base = url.searchParams.get("base")?.trim() ?? "";
   const head = url.searchParams.get("head")?.trim() ?? "";
   const path = url.searchParams.get("path")?.trim() ?? "";
@@ -37,7 +39,7 @@ export function parseCodeDiffRequest(url: URL) {
 }
 
 export function buildGitHubCompareUrl(repository: string, base: string, head: string) {
-  return new URL(`https://api.github.com/repos/${repository}/compare/${base}...${head}`);
+  return new URL(`https://api.github.com/repos/${canonicalRepository(repository)}/compare/${base}...${head}`);
 }
 
 export function parseGitHubPatch(patch: string, range: DiffRange) {
