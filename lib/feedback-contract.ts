@@ -1,3 +1,5 @@
+import { canonicalRepository, canonicalizeRepositoryList, canonicalizeRepositoryStateRecord } from "./repository-identity";
+
 export type ReaderStoryState = {
   expanded: boolean;
   locked: boolean;
@@ -59,18 +61,18 @@ export function parseReaderState(input: unknown): ReaderStatePayload {
       watching: readBoolean(value.watching),
     };
   });
-  const selectedRepositories = readStringArray(input.selectedRepositories, 20, 200);
+  const selectedRepositories = canonicalizeRepositoryList(readStringArray(input.selectedRepositories, 20, 200));
   if (!selectedRepositories.every((repository) => REPOSITORY_PATTERN.test(repository))) throw new Error("Invalid selected repository.");
   const view = readString(input.view, 20);
   if (!VIEWS.has(view)) throw new Error("Invalid reader view.");
 
   return {
-    activeMapRepository: readString(input.activeMapRepository, 200),
+    activeMapRepository: canonicalRepository(readString(input.activeMapRepository, 200)),
     editionId: readString(input.editionId, 100),
     hideUnderstood: readBoolean(input.hideUnderstood),
-    mapStates: parseEnumRecord<ReaderStatePayload["mapStates"][string]>(input.mapStates, MAP_STATES),
-    questionStates: parseEnumRecord<ReaderStatePayload["questionStates"][string]>(input.questionStates, QUESTION_STATES),
-    selectedRepositories: [...new Set(selectedRepositories)],
+    mapStates: canonicalizeRepositoryStateRecord(parseEnumRecord<ReaderStatePayload["mapStates"][string]>(input.mapStates, MAP_STATES)),
+    questionStates: canonicalizeRepositoryStateRecord(parseEnumRecord<ReaderStatePayload["questionStates"][string]>(input.questionStates, QUESTION_STATES)),
+    selectedRepositories,
     states,
     version: 1,
     view: view as ReaderStatePayload["view"],
@@ -79,7 +81,7 @@ export function parseReaderState(input: unknown): ReaderStatePayload {
 
 export function parseReviewRequest(input: unknown) {
   if (!isRecord(input)) throw new Error("Invalid review request.");
-  const repository = readString(input.repository, 200);
+  const repository = canonicalRepository(readString(input.repository, 200));
   if (!REPOSITORY_PATTERN.test(repository)) throw new Error("Invalid review repository.");
   return {
     editionId: readString(input.editionId, 100),
