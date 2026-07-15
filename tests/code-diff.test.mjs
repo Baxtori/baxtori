@@ -9,12 +9,12 @@ test("parses an exact commit comparison request", () => {
     endLine: 88,
     head: "05a5bfe",
     path: "lib/github-auth.ts",
-    repository: "teamleaderleo/glimpse",
+    repository: "teamleaderleo/baxtori",
     startLine: 57,
   });
   assert.equal(
     buildGitHubCompareUrl("teamleaderleo/glimpse", "5c813ff", "05a5bfe").toString(),
-    "https://api.github.com/repos/teamleaderleo/glimpse/compare/5c813ff...05a5bfe",
+    "https://api.github.com/repos/teamleaderleo/baxtori/compare/5c813ff...05a5bfe",
   );
 });
 
