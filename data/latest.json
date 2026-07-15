@@ -7,8 +7,8 @@
   "stories": [
     {
       "id": "glimpse-account-backed-review-loop",
-      "project": "glimpse",
-      "repository": "teamleaderleo/glimpse",
+      "project": "baxtori",
+      "repository": "teamleaderleo/baxtori",
       "tone": "green",
       "timing": "Jul 13",
       "title": "Reader choices now constrain the next review.",
@@ -61,7 +61,7 @@
       "commits": [
         {
           "sha": "36379892e85bd1e3512663bcc7632a1c6a9a1be5",
-          "url": "https://github.com/teamleaderleo/glimpse/commit/36379892e85bd1e3512663bcc7632a1c6a9a1be5"
+          "url": "https://github.com/teamleaderleo/baxtori/commit/36379892e85bd1e3512663bcc7632a1c6a9a1be5"
         }
       ]
     },
