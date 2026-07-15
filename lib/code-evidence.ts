@@ -1,3 +1,5 @@
+import { canonicalRepository } from "./repository-identity";
+
 const REPOSITORY_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const COMMIT_PATTERN = /^[0-9a-f]{7,40}$/i;
 const SAFE_PATH_SEGMENT = /^[^\0/]+$/;
@@ -8,7 +10,7 @@ export type CodeRange = {
 };
 
 export function parseCodeEvidenceRequest(url: URL) {
-  const repository = url.searchParams.get("repo")?.trim() ?? "";
+  const repository = canonicalRepository(url.searchParams.get("repo")?.trim() ?? "");
   const commit = url.searchParams.get("commit")?.trim() ?? "";
   const path = url.searchParams.get("path")?.trim() ?? "";
   const startLine = Number(url.searchParams.get("start"));
@@ -23,8 +25,9 @@ export function parseCodeEvidenceRequest(url: URL) {
 }
 
 export function buildGitHubContentsUrl(repository: string, path: string, commit: string) {
+  const canonical = canonicalRepository(repository);
   const encodedPath = path.split("/").map(encodeURIComponent).join("/");
-  const endpoint = new URL(`https://api.github.com/repos/${repository}/contents/${encodedPath}`);
+  const endpoint = new URL(`https://api.github.com/repos/${canonical}/contents/${encodedPath}`);
   endpoint.searchParams.set("ref", commit);
   return endpoint;
 }
