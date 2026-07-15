@@ -1,4 +1,4 @@
-import { canonicalRepository, canonicalizeRepositoryList, canonicalizeRepositoryStateRecord } from "./repository-identity";
+import { canonicalRepository, canonicalizeRepositoryList, canonicalizeRepositoryStateRecord } from "./repository-identity.ts";
 
 export type ReaderStoryState = {
   expanded: boolean;
