@@ -1,3 +1,5 @@
+import { canonicalRepository } from "./repository-identity.mjs";
+
 function normalized(path) {
   return path.replace(/^\.\//, "").replace(/\/$/, "");
 }
@@ -9,12 +11,13 @@ function evidenceMatches(file, evidence) {
 }
 
 export function buildMapImpact(repositoryMap, repositories) {
-  const repository = repositories.find((item) => item.fullName === repositoryMap.repository);
+  const mapRepository = canonicalRepository(repositoryMap.repository);
+  const repository = repositories.find((item) => canonicalRepository(item.fullName) === mapRepository);
   if (!repository) {
     return {
       affectedAreas: [],
-      error: `No collected source matches ${repositoryMap.repository}.`,
-      repository: repositoryMap.repository,
+      error: `No collected source matches ${mapRepository}.`,
+      repository: mapRepository,
       unmappedFiles: [],
     };
   }
@@ -45,7 +48,7 @@ export function buildMapImpact(repositoryMap, repositories) {
       commits: commits.map(({ date, sha, shortSha, subject, url }) => ({ date, sha, shortSha, subject, url })),
       previousConfidence: area.confidence,
       previousFreshness: area.freshness,
-      repository: repositoryMap.repository,
+      repository: mapRepository,
       reviewReason: `${changedFiles.length} mapped evidence ${changedFiles.length === 1 ? "file has" : "files have"} changed since the collection window opened.`,
     }];
   });
@@ -53,7 +56,7 @@ export function buildMapImpact(repositoryMap, repositories) {
   return {
     affectedAreas,
     error: null,
-    repository: repositoryMap.repository,
+    repository: mapRepository,
     reviewedThrough: repositoryMap.generatedAt ?? null,
     unmappedFiles: touchedSinceReview.filter((file) => !coveredFiles.has(file)),
   };

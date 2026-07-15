@@ -1,5 +1,6 @@
 "use client";
 
+import { canonicalRepository, canonicalizeRepositoryStateRecord } from "@/lib/repository-identity";
 import { RepoMap, type QuestionDisposition, type RepoArea, type RepoMapData, type RepoQuestion, type UnderstandingState } from "./repo-map";
 
 type MapSource = {
@@ -29,17 +30,31 @@ export function RepositoryMaps({
   sources,
   states,
 }: RepositoryMapsProps) {
-  const activeSource = sources.find((source) => source.fullName === activeRepository) ?? sources[0];
-  const activeMap = data.find((map) => map.repository === activeSource?.fullName);
+  const activeSource = sources.find((source) => canonicalRepository(source.fullName) === canonicalRepository(activeRepository)) ?? sources[0];
+  const sourceMap = data.find((map) => canonicalRepository(map.repository) === canonicalRepository(activeSource?.fullName));
+  const activeMap = sourceMap ? { ...sourceMap, repository: canonicalRepository(sourceMap.repository) } : undefined;
+  const normalizedStates = canonicalizeRepositoryStateRecord(states);
+  const normalizedQuestionStates = canonicalizeRepositoryStateRecord(questionStates);
+
+  if (activeMap) {
+    for (const area of activeMap.areas) {
+      const key = `${activeMap.repository}:${area.id}`;
+      if (normalizedStates[key] === undefined && states[area.id] !== undefined) normalizedStates[key] = states[area.id];
+    }
+    for (const question of activeMap.questions) {
+      const key = `${activeMap.repository}:${question.id}`;
+      if (normalizedQuestionStates[key] === undefined && questionStates[question.id] !== undefined) normalizedQuestionStates[key] = questionStates[question.id];
+    }
+  }
 
   return (
     <section className="repository-maps" aria-label="Repository maps">
       <div className="map-switcher" role="tablist" aria-label="Choose a repository map">
         {sources.map((source) => (
           <button
-            aria-selected={activeSource?.fullName === source.fullName}
+            aria-selected={canonicalRepository(activeSource?.fullName ?? "") === canonicalRepository(source.fullName)}
             key={source.fullName}
-            onClick={() => onActiveRepositoryChange(source.fullName)}
+            onClick={() => onActiveRepositoryChange(canonicalRepository(source.fullName))}
             role="tab"
             type="button"
           >
@@ -55,8 +70,8 @@ export function RepositoryMaps({
             data={activeMap}
             onQuestionChange={(question, state) => onQuestionChange(activeMap.repository, question, state)}
             onStateChange={(area, state) => onStateChange(activeMap.repository, area, state)}
-            questionStates={questionStates}
-            states={states}
+            questionStates={normalizedQuestionStates}
+            states={normalizedStates}
           />
         ) : (
           <div className="map-unavailable">

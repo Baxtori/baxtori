@@ -1,5 +1,6 @@
 import { feedbackIsConfigured, getReaderFeedback, saveReaderFeedback } from "@/lib/feedback-store";
 import { parseReaderState } from "@/lib/feedback-contract";
+import { canonicalRepository } from "@/lib/repository-identity";
 import { getGitHubSession, withSessionCookie } from "@/lib/github-auth";
 
 export async function GET(request: Request) {
@@ -9,11 +10,16 @@ export async function GET(request: Request) {
 
   try {
     const result = await getReaderFeedback(String(session.user.id));
+    const state = result.state?.payload ? parseReaderState(result.state.payload) : null;
+    const reviewRequests = result.reviewRequests.map((reviewRequest) => ({
+      ...reviewRequest,
+      repository: canonicalRepository(reviewRequest.repository),
+    }));
     return withSessionCookie(Response.json({
       configured: true,
-      reviewRequests: result.reviewRequests,
+      reviewRequests,
       revision: result.state?.revision ?? 0,
-      state: result.state?.payload ?? null,
+      state,
       updatedAt: result.state?.updatedAt ?? null,
     }, { headers: { "Cache-Control": "private, no-store" } }), setCookie);
   } catch {

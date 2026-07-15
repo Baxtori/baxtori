@@ -1,21 +1,23 @@
 import { readFile } from "node:fs/promises";
+import { canonicalRepository } from "./lib/repository-identity.mjs";
 
 const root = new URL("../", import.meta.url);
 const registry = JSON.parse(await readFile(new URL("data/repository-maps.json", root), "utf8"));
 const requiredSignals = ["breadth", "depth", "confidence", "freshness"];
 
 function validateMap(map, expectedRepository) {
-  if (map.repository !== expectedRepository || !map.repository?.includes("/") || !map.summary || !Array.isArray(map.areas) || !map.areas.length) {
+  const repository = canonicalRepository(map.repository);
+  if (repository !== canonicalRepository(expectedRepository) || !repository?.includes("/") || !map.summary || !Array.isArray(map.areas) || !map.areas.length) {
     throw new Error(`${expectedRepository} needs a matching repository, summary, and at least one mapped area.`);
   }
 
-  if (!Array.isArray(map.questions)) throw new Error(`${map.repository} needs a question ledger.`);
+  if (!Array.isArray(map.questions)) throw new Error(`${repository} needs a question ledger.`);
   const areaIds = new Set(map.areas.map((area) => area.id));
-  if (!Array.isArray(map.reviews)) throw new Error(`${map.repository} needs an append-only review history.`);
+  if (!Array.isArray(map.reviews)) throw new Error(`${repository} needs an append-only review history.`);
   for (const review of map.reviews) {
     const referencedAreas = [...(review.affectedAreaIds ?? []), ...(review.newAreaIds ?? [])];
     if (!review.id || !Date.parse(review.reviewedAt) || !review.summary || !review.throughCommit?.sha || !review.throughCommit?.url) {
-      throw new Error(`Invalid map review in ${map.repository}: ${review.id}`);
+      throw new Error(`Invalid map review in ${repository}: ${review.id}`);
     }
     if (!referencedAreas.length || referencedAreas.some((areaId) => !areaIds.has(areaId)) || !Array.isArray(review.unmappedFilesReviewed)) {
       throw new Error(`${review.id} has invalid area or unmapped-file references.`);
@@ -23,7 +25,7 @@ function validateMap(map, expectedRepository) {
   }
   for (const question of map.questions) {
     if (!question.id || !areaIds.has(question.areaId) || !question.question || !question.whyItMatters) {
-      throw new Error(`Invalid repository question in ${map.repository}: ${question.id}`);
+      throw new Error(`Invalid repository question in ${repository}: ${question.id}`);
     }
     if (!["open", "resolved"].includes(question.status) || !question.evidence?.length) {
       throw new Error(`${question.id} lacks a valid status or evidence.`);
@@ -32,7 +34,7 @@ function validateMap(map, expectedRepository) {
 
   const ids = new Set();
   for (const area of map.areas) {
-    if (!area.id || ids.has(area.id)) throw new Error(`Duplicate or missing area id in ${map.repository}: ${area.id}`);
+    if (!area.id || ids.has(area.id)) throw new Error(`Duplicate or missing area id in ${repository}: ${area.id}`);
     ids.add(area.id);
     if (!area.name || !area.kind || !area.purpose || !area.verdict) throw new Error(`${area.id} lacks explanatory context.`);
     if (!Number.isInteger(area.importance) || area.importance < 1 || area.importance > 5) throw new Error(`${area.id} has invalid importance.`);
@@ -57,12 +59,14 @@ function validateMap(map, expectedRepository) {
 if (!Array.isArray(registry.maps) || !registry.maps.length) throw new Error("Repository map registry is empty.");
 const repositories = new Set();
 for (const entry of registry.maps) {
-  if (!entry.repository?.includes("/") || !entry.path || repositories.has(entry.repository)) {
+  const repository = canonicalRepository(entry.repository);
+  if (!repository?.includes("/") || !entry.path || repositories.has(repository)) {
     throw new Error(`Invalid or duplicate map registry entry: ${entry.repository}`);
   }
+  if (entry.repository !== repository) throw new Error(`${entry.repository} is a legacy map alias. Register ${repository}.`);
   const map = JSON.parse(await readFile(new URL(entry.path, root), "utf8"));
-  validateMap(map, entry.repository);
-  repositories.add(entry.repository);
+  validateMap(map, repository);
+  repositories.add(repository);
 }
 
 console.log(`Repository maps are valid for ${repositories.size} repositories.`);

@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-07-13T09:19:11+08:00",
+  "updatedAt": "2026-07-15T07:08:00Z",
   "lastReviewedAt": "2026-07-13T01:15:55.210Z",
   "schedule": "Mondays at 9:00 AM",
   "windowDays": 7,
   "repositories": [
     {
-      "fullName": "teamleaderleo/glimpse",
-      "name": "glimpse",
+      "fullName": "teamleaderleo/baxtori",
+      "name": "baxtori",
       "priority": "core",
       "mapStatus": "mapped"
     },

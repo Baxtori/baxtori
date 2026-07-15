@@ -2,8 +2,8 @@
   "windowDays": 7,
   "repositories": [
     {
-      "name": "glimpse",
-      "fullName": "teamleaderleo/glimpse",
+      "name": "baxtori",
+      "fullName": "teamleaderleo/baxtori",
       "path": ".",
       "branch": "main"
     },
