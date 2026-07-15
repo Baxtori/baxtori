@@ -1,4 +1,4 @@
-import { canonicalRepository } from "./repository-identity";
+import { canonicalRepository } from "./repository-identity.ts";
 
 const REPOSITORY_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const COMMIT_PATTERN = /^[0-9a-f]{7,40}$/i;
