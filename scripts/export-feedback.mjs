@@ -3,6 +3,11 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../convex/_generated/api.js";
+import {
+  canonicalRepository,
+  canonicalizeRepositoryList,
+  canonicalizeRepositoryStateRecord,
+} from "./lib/repository-identity.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 try {
@@ -18,10 +23,23 @@ if (!url || !secret || !githubLogin) throw new Error("Feedback export needs CONV
 
 const client = new ConvexHttpClient(url);
 const input = await client.query(api.feedback.getCompilerInput, { githubLogin, secret });
+const readerState = input.readerState ? {
+  ...input.readerState,
+  payload: {
+    ...input.readerState.payload,
+    activeMapRepository: canonicalRepository(input.readerState.payload.activeMapRepository),
+    mapStates: canonicalizeRepositoryStateRecord(input.readerState.payload.mapStates),
+    questionStates: canonicalizeRepositoryStateRecord(input.readerState.payload.questionStates),
+    selectedRepositories: canonicalizeRepositoryList(input.readerState.payload.selectedRepositories),
+  },
+} : null;
+const reviewRequests = input.reviewRequests
+  .map((request) => ({ ...request, repository: canonicalRepository(request.repository) }))
+  .sort((a, b) => a.createdAt - b.createdAt);
 const output = {
   exportedAt: new Date().toISOString(),
-  readerState: input.readerState,
-  reviewRequests: input.reviewRequests.sort((a, b) => a.createdAt - b.createdAt),
+  readerState,
+  reviewRequests,
 };
 
 await writeFile(resolve(root, "data/feedback-input.json"), `${JSON.stringify(output, null, 2)}\n`);
