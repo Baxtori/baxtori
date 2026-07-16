@@ -62,11 +62,24 @@ test("ranks one deterministic queue across stories, map areas, and questions", (
   assert.deepEqual(queue.slice(0, 4).map((item) => item.id), [
     "story:auth-story",
     "area:owner/repo:auth",
-    "watch:cache-story",
     "question:owner/repo:session-expiry",
+    "area:owner/repo:cache",
   ]);
   assert.equal(queue[0].reason, "5/5 learning value and not yet understood.");
   assert.equal(queue.find((item) => item.kind === "area")?.minutes, 5);
+});
+
+test("keeps understood watches in memory without making them permanent Continue work", () => {
+  const queue = build({
+    mapStates: { auth: "understood", cache: "skipped" },
+    questionStates: { "owner/repo:session-expiry": "resolved" },
+    storyStates: {
+      "auth-story": { understood: true, watching: true },
+      "cache-story": { understood: true },
+    },
+  });
+
+  assert.deepEqual(queue, []);
 });
 
 test("honors dismiss, lock, understanding, and question dispositions", () => {

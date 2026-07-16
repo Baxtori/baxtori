@@ -110,18 +110,6 @@ export function buildContinueQueue({
         title: story.title,
         view: "briefing",
       });
-    } else if (readable && state.understood && state.watching) {
-      items.push({
-        id: `watch:${story.id}`,
-        kind: "watch",
-        minutes: 3,
-        priority: 94 + story.learningValue * 3 + (stories.length - storyIndex),
-        reason: "You understood this story and kept the thread on watch.",
-        repository,
-        targetId: story.id,
-        title: story.title,
-        view: "briefing",
-      });
     }
   }
 
