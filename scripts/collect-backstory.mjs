@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildFollowUpCandidates } from "./lib/follow-up-candidates.mjs";
 import { buildMapImpacts } from "./lib/map-impact.mjs";
 import { sourceReviewRef } from "./lib/source-ref.mjs";
 
@@ -134,19 +135,29 @@ const configuredSources = selectedRepositorySet
   : config.repositories;
 const repositories = configuredSources.map(collectRepository);
 const mapImpact = buildMapImpacts(repositoryMaps, repositories);
+const followUpCandidates = buildFollowUpCandidates({
+  mapImpact,
+  queuedQuestions: readerFeedback?.queuedQuestions ?? [],
+  repositories,
+  topicThreads: readerFeedback?.topicThreads ?? [],
+});
 const output = {
   collectedAt: new Date().toISOString(),
   instructions: {
     evidenceRule: "Every claim must be supported by the listed commits and files. Do not infer unobserved behavior.",
     quietRule: "Publish no story for repositories with no commits or only routine lockfile/documentation churn unless that churn changes behavior.",
     storyLimit: 5,
+    followUpRule: "Treat follow-up candidates as review prompts only. Publish a return to the reader only after inspecting the original evidence and the new commits, then record the exact match reason and new evidence.",
     mapRule: "Review every affected map area against its exact commits before changing confidence, freshness, verdict, walkthrough, or questions. New unmapped files may suggest a new area, but are not proof of one.",
   },
+  followUpCandidates,
   mapImpact,
   readerFeedback: readerFeedback ? {
     exportedAt: readerFeedback.exportedAt,
     readerState: readerFeedback.readerState,
+    queuedQuestions: readerFeedback.queuedQuestions ?? [],
     reviewRequests: readerFeedback.reviewRequests,
+    topicThreads: readerFeedback.topicThreads ?? [],
     unconfiguredSelections: Array.isArray(requestedRepositories)
       ? requestedRepositories.filter((repository) => !config.repositories.some((source) => source.fullName === repository))
       : [],
@@ -163,3 +174,4 @@ await writeFile(resolve(root, "data/candidates.json"), `${JSON.stringify(output,
 const active = repositories.filter((repository) => repository.commits.length && !repository.routineOnly).length;
 console.log(`Collected ${repositories.length} selected repositories; ${active} have potentially meaningful changes.`);
 console.log(`Map impact: ${mapImpact.affectedAreas.length} affected areas; ${mapImpact.unmappedFiles.length} changed files remain unmapped.`);
+console.log(`Follow-up preflight: ${followUpCandidates.candidates.length} candidates; ${followUpCandidates.unmatchedThreads.length} active threads have no related collected change.`);
