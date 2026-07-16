@@ -58,6 +58,22 @@ test("question input preserves private or explicitly queued intent", () => {
   assert.equal(input.threadId, "thread-id");
 });
 
+test("question input rejects blank text", () => {
+  assert.throws(() => storyQuestionInput({
+    editionId: "2026-07-13",
+    evidence,
+    guidance: "",
+    lensId: "same",
+    question: "   ",
+    repository: "owner/repo",
+    reviewState: "private",
+    selectedEndLine: 24,
+    selectedStartLine: 18,
+    story,
+    threadId: "thread-id",
+  }), /write a question/i);
+});
+
 test("evidence filtering returns questions attached to the active excerpt", () => {
   const inside = {
     evidence: questionEvidenceAddress(evidence, "owner/repo", 18, 24),
