@@ -36,11 +36,25 @@ const readerState = input.readerState ? {
 const reviewRequests = input.reviewRequests
   .map((request) => ({ ...request, repository: canonicalRepository(request.repository) }))
   .sort((a, b) => a.createdAt - b.createdAt);
+const topicThreads = input.topicThreads
+  .map((thread) => ({
+    ...thread,
+    evidence: { ...thread.evidence, repository: canonicalRepository(thread.evidence.repository) },
+  }))
+  .sort((a, b) => a.createdAt - b.createdAt);
+const queuedQuestions = input.queuedQuestions
+  .map((question) => ({
+    ...question,
+    evidence: { ...question.evidence, repository: canonicalRepository(question.evidence.repository) },
+  }))
+  .sort((a, b) => a.createdAt - b.createdAt);
 const output = {
   exportedAt: new Date().toISOString(),
+  queuedQuestions,
   readerState,
   reviewRequests,
+  topicThreads,
 };
 
 await writeFile(resolve(root, "data/feedback-input.json"), `${JSON.stringify(output, null, 2)}\n`);
-console.log(`Exported reader state and ${output.reviewRequests.length} queued review requests.`);
+console.log(`Exported reader state, ${output.topicThreads.length} active topics, ${output.queuedQuestions.length} queued questions, and ${output.reviewRequests.length} queued review requests.`);
