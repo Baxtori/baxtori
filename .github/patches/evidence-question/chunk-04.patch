@@ -1,0 +1,76 @@
+diff --git a/app/story-code.tsx b/app/story-code.tsx
+index f08e272..b5dbb82 100644
+--- a/app/story-code.tsx
++++ b/app/story-code.tsx
+@@ -3,6 +3,9 @@
+ import { useEffect, useState } from "react";
+ import type { DiffLine } from "@/lib/code-diff";
+ import { highlightCodeLines, type SyntaxToken } from "@/lib/code-highlight";
++import type { ThreadQuestionRecord } from "@/lib/story-questions";
++import type { TopicThreadRecord } from "@/lib/story-topics";
++import { EvidenceQuestion, type QuestionReviewLens } from "./evidence-question";
+ 
+ export type CodeEvidence = {
+   baseCommit: string;
+@@ -34,14 +37,38 @@ type HighlightedDiffLine = DiffLine & {
+ };
+ 
+ type StoryCodeProps = {
++  defaultQuestionLens: string;
++  editionId: string;
+   evidence: CodeEvidence[];
++  feedbackConfigured: boolean;
++  onQuestionSaved: (question: ThreadQuestionRecord, topic?: TopicThreadRecord) => void;
++  onQuestionUpdated: (question: ThreadQuestionRecord) => void;
++  questionLenses: QuestionReviewLens[];
++  questions: ThreadQuestionRecord[];
+   repository: string;
+   storyId: string;
++  storyTitle: string;
++  topicId: string;
++  topicThread?: TopicThreadRecord;
+ };
+ 
+ type ViewMode = "current" | "diff";
+ 
+-export function StoryCode({ evidence, repository, storyId }: StoryCodeProps) {
++export function StoryCode({
++  defaultQuestionLens,
++  editionId,
++  evidence,
++  feedbackConfigured,
++  onQuestionSaved,
++  onQuestionUpdated,
++  questionLenses,
++  questions,
++  repository,
++  storyId,
++  storyTitle,
++  topicId,
++  topicThread,
++}: StoryCodeProps) {
+   const [activeIndex, setActiveIndex] = useState(0);
+   const [codeResponse, setCodeResponse] = useState<CodeResponse | null>(null);
+   const [diffResponse, setDiffResponse] = useState<DiffResponse | null>(null);
+@@ -234,6 +261,21 @@ export function StoryCode({ evidence, repository, storyId }: StoryCodeProps) {
+           <button disabled={!hasVisibleCode} onClick={() => void copyVisibleCode()} type="button">{copied ? "Copied ✓" : viewMode === "diff" ? "Copy diff" : "Copy excerpt"}</button>
+           {visibleSourceUrl && <a href={visibleSourceUrl} rel="noreferrer" target="_blank">{viewMode === "diff" ? "Open comparison on GitHub ↗" : "Open full file on GitHub ↗"}</a>}
+         </footer>
++
++        <EvidenceQuestion
++          defaultLens={defaultQuestionLens}
++          editionId={editionId}
++          evidence={active}
++          feedbackConfigured={feedbackConfigured}
++          key={`${active.commit}:${active.path}:${active.startLine}`}
++          lenses={questionLenses}
++          onQuestionSaved={onQuestionSaved}
++          onQuestionUpdated={onQuestionUpdated}
++          questions={questions}
++          repository={repository}
++          story={{ id: storyId, title: storyTitle, topicId }}
++          topicThread={topicThread}
++        />
+       </div>
+     </section>
+   );
