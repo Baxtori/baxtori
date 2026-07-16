@@ -2,6 +2,7 @@ import { ConvexHttpClient } from "convex/browser";
 import type { Id } from "@/convex/_generated/dataModel";
 import { api } from "@/convex/_generated/api";
 import type { ReaderStatePayload } from "@/lib/feedback-contract";
+import type { ThreadQuestionInput, ThreadQuestionUpdate, TopicThreadInput, TopicThreadUpdate } from "@/lib/topic-contract";
 
 let feedbackClient: ConvexHttpClient | null = null;
 
@@ -50,6 +51,41 @@ export async function cancelReviewFeedback(userId: string, requestId: string) {
   const { client, secret } = getFeedbackClient();
   return client.mutation(api.feedback.cancelReviewRequest, {
     requestId: requestId as Id<"reviewRequests">,
+    secret,
+    userId,
+  });
+}
+
+export async function upsertTopicFeedback(userId: string, thread: TopicThreadInput) {
+  const { client, secret } = getFeedbackClient();
+  return client.mutation(api.feedback.upsertTopicThread, { ...thread, secret, userId });
+}
+
+export async function updateTopicFeedback(userId: string, update: TopicThreadUpdate) {
+  const { client, secret } = getFeedbackClient();
+  return client.mutation(api.feedback.updateTopicThread, {
+    ...update,
+    secret,
+    threadId: update.threadId as Id<"topicThreads">,
+    userId,
+  });
+}
+
+export async function createQuestionFeedback(userId: string, question: ThreadQuestionInput) {
+  const { client, secret } = getFeedbackClient();
+  return client.mutation(api.feedback.createThreadQuestion, {
+    ...question,
+    secret,
+    threadId: question.threadId as Id<"topicThreads">,
+    userId,
+  });
+}
+
+export async function updateQuestionFeedback(userId: string, update: ThreadQuestionUpdate) {
+  const { client, secret } = getFeedbackClient();
+  return client.mutation(api.feedback.updateThreadQuestion, {
+    ...update,
+    questionId: update.questionId as Id<"threadQuestions">,
     secret,
     userId,
   });
