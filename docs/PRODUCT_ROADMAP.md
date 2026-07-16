@@ -87,6 +87,8 @@ A watched topic should retain:
 
 A later edition should explain why it matched the watched topic. Weak filename-only matches should remain review input and stay out of the reader-facing feed.
 
+**Implemented foundation:** Watch and evidence questions now share durable topic identities, and the deterministic collector proposes follow-up candidates only for exact retained paths or explicitly mapped areas. Every candidate remains compiler scratch input until review confirms the relationship and publishes new exact evidence.
+
 Tracked in #19.
 
 ## P1 — Questions attached to evidence
