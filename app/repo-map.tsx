@@ -251,7 +251,7 @@ export function RepoMap({ data, onQuestionChange, onStateChange, questionStates,
           const state = stateFor(area);
           const score = adjustedCoverage(area, state);
           return (
-            <details className={`map-area is-${state}`} id={`area-${area.id}`} key={area.id} open={area.id === frontier?.id}>
+            <details className={`map-area is-${state}`} id={`area-${area.id}`} key={area.id} open={area.id === frontier?.id} tabIndex={-1}>
               <summary>
                 <div className="map-area-main">
                   <span>{area.kind}</span>
@@ -294,7 +294,7 @@ export function RepoMap({ data, onQuestionChange, onStateChange, questionStates,
                   <button aria-pressed={state === "skipped"} onClick={() => onStateChange(area, "skipped")} type="button">Not worth it</button>
                 </div>
                 {area.walkthrough ? (
-                  <details className="walkthrough" id={`walkthrough-${area.id}`}>
+                  <details className="walkthrough" id={`walkthrough-${area.id}`} tabIndex={-1}>
                     <summary>
                       <div><span className="eyebrow">Code walkthrough · {area.walkthrough.estimatedMinutes} min</span><strong>{area.walkthrough.title}</strong></div>
                       <span>Follow the path</span>
@@ -332,7 +332,7 @@ export function RepoMap({ data, onQuestionChange, onStateChange, questionStates,
             const disposition = questionStateFor(question);
             const area = data.areas.find((item) => item.id === question.areaId);
             return (
-              <article className={`question-card is-${disposition}`} id={`question-${question.id}`} key={question.id}>
+              <article className={`question-card is-${disposition}`} id={`question-${question.id}`} key={question.id} tabIndex={-1}>
                 <div className="question-meta"><span>{area?.name ?? question.areaId}</span><strong>{disposition}</strong></div>
                 <h3>{question.question}</h3>
                 <p>{question.whyItMatters}</p>

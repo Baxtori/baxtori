@@ -15,6 +15,7 @@ The product started as **Glimpse** and is being rebranded around
 - A deliberately concise weekly briefing with details on demand
 - Separate signals for learning value, code quality, and deliberate tradeoffs
 - Mark-understood, watch, dismiss-project, focus, and keyboard-reading flows
+- A deterministic 5, 15, or 30-minute Continue queue across stories, watches, map frontiers, questions, and re-review context
 - A chronological activity view without notification or inbox behavior
 - Account-backed reading state with an instant device fallback
 - GitHub account sign-in with an encrypted, HttpOnly server session

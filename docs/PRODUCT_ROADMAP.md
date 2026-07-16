@@ -47,6 +47,11 @@ Add a compact validation report that confirms:
 
 ## P1 — Unified Continue queue
 
+**Implemented:** a deterministic cross-surface queue now ranks unread stories,
+watched follow-ups, map frontiers, revisit work, open questions, and re-review
+requests that still need reader context. The reader gets one primary action,
+an explicit reason, direct focus navigation, and 5, 15, or 30-minute plans.
+
 Create one queue across:
 
 - unread briefing stories

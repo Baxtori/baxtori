@@ -7,6 +7,7 @@ import oneMoreLegendMap from "@/data/maps/one-more-legend.json";
 import repositoryMap from "@/data/repo-map.json";
 import reviewPolicy from "@/data/review-policy.json";
 import reviewScope from "@/data/review-scope.json";
+import { buildContinueQueue, planContinueQueue, type ContinueItem, type ContinueItemKind } from "@/lib/continue-queue";
 import type { ReaderStatePayload, ReaderStoryState, ReviewRequest } from "@/lib/feedback-contract";
 import { RepositoryMaps } from "./repository-maps";
 import { type QuestionDisposition, type RepoArea, type RepoMapData, type RepoQuestion, type UnderstandingState } from "./repo-map";
@@ -138,6 +139,14 @@ type FeedbackStatus = "loading" | "local" | "saved" | "saving";
 const STORAGE_KEY = "baxtori:backstory:v1";
 const LEGACY_STORAGE_KEY = "glimpse:rundown:v2";
 const MAX_SELECTED_REPOSITORIES = 8;
+const CONTINUE_BUDGETS = [5, 15, 30] as const;
+const CONTINUE_KIND_LABELS: Record<ContinueItemKind, string> = {
+  area: "Map frontier",
+  question: "Open question",
+  review: "Re-review context",
+  story: "Unread backstory",
+  watch: "Watched thread",
+};
 
 const EMPTY_STORY_STATE: StoryState = {
   expanded: false,
@@ -250,6 +259,8 @@ export default function Home() {
   const [focusMode, setFocusMode] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [focusedStoryId, setFocusedStoryId] = useState<string | null>(null);
+  const [continueBudget, setContinueBudget] = useState<(typeof CONTINUE_BUDGETS)[number]>(15);
+  const [continueTarget, setContinueTarget] = useState<ContinueItem | null>(null);
   const [notice, setNotice] = useState("");
   const [hasHydrated, setHasHydrated] = useState(false);
   const [feedbackConfigured, setFeedbackConfigured] = useState(false);
@@ -458,6 +469,16 @@ export default function Home() {
   const visibleStories = STORIES.filter(
     (story) => storyState(story.id).locked || (!storyState(story.id).muted && (!hideUnderstood || !storyState(story.id).understood)),
   );
+  const continueQueue = buildContinueQueue({
+    mapStates,
+    questionStates,
+    repositoryMaps: REPOSITORY_MAPS,
+    reviewRequests,
+    stories: STORIES,
+    storyStates: states,
+  });
+  const continuePlan = planContinueQueue(continueQueue, continueBudget);
+  const nextContinueItem = continuePlan.items[0];
 
   const selectedRepositoryData = repositories.filter((repository) =>
     selectedRepositories.includes(repository.fullName),
@@ -609,6 +630,58 @@ export default function Home() {
     };
     setNotice(messages[state]);
   };
+
+  const openContinueItem = (item: ContinueItem) => {
+    if (item.view === "briefing") {
+      setHideUnderstood(false);
+      updateStory(item.targetId, {
+        expanded: true,
+        muted: false,
+        revising: item.kind === "review",
+      });
+      setFocusedStoryId(item.targetId);
+    } else if (item.kind === "area") {
+      const stateKey = `${item.repository}:${item.targetId}`;
+      const currentState = mapStates[stateKey] ?? mapStates[item.targetId] ?? "unexplored";
+      if (currentState === "unexplored") {
+        setMapStates((current) => ({ ...current, [stateKey]: "introduced" }));
+      }
+      setActiveMapRepository(item.repository);
+    } else {
+      setActiveMapRepository(item.repository);
+    }
+
+    setView(item.view);
+    setContinueTarget(item);
+    setNotice(`Continuing with ${item.title}`);
+  };
+
+  useEffect(() => {
+    if (!continueTarget || view !== continueTarget.view) return;
+    const focusFrame = window.requestAnimationFrame(() => {
+      let target: HTMLElement | null = null;
+      if (continueTarget.view === "briefing") {
+        target = document.getElementById(`story-${continueTarget.targetId}`);
+      } else if (continueTarget.kind === "question") {
+        target = document.getElementById(`question-${continueTarget.targetId}`);
+      } else {
+        const area = document.getElementById(`area-${continueTarget.targetId}`) as HTMLDetailsElement | null;
+        if (area) area.open = true;
+        const walkthrough = document.getElementById(`walkthrough-${continueTarget.targetId}`) as HTMLDetailsElement | null;
+        if (walkthrough) walkthrough.open = true;
+        target = walkthrough ?? area;
+      }
+
+      target?.focus({ preventScroll: true });
+      target?.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "center",
+      });
+      setContinueTarget(null);
+    });
+
+    return () => window.cancelAnimationFrame(focusFrame);
+  }, [activeMapRepository, continueTarget, view]);
 
   const moveStoryFocus = (direction: 1 | -1) => {
     if (!visibleStories.length) return;
@@ -827,6 +900,70 @@ export default function Home() {
         </header>
 
         <p className="notice" aria-live="polite" role="status">{notice}</p>
+
+        {hasHydrated && (
+          <section className={`continue-queue ${nextContinueItem ? "" : "is-complete"}`} aria-labelledby="continue-heading">
+            {nextContinueItem ? (
+              <>
+                <div className="continue-primary">
+                  <span className="eyebrow">Continue · {CONTINUE_KIND_LABELS[nextContinueItem.kind]}</span>
+                  <h2 id="continue-heading">{nextContinueItem.title}</h2>
+                  <p>{nextContinueItem.reason}</p>
+                  <div className="continue-meta">
+                    <span>{nextContinueItem.repository}</span>
+                    <span>{nextContinueItem.minutes} min</span>
+                  </div>
+                  <button onClick={() => openContinueItem(nextContinueItem)} type="button">
+                    Continue <span aria-hidden="true">→</span>
+                  </button>
+                </div>
+                <div className="continue-plan">
+                  <div className="continue-plan-heading">
+                    <div>
+                      <span>Next up</span>
+                      <strong>{continuePlan.plannedMinutes} of {continueBudget} minutes planned</strong>
+                    </div>
+                    <div className="continue-budgets" aria-label="Continue time budget">
+                      {CONTINUE_BUDGETS.map((minutes) => (
+                        <button
+                          aria-pressed={continueBudget === minutes}
+                          key={minutes}
+                          onClick={() => setContinueBudget(minutes)}
+                          type="button"
+                        >
+                          {minutes}m
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {continuePlan.items.length > 1 ? (
+                    <ol>
+                      {continuePlan.items.slice(1, 4).map((item) => (
+                        <li key={item.id}>
+                          <button onClick={() => openContinueItem(item)} type="button">
+                            <span>{CONTINUE_KIND_LABELS[item.kind]} · {item.minutes} min</span>
+                            <strong>{item.title}</strong>
+                          </button>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p className="continue-solo">One useful step fits this window. Finish it, and Baxtori will choose again.</p>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="continue-complete">
+                <span aria-hidden="true">✓</span>
+                <div>
+                  <span className="eyebrow">Continue queue</span>
+                  <h2 id="continue-heading">Nothing is asking for your attention.</h2>
+                  <p>Your stories, map areas, and questions are understood, resolved, or deliberately skipped.</p>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
 
         {view === "briefing" && (
           <section className="briefing-view" aria-labelledby="briefing-heading">
