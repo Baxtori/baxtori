@@ -8,6 +8,7 @@ import repositoryMap from "@/data/repo-map.json";
 import reviewPolicy from "@/data/review-policy.json";
 import reviewScope from "@/data/review-scope.json";
 import { buildContinueQueue, planContinueQueue, type ContinueItem, type ContinueItemKind } from "@/lib/continue-queue";
+import { focusTargetFor, planStoryOpening, shouldClearReviewMarker, type FocusTarget } from "@/lib/reader-navigation";
 import type { ReaderStatePayload, ReaderStoryState, ReviewRequest } from "@/lib/feedback-contract";
 import { RepositoryMaps } from "./repository-maps";
 import { type QuestionDisposition, type RepoArea, type RepoMapData, type RepoQuestion, type UnderstandingState } from "./repo-map";
@@ -260,7 +261,7 @@ export default function Home() {
   const [showHelp, setShowHelp] = useState(false);
   const [focusedStoryId, setFocusedStoryId] = useState<string | null>(null);
   const [continueBudget, setContinueBudget] = useState<(typeof CONTINUE_BUDGETS)[number]>(15);
-  const [continueTarget, setContinueTarget] = useState<ContinueItem | null>(null);
+  const [focusTarget, setFocusTarget] = useState<FocusTarget | null>(null);
   const [notice, setNotice] = useState("");
   const [hasHydrated, setHasHydrated] = useState(false);
   const [feedbackConfigured, setFeedbackConfigured] = useState(false);
@@ -591,7 +592,10 @@ export default function Home() {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("The request could not be canceled.");
-      setReviewRequests((current) => current.map((request) => request._id === requestId ? { ...request, status: "canceled" } : request));
+      const request = reviewRequests.find((candidate) => candidate._id === requestId);
+      const clearMarker = shouldClearReviewMarker(reviewRequests, requestId);
+      setReviewRequests((current) => current.map((candidate) => candidate._id === requestId ? { ...candidate, status: "canceled" } : candidate));
+      if (request && clearMarker) updateStory(request.storyId, { reviewRequestedAt: null, revising: false });
       setNotice("Re-review removed from the queue.");
     } catch {
       setNotice("The review queue could not be updated.");
@@ -631,57 +635,66 @@ export default function Home() {
     setNotice(messages[state]);
   };
 
+  const openStory = (story: Story, options: { revising?: boolean; notice?: string } = {}) => {
+    const plan = planStoryOpening(storyState(story.id), hideUnderstood, options.revising ?? false);
+    if (plan.hideUnderstood !== hideUnderstood) setHideUnderstood(plan.hideUnderstood);
+    updateStory(story.id, plan.patch);
+    setFocusedStoryId(story.id);
+    setView("briefing");
+    setFocusTarget(focusTargetFor({ kind: "story", targetId: story.id }));
+    setNotice(options.notice ?? `Opened ${story.title}`);
+  };
+
+  const openRepositoryControls = () => {
+    setView("repositories");
+    setFocusTarget(focusTargetFor({ kind: "repositories" }));
+  };
+
   const openContinueItem = (item: ContinueItem) => {
     if (item.view === "briefing") {
-      setHideUnderstood(false);
-      updateStory(item.targetId, {
-        expanded: true,
-        muted: false,
-        revising: item.kind === "review",
-      });
-      setFocusedStoryId(item.targetId);
-    } else if (item.kind === "area") {
+      const story = STORIES.find((candidate) => candidate.id === item.targetId);
+      if (story) {
+        openStory(story, { revising: item.kind === "review", notice: `Continuing with ${item.title}` });
+        return;
+      }
+    }
+
+    if (item.kind === "area") {
       const stateKey = `${item.repository}:${item.targetId}`;
       const currentState = mapStates[stateKey] ?? mapStates[item.targetId] ?? "unexplored";
       if (currentState === "unexplored") {
         setMapStates((current) => ({ ...current, [stateKey]: "introduced" }));
       }
       setActiveMapRepository(item.repository);
+      setFocusTarget(focusTargetFor({ kind: "area", repository: item.repository, targetId: item.targetId }));
     } else {
       setActiveMapRepository(item.repository);
+      setFocusTarget(focusTargetFor({ kind: "question", repository: item.repository, targetId: item.targetId }));
     }
 
     setView(item.view);
-    setContinueTarget(item);
     setNotice(`Continuing with ${item.title}`);
   };
 
   useEffect(() => {
-    if (!continueTarget || view !== continueTarget.view) return;
+    if (!focusTarget) return;
     const focusFrame = window.requestAnimationFrame(() => {
-      let target: HTMLElement | null = null;
-      if (continueTarget.view === "briefing") {
-        target = document.getElementById(`story-${continueTarget.targetId}`);
-      } else if (continueTarget.kind === "question") {
-        target = document.getElementById(`question-${continueTarget.targetId}`);
-      } else {
-        const area = document.getElementById(`area-${continueTarget.targetId}`) as HTMLDetailsElement | null;
-        if (area) area.open = true;
-        const walkthrough = document.getElementById(`walkthrough-${continueTarget.targetId}`) as HTMLDetailsElement | null;
-        if (walkthrough) walkthrough.open = true;
-        target = walkthrough ?? area;
+      for (const detailsId of focusTarget.detailsIds ?? []) {
+        const details = document.getElementById(detailsId) as HTMLDetailsElement | null;
+        if (details) details.open = true;
       }
-
+      const target = document.getElementById(focusTarget.elementId) ??
+        (focusTarget.detailsIds ?? []).map((id) => document.getElementById(id)).find(Boolean) ?? null;
       target?.focus({ preventScroll: true });
       target?.scrollIntoView({
         behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
         block: "center",
       });
-      setContinueTarget(null);
+      setFocusTarget(null);
     });
 
     return () => window.cancelAnimationFrame(focusFrame);
-  }, [activeMapRepository, continueTarget, view]);
+  }, [activeMapRepository, focusTarget, states, view]);
 
   const moveStoryFocus = (direction: 1 | -1) => {
     if (!visibleStories.length) return;
@@ -774,7 +787,7 @@ export default function Home() {
       return (
         <>
           <p><strong>{repositories.length} available repositories.</strong></p>
-          <button onClick={() => setView("repositories")} type="button">Choose</button>
+          <button onClick={openRepositoryControls} type="button">Choose repositories</button>
         </>
       );
     }
@@ -784,7 +797,7 @@ export default function Home() {
           <strong>{selectedRepositories.length} {selectedRepositories.length === 1 ? "repository" : "repositories"}</strong>{" · "}
           {activityLoading ? "Checking commits…" : `${recentCommitCount} commits since ${formatReviewCursor(REVIEW_SCOPE.lastReviewedAt)}`}
         </p>
-        <button onClick={() => setView("repositories")} type="button">Manage</button>
+        <button onClick={openRepositoryControls} type="button">Manage repositories</button>
       </>
     );
   };
@@ -834,16 +847,16 @@ export default function Home() {
           </div>
         </div>
         <nav className="primary-nav" aria-label="Primary">
-          <button className={view === "briefing" ? "is-active" : ""} onClick={() => setView("briefing")} type="button">
+          <button aria-current={view === "briefing" ? "page" : undefined} className={view === "briefing" ? "is-active" : ""} onClick={() => setView("briefing")} type="button">
             <span>Briefing</span><small>{STORIES.length - understoodCount}</small>
           </button>
-          <button className={view === "map" ? "is-active" : ""} onClick={() => setView("map")} type="button">
+          <button aria-current={view === "map" ? "page" : undefined} className={view === "map" ? "is-active" : ""} onClick={() => setView("map")} type="button">
             <span>Repo map</span><small>{Object.values(mapStates).filter((state) => state === "understood").length}</small>
           </button>
-          <button className={view === "timeline" ? "is-active" : ""} onClick={() => setView("timeline")} type="button">
+          <button aria-current={view === "timeline" ? "page" : undefined} className={view === "timeline" ? "is-active" : ""} onClick={() => setView("timeline")} type="button">
             <span>Timeline</span><small>7d</small>
           </button>
-          <button className={view === "repositories" ? "is-active" : ""} onClick={() => setView("repositories")} type="button">
+          <button aria-current={view === "repositories" ? "page" : undefined} className={view === "repositories" ? "is-active" : ""} onClick={openRepositoryControls} type="button">
             <span>Repositories</span><small>{selectedRepositories.length}</small>
           </button>
         </nav>
@@ -867,11 +880,11 @@ export default function Home() {
               <button aria-pressed={focusMode} onClick={() => setFocusMode((current) => !current)} type="button">
                 {focusMode ? "Exit focus" : "Focus"}
               </button>
-              <button onClick={copyBackstory} type="button">Copy</button>
-              <button aria-expanded={showHelp} onClick={() => setShowHelp((current) => !current)} type="button">?</button>
+              <button onClick={copyBackstory} type="button">Copy briefing</button>
+              <button aria-expanded={showHelp} aria-label={showHelp ? "Hide keyboard shortcuts" : "Show keyboard shortcuts"} onClick={() => setShowHelp((current) => !current)} type="button">?</button>
             </div>
           </div>
-          <h1>{view === "repositories" ? "Repositories." : view === "map" ? "Repository map." : "Weekly review."}</h1>
+          <h1>{view === "repositories" ? "Repositories." : view === "map" ? "Repository map." : view === "timeline" ? "Edition timeline." : "Weekly review."}</h1>
           <p className="dek">
             {view === "repositories"
               ? "Choose what Monday reviews."
@@ -1100,7 +1113,7 @@ export default function Home() {
             {watchedStories.length > 0 && (
               <div className="watch-strip">
                 <span>Watching</span>
-                {watchedStories.map((story) => <button key={story.id} onClick={() => updateStory(story.id, { expanded: true })} type="button">{story.project}</button>)}
+                {watchedStories.map((story) => <button key={story.id} onClick={() => openStory(story, { notice: `Opened watched thread ${story.title}` })} type="button">{story.project}</button>)}
               </div>
             )}
 
@@ -1149,7 +1162,7 @@ export default function Home() {
                   <div>
                     <span>{story.project}</span>
                     <h3>{story.title}</h3>
-                    <button onClick={() => { setView("briefing"); updateStory(story.id, { expanded: true }); setFocusedStoryId(story.id); }} type="button">Open backstory</button>
+                    <button onClick={() => openStory(story)} type="button">Open backstory</button>
                   </div>
                 </li>
               ))}
@@ -1162,7 +1175,7 @@ export default function Home() {
         )}
 
         {view === "repositories" && (
-          <section className="repositories-view" aria-labelledby="repositories-heading">
+          <section className="repositories-view" aria-labelledby="repositories-heading" id="repository-controls" tabIndex={-1}>
             <div className="connection-summary">
               <div>
                 <span className={`status-dot ${repositoryError ? "is-error" : ""}`} aria-hidden="true" />
@@ -1173,7 +1186,7 @@ export default function Home() {
               </div>
               <div className="connection-actions">
                 <span>{selectedRepositories.length}/{MAX_SELECTED_REPOSITORIES} selected</span>
-                {auth.appSlug && <a href={`https://github.com/apps/${auth.appSlug}/installations/new`} rel="noreferrer" target="_blank">Manage GitHub access ↗</a>}
+                {auth.appSlug && <><a href={`https://github.com/apps/${auth.appSlug}/installations/new`} rel="noreferrer" target="_blank">Add repositories ↗</a><a href="https://github.com/settings/installations" rel="noreferrer" target="_blank">Manage installation ↗</a></>}
               </div>
             </div>
 
@@ -1245,7 +1258,7 @@ export default function Home() {
                 {inaccessibleScheduledRepositories.map((repository) => (
                   <article className="scope-row is-inaccessible" key={repository}>
                     <div className="scope-row-main"><div className="scope-row-title"><strong>{repository}</strong><span>Needs GitHub access</span></div><p>Included in the published scope, but not visible to the current GitHub App installation.</p></div>
-                    {auth.appSlug && <a href={`https://github.com/apps/${auth.appSlug}/installations/new`} rel="noreferrer" target="_blank">Manage access ↗</a>}
+                    {auth.appSlug && <a href="https://github.com/settings/installations" rel="noreferrer" target="_blank">Manage installation ↗</a>}
                   </article>
                 ))}
                 {repositoryLoading && <div className="scope-empty"><strong>Checking the scheduled scope…</strong><span>Reading repository access and post-review activity from GitHub.</span></div>}
