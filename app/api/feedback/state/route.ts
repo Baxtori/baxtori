@@ -1,12 +1,13 @@
 import { feedbackIsConfigured, getReaderFeedback, saveReaderFeedback } from "@/lib/feedback-store";
 import { parseReaderState } from "@/lib/feedback-contract";
 import { canonicalRepository } from "@/lib/repository-identity";
+import { canonicalizeEvidenceAddress } from "@/lib/topic-contract";
 import { getGitHubSession, withSessionCookie } from "@/lib/github-auth";
 
 export async function GET(request: Request) {
   const { session, setCookie } = await getGitHubSession(request);
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to load your reading state." }, { status: 401 }), setCookie);
-  if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ configured: false, reviewRequests: [], state: null }, { status: 200 }), setCookie);
+  if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ configured: false, reviewRequests: [], state: null, threadQuestions: [], topicThreads: [] }, { status: 200 }), setCookie);
 
   try {
     const result = await getReaderFeedback(String(session.user.id));
@@ -15,11 +16,21 @@ export async function GET(request: Request) {
       ...reviewRequest,
       repository: canonicalRepository(reviewRequest.repository),
     }));
+    const topicThreads = result.topicThreads.map((thread) => ({
+      ...thread,
+      evidence: canonicalizeEvidenceAddress(thread.evidence),
+    }));
+    const threadQuestions = result.threadQuestions.map((question) => ({
+      ...question,
+      evidence: canonicalizeEvidenceAddress(question.evidence),
+    }));
     return withSessionCookie(Response.json({
       configured: true,
       reviewRequests,
       revision: result.state?.revision ?? 0,
       state,
+      threadQuestions,
+      topicThreads,
       updatedAt: result.state?.updatedAt ?? null,
     }, { headers: { "Cache-Control": "private, no-store" } }), setCookie);
   } catch {
