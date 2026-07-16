@@ -40,3 +40,17 @@ export const reviewStatusValidator = v.union(
   v.literal("queued"),
   v.literal("superseded"),
 );
+
+export const evidenceAddressValidator = v.object({
+  baseCommit: v.string(),
+  endLine: v.number(),
+  headCommit: v.string(),
+  path: v.string(),
+  repository: v.string(),
+  startLine: v.number(),
+});
+
+export const topicOriginValidator = v.union(v.literal("question"), v.literal("watch"));
+export const topicStatusValidator = v.union(v.literal("active"), v.literal("resolved"), v.literal("snoozed"));
+export const questionStatusValidator = v.union(v.literal("open"), v.literal("resolved"), v.literal("snoozed"));
+export const questionReviewStateValidator = v.union(v.literal("considered"), v.literal("private"), v.literal("queued"));

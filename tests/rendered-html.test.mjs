@@ -36,7 +36,7 @@ test("server-renders the Baxtori briefing", async () => {
 });
 
 test("keeps GitHub credentials and feedback storage behind the server session", async () => {
-  const [page, authLibrary, callbackRoute, repositoriesRoute, activityRoute, diffRoute, feedbackStateRoute, feedbackReviewsRoute, feedbackStore, envExample, hosting] = await Promise.all([
+  const [page, authLibrary, callbackRoute, repositoriesRoute, activityRoute, diffRoute, feedbackStateRoute, feedbackReviewsRoute, feedbackTopicsRoute, feedbackQuestionsRoute, feedbackStore, envExample, hosting] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../lib/github-auth.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/auth/github/callback/route.ts", import.meta.url), "utf8"),
@@ -45,6 +45,8 @@ test("keeps GitHub credentials and feedback storage behind the server session", 
     readFile(new URL("../app/api/github/diff/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/feedback/state/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/feedback/reviews/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/feedback/topics/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/feedback/questions/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../lib/feedback-store.ts", import.meta.url), "utf8"),
     readFile(new URL("../.env.example", import.meta.url), "utf8"),
     readFile(new URL("../.openai/hosting.json", import.meta.url), "utf8"),
@@ -59,6 +61,8 @@ test("keeps GitHub credentials and feedback storage behind the server session", 
   assert.match(diffRoute, /getGitHubSession/);
   assert.match(feedbackStateRoute, /getGitHubSession/);
   assert.match(feedbackReviewsRoute, /getGitHubSession/);
+  assert.match(feedbackTopicsRoute, /getGitHubSession/);
+  assert.match(feedbackQuestionsRoute, /getGitHubSession/);
   assert.match(feedbackStore, /FEEDBACK_API_SECRET/);
   assert.doesNotMatch(page, /FEEDBACK_API_SECRET|CONVEX_URL|ConvexHttpClient/);
   assert.match(envExample, /^GITHUB_CLIENT_ID=$/m);
@@ -94,4 +98,10 @@ test("requires GitHub authentication before repository access", async () => {
 
   const reviewQueueResponse = await render("/api/feedback/reviews", { method: "POST" });
   assert.equal(reviewQueueResponse.status, 401);
+
+  const topicResponse = await render("/api/feedback/topics", { method: "POST" });
+  assert.equal(topicResponse.status, 401);
+
+  const questionResponse = await render("/api/feedback/questions", { method: "POST" });
+  assert.equal(questionResponse.status, 401);
 });
