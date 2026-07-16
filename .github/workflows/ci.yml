@@ -7,45 +7,13 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: verify-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  apply-durable-watch:
-    if: github.event_name == 'pull_request' && github.head_ref == 'codex/durable-watch-threads'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out source branch
-        uses: actions/checkout@v4
-        with:
-          ref: codex/durable-watch-threads
-          fetch-depth: 1
-          show-progress: false
-
-      - name: Fetch main
-        run: git fetch origin main --depth=1 --quiet
-
-      - name: Check product patch
-        run: git apply --check .github/patches/durable-watch.patch
-
-      - name: Apply product changes
-        run: git apply --index .github/patches/durable-watch.patch
-
-      - name: Prepare clean commit
-        run: |
-          rm .github/patches/durable-watch.patch
-          git checkout origin/main -- .github/workflows/ci.yml
-          git add -A
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Make watched topics durable across editions"
-
-      - name: Push product branch
-        run: git push origin HEAD:codex/durable-watch-threads
-
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15

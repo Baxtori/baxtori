@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 const edition = JSON.parse(await readFile(new URL("../data/latest.json", import.meta.url), "utf8"));
 const requiredEditionFields = ["id", "generatedAt", "periodStart", "periodEnd", "stories", "quietRepositories"];
 const requiredStoryFields = [
-  "id", "project", "repository", "tone", "timing", "title", "brief", "learningValue", "verdict",
+  "id", "topicId", "project", "repository", "tone", "timing", "title", "brief", "learningValue", "verdict",
   "whatChanged", "whyItMatters", "verify", "tradeoff", "evidence", "files", "codeEvidence", "commits",
 ];
 
@@ -17,6 +17,7 @@ for (const story of edition.stories) {
   for (const field of requiredStoryFields) {
     if (!(field in story)) throw new Error(`${story.id ?? "Story"} is missing ${field}.`);
   }
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(story.topicId) || story.topicId.length > 120) throw new Error(`${story.id} has an invalid topic ID.`);
   if (!["blue", "green", "rust"].includes(story.tone)) throw new Error(`${story.id} has an invalid tone.`);
   if (!Number.isInteger(story.learningValue) || story.learningValue < 1 || story.learningValue > 5) {
     throw new Error(`${story.id} has an invalid learning value.`);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import latestEdition from "@/data/latest.json";
 import ourchivalMap from "@/data/maps/ourchival.json";
 import oneMoreLegendMap from "@/data/maps/one-more-legend.json";
@@ -9,6 +9,7 @@ import reviewPolicy from "@/data/review-policy.json";
 import reviewScope from "@/data/review-scope.json";
 import { buildContinueQueue, planContinueQueue, type ContinueItem, type ContinueItemKind } from "@/lib/continue-queue";
 import { focusTargetFor, planStoryOpening, shouldClearReviewMarker, type FocusTarget } from "@/lib/reader-navigation";
+import { activeWatchThreadFor, storyWatchInput, type TopicThreadRecord } from "@/lib/story-topics";
 import type { ReaderStatePayload, ReaderStoryState, ReviewRequest } from "@/lib/feedback-contract";
 import { RepositoryMaps } from "./repository-maps";
 import { type QuestionDisposition, type RepoArea, type RepoMapData, type RepoQuestion, type UnderstandingState } from "./repo-map";
@@ -19,6 +20,7 @@ type View = "briefing" | "map" | "timeline" | "repositories";
 
 type Story = {
   id: string;
+  topicId: string;
   project: string;
   tone: Tone;
   timing: string;
@@ -132,6 +134,7 @@ type FeedbackStateResponse = {
   reviewRequests: ReviewRequest[];
   revision?: number;
   state: ReaderStatePayload | null;
+  topicThreads: TopicThreadRecord[];
   updatedAt?: number | null;
 };
 
@@ -164,6 +167,7 @@ const EMPTY_STORY_STATE: StoryState = {
 const DEMO_STORIES: Story[] = [
   {
     id: "checkout",
+    topicId: "payment-retry-policy",
     project: "Checkout",
     tone: "blue",
     timing: "Tue, 11:40",
@@ -180,6 +184,7 @@ const DEMO_STORIES: Story[] = [
   },
   {
     id: "studio",
+    topicId: "workspace-membership-boundary",
     project: "Studio",
     tone: "green",
     timing: "Wed, 15:20",
@@ -196,6 +201,7 @@ const DEMO_STORIES: Story[] = [
   },
   {
     id: "canvas",
+    topicId: "animation-timing-compatibility",
     project: "Canvas",
     tone: "rust",
     timing: "Thu, 09:05",
@@ -267,6 +273,8 @@ export default function Home() {
   const [feedbackConfigured, setFeedbackConfigured] = useState(false);
   const [feedbackStatus, setFeedbackStatus] = useState<FeedbackStatus>("loading");
   const [reviewRequests, setReviewRequests] = useState<ReviewRequest[]>([]);
+  const [topicThreads, setTopicThreads] = useState<TopicThreadRecord[]>([]);
+  const watchMigrationAttempted = useRef(false);
 
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [repositoryLoading, setRepositoryLoading] = useState(false);
@@ -323,6 +331,8 @@ export default function Home() {
       setView("briefing");
       setSelectedRepositories(SCHEDULED_REPOSITORIES);
       setReviewRequests([]);
+      setTopicThreads([]);
+      watchMigrationAttempted.current = false;
       setFeedbackStatus("loading");
 
       let localState: (Partial<SavedState> & { selectedRepoIds?: string[] }) | null = null;
@@ -342,6 +352,7 @@ export default function Home() {
         if (controller.signal.aborted) return;
         setFeedbackConfigured(remote.configured);
         setReviewRequests(remote.reviewRequests ?? []);
+        setTopicThreads(remote.topicThreads ?? []);
         applySavedState(remote.state ?? localState ?? {});
         setFeedbackStatus(remote.configured ? "saved" : "local");
       } catch {
@@ -396,6 +407,38 @@ export default function Home() {
       controller.abort();
     };
   }, [accountStorageKey, activeMapRepository, feedbackConfigured, hasHydrated, hideUnderstood, mapStates, questionStates, selectedRepositories, states, view]);
+
+  useEffect(() => {
+    if (!hasHydrated || !feedbackConfigured || watchMigrationAttempted.current) return;
+    watchMigrationAttempted.current = true;
+    const legacyWatches = STORIES.flatMap((story) => {
+      if (!storyState(story.id).watching || activeWatchThreadFor(topicThreads, story)) return [];
+      const input = storyWatchInput(story, EDITION.id);
+      return input ? [input] : [];
+    });
+    if (!legacyWatches.length) return;
+
+    void Promise.all(legacyWatches.map(async (input) => {
+      const response = await fetch("/api/feedback/topics", {
+        body: JSON.stringify(input),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      });
+      const payload = (await response.json()) as { error?: string; topic?: TopicThreadRecord };
+      if (!response.ok || !payload.topic) throw new Error(payload.error ?? "The watched topic could not be migrated.");
+      return payload.topic;
+    })).then((migrated) => {
+      setTopicThreads((current) => {
+        const bySource = new Map(current.map((thread) => [thread.sourceKey, thread]));
+        for (const thread of migrated) bySource.set(thread.sourceKey, thread);
+        return [...bySource.values()];
+      });
+    }).catch(() => {
+      setNotice("Existing watches remain saved on this device until account sync is available.");
+    });
+    // This migration runs once per account hydration.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feedbackConfigured, hasHydrated]);
 
   useEffect(() => {
     if (!auth?.authenticated) return;
@@ -463,9 +506,14 @@ export default function Home() {
     }));
   };
 
+  const isStoryWatching = (story: Story) => Boolean(activeWatchThreadFor(topicThreads, story) || storyState(story.id).watching);
+  const effectiveStoryStates = Object.fromEntries(STORIES.map((story) => [
+    story.id,
+    { ...storyState(story.id), watching: isStoryWatching(story) },
+  ]));
   const understoodCount = STORIES.filter((story) => storyState(story.id).understood).length;
   const reviewedRepositoryCount = new Set(STORIES.map((story) => story.repository ?? story.project)).size;
-  const watchedStories = STORIES.filter((story) => storyState(story.id).watching);
+  const watchedStories = STORIES.filter(isStoryWatching);
   const queuedReviewRequests = reviewRequests.filter((request) => request.status === "queued");
   const visibleStories = STORIES.filter(
     (story) => storyState(story.id).locked || (!storyState(story.id).muted && (!hideUnderstood || !storyState(story.id).understood)),
@@ -476,7 +524,7 @@ export default function Home() {
     repositoryMaps: REPOSITORY_MAPS,
     reviewRequests,
     stories: STORIES,
-    storyStates: states,
+    storyStates: effectiveStoryStates,
   });
   const continuePlan = planContinueQueue(continueQueue, continueBudget);
   const nextContinueItem = continuePlan.items[0];
@@ -521,10 +569,38 @@ export default function Home() {
     setNotice(understood ? `${story.project} is back in your queue.` : `${story.project} filed away.`);
   };
 
-  const toggleWatch = (story: Story) => {
-    const watching = storyState(story.id).watching;
+  const toggleWatch = async (story: Story) => {
+    const activeThread = activeWatchThreadFor(topicThreads, story);
+    const watching = Boolean(activeThread || storyState(story.id).watching);
+    const input = storyWatchInput(story, EDITION.id);
+
+    if (feedbackConfigured && input) {
+      try {
+        const response = await fetch("/api/feedback/topics", {
+          body: JSON.stringify(activeThread
+            ? { snoozedUntil: null, status: "resolved", threadId: activeThread._id }
+            : input),
+          headers: { "Content-Type": "application/json" },
+          method: activeThread ? "PATCH" : "POST",
+        });
+        const payload = (await response.json()) as { error?: string; topic?: TopicThreadRecord };
+        if (!response.ok || !payload.topic) throw new Error(payload.error ?? "The watch could not be saved.");
+        setTopicThreads((current) => {
+          const next = current.filter((thread) => thread._id !== payload.topic?._id && thread.sourceKey !== payload.topic?.sourceKey);
+          return payload.topic ? [payload.topic, ...next] : next;
+        });
+        updateStory(story.id, { watching: !activeThread });
+        setNotice(activeThread ? `${story.project} watch resolved.` : `${story.project} will return when new evidence advances this topic.`);
+        return;
+      } catch {
+        updateStory(story.id, { watching: !watching });
+        setNotice("The watch is saved on this device until account sync is available.");
+        return;
+      }
+    }
+
     updateStory(story.id, { watching: !watching });
-    setNotice(watching ? `${story.project} removed from your watch list.` : `${story.project} added to your watch list.`);
+    setNotice(watching ? `${story.project} removed from your watch list.` : `${story.project} added to your watch list on this device.`);
   };
 
   const toggleStoryLock = (story: Story) => {
@@ -995,6 +1071,7 @@ export default function Home() {
               <div className="story-list">
                 {visibleStories.map((story, index) => {
                   const state = storyState(story.id);
+                  const watching = isStoryWatching(story);
                   return (
                     <article
                       className={`story ${story.tone} ${index === 0 ? "is-first" : ""} ${state.expanded ? "is-expanded" : ""} ${state.understood ? "is-understood" : ""} ${state.locked ? "is-locked" : ""} ${focusedStoryId === story.id ? "is-focused" : ""}`}
@@ -1061,8 +1138,8 @@ export default function Home() {
                           <button aria-pressed={state.understood} onClick={() => markUnderstood(story)} type="button">
                             {state.understood ? "Understood ✓" : "Got it"}
                           </button>
-                          <button aria-pressed={state.watching} onClick={() => toggleWatch(story)} type="button">
-                            {state.watching ? "Watching" : "Watch"}
+                          <button aria-pressed={watching} onClick={() => void toggleWatch(story)} type="button">
+                            {watching ? "Watching" : "Watch"}
                           </button>
                           {state.expanded && (
                             <>

@@ -7,6 +7,7 @@
   "stories": [
     {
       "id": "glimpse-account-backed-review-loop",
+      "topicId": "reader-review-loop",
       "project": "baxtori",
       "repository": "teamleaderleo/baxtori",
       "tone": "green",
@@ -67,6 +68,7 @@
     },
     {
       "id": "ourchival-drive-first-capture",
+      "topicId": "capture-storage-provenance",
       "project": "ourchival",
       "repository": "teamleaderleo/ourchival",
       "tone": "blue",
@@ -120,6 +122,7 @@
     },
     {
       "id": "one-more-legend-pressure-telemetry",
+      "topicId": "combat-pressure-telemetry",
       "project": "one-more-legend",
       "repository": "teamleaderleo/one-more-legend",
       "tone": "rust",
