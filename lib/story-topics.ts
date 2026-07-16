@@ -1,5 +1,5 @@
 import { canonicalRepository } from "./repository-identity.ts";
-import type { EvidenceAddress, TopicThreadInput } from "./topic-contract.ts";
+import type { EvidenceAddress, TopicThreadInput, TopicThreadOrigin } from "./topic-contract.ts";
 
 export type StoryTopic = {
   codeEvidence?: {
@@ -30,9 +30,10 @@ export function storyTopicSourceKey(
   return `watch:${canonicalRepository(story.repository)}:${story.topicId}`;
 }
 
-export function storyWatchInput(
+export function storyTopicInput(
   story: StoryTopic,
   editionId: string,
+  origin: TopicThreadOrigin,
 ): TopicThreadInput | null {
   const sourceKey = storyTopicSourceKey(story);
   const excerpt = story.codeEvidence?.[0];
@@ -47,12 +48,29 @@ export function storyWatchInput(
       repository: canonicalRepository(story.repository),
       startLine: excerpt.startLine,
     },
-    origin: "watch",
+    origin,
     sourceKey,
     storyId: story.id,
     storyTitle: story.title,
     title: story.title,
   };
+}
+
+export function storyWatchInput(
+  story: StoryTopic,
+  editionId: string,
+) {
+  return storyTopicInput(story, editionId, "watch");
+}
+
+export function topicThreadFor<T extends TopicThreadRecord>(
+  threads: T[],
+  story: Pick<StoryTopic, "repository" | "topicId">,
+) {
+  const sourceKey = storyTopicSourceKey(story);
+  if (!sourceKey) return undefined;
+  const matching = threads.filter((thread) => thread.sourceKey === sourceKey);
+  return matching.find((thread) => thread.status === "active") ?? matching[0];
 }
 
 export function activeWatchThreadFor<T extends TopicThreadRecord>(
@@ -61,10 +79,9 @@ export function activeWatchThreadFor<T extends TopicThreadRecord>(
 ) {
   const sourceKey = storyTopicSourceKey(story);
   if (!sourceKey) return undefined;
-  return threads.find(
-    (thread) =>
-      thread.sourceKey === sourceKey &&
-      thread.origin === "watch" &&
-      thread.status === "active",
+  return threads.find((thread) =>
+    thread.sourceKey === sourceKey &&
+    thread.origin === "watch" &&
+    thread.status === "active"
   );
 }

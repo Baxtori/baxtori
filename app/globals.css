@@ -1077,6 +1077,49 @@ kbd {
 .code-actions a { color: #9bc4a7; }
 .code-actions a:hover { text-decoration: underline; }
 
+.evidence-question { border-top: 1px solid rgb(255 255 255 / 10%); background: #101a15; }
+.evidence-question-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.72rem 1rem; }
+.evidence-question-heading > div { display: grid; gap: 0.12rem; }
+.evidence-question-heading span { color: #7f9387; font-size: 0.56rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; }
+.evidence-question-heading strong { color: #c8d5cd; font-size: 0.66rem; }
+.evidence-question-heading button,
+.evidence-question-actions button,
+.evidence-question-list button { min-height: 1.9rem; padding: 0.28rem 0.6rem; color: #c7d5cc; background: transparent; border: 1px solid rgb(255 255 255 / 16%); cursor: pointer; font-size: 0.59rem; font-weight: 760; }
+.evidence-question-heading button:hover,
+.evidence-question-actions button:hover,
+.evidence-question-list button:hover { color: #101914; background: #b8d8c0; border-color: #b8d8c0; }
+.evidence-question-form { display: grid; gap: 0.8rem; padding: 0.9rem 1rem 1rem; border-top: 1px solid rgb(255 255 255 / 9%); }
+.evidence-question-form > p { margin: 0; color: #91a49a; font-family: var(--serif); font-size: 0.72rem; line-height: 1.4; }
+.evidence-question-form > p code { color: #b8d8c0; font-size: 0.6rem; }
+.evidence-question-form label { display: grid; gap: 0.35rem; color: #a8c8b3; font-size: 0.61rem; font-weight: 760; }
+.evidence-question-form textarea,
+.evidence-question-form input[type="number"],
+.evidence-question-form select { width: 100%; padding: 0.55rem; color: var(--paper-light); background: rgb(255 255 255 / 7%); border: 1px solid rgb(255 255 255 / 20%); border-radius: 0; font: inherit; }
+.evidence-question-form textarea { resize: vertical; font-family: var(--serif); font-size: 0.78rem; line-height: 1.4; }
+.evidence-question-form option { color: var(--ink); background: var(--paper); }
+.evidence-line-range,
+.question-disposition { display: flex; align-items: end; gap: 0.55rem; margin: 0; padding: 0; border: 0; }
+.evidence-line-range legend,
+.question-disposition legend { width: 100%; margin-bottom: 0.4rem; color: #7f9387; font-size: 0.55rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.evidence-line-range label { width: 7rem; }
+.evidence-line-range > span { padding-bottom: 0.55rem; color: #71847a; }
+.question-disposition { align-items: center; flex-wrap: wrap; }
+.question-disposition label { display: flex; grid-template-columns: auto 1fr; align-items: center; gap: 0.4rem; color: #c7d5cc; }
+.question-disposition input { margin: 0; }
+.question-review-options { display: grid; grid-template-columns: minmax(10rem, 0.7fr) minmax(16rem, 1.3fr); gap: 0.8rem; }
+.question-sync-note { color: #d2ad83 !important; }
+.evidence-question-actions { display: flex; gap: 0.5rem; }
+.evidence-question-actions .primary { color: #101914; background: #b8d8c0; border-color: #b8d8c0; }
+.evidence-question-actions button:disabled { cursor: wait; opacity: 0.55; }
+.evidence-question-list { display: grid; margin: 0; padding: 0; border-top: 1px solid rgb(255 255 255 / 9%); list-style: none; }
+.evidence-question-list li { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.75rem 1rem; border-bottom: 1px solid rgb(255 255 255 / 7%); }
+.evidence-question-list li:last-child { border-bottom: 0; }
+.evidence-question-list li.is-resolved { opacity: 0.55; }
+.evidence-question-list li > div { min-width: 0; }
+.evidence-question-list span { color: #7f9387; font-size: 0.55rem; font-weight: 760; text-transform: uppercase; }
+.evidence-question-list p { margin: 0.25rem 0 0; color: #d9e2dc; font-family: var(--serif); font-size: 0.78rem; line-height: 1.35; }
+.evidence-question-message { margin: 0; padding: 0.6rem 1rem; color: #a8c8b3; border-top: 1px solid rgb(255 255 255 / 7%); font-size: 0.62rem; }
+
 .story-code.is-fullscreen {
   position: fixed;
   z-index: 1000;

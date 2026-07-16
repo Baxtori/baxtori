@@ -9,7 +9,8 @@ import reviewPolicy from "@/data/review-policy.json";
 import reviewScope from "@/data/review-scope.json";
 import { buildContinueQueue, planContinueQueue, type ContinueItem, type ContinueItemKind } from "@/lib/continue-queue";
 import { focusTargetFor, planStoryOpening, shouldClearReviewMarker, type FocusTarget } from "@/lib/reader-navigation";
-import { activeWatchThreadFor, storyWatchInput, type TopicThreadRecord } from "@/lib/story-topics";
+import { parseStoredQuestionRecords, type ThreadQuestionRecord } from "@/lib/story-questions";
+import { activeWatchThreadFor, storyWatchInput, topicThreadFor, type TopicThreadRecord } from "@/lib/story-topics";
 import type { ReaderStatePayload, ReaderStoryState, ReviewRequest } from "@/lib/feedback-contract";
 import { RepositoryMaps } from "./repository-maps";
 import { type QuestionDisposition, type RepoArea, type RepoMapData, type RepoQuestion, type UnderstandingState } from "./repo-map";
@@ -134,6 +135,7 @@ type FeedbackStateResponse = {
   reviewRequests: ReviewRequest[];
   revision?: number;
   state: ReaderStatePayload | null;
+  threadQuestions: ThreadQuestionRecord[];
   topicThreads: TopicThreadRecord[];
   updatedAt?: number | null;
 };
@@ -142,6 +144,7 @@ type FeedbackStatus = "loading" | "local" | "saved" | "saving";
 
 const STORAGE_KEY = "baxtori:backstory:v1";
 const LEGACY_STORAGE_KEY = "glimpse:rundown:v2";
+const LOCAL_QUESTION_STORAGE_KEY = "baxtori:evidence-questions:v1";
 const MAX_SELECTED_REPOSITORIES = 8;
 const CONTINUE_BUDGETS = [5, 15, 30] as const;
 const CONTINUE_KIND_LABELS: Record<ContinueItemKind, string> = {
@@ -273,6 +276,7 @@ export default function Home() {
   const [feedbackConfigured, setFeedbackConfigured] = useState(false);
   const [feedbackStatus, setFeedbackStatus] = useState<FeedbackStatus>("loading");
   const [reviewRequests, setReviewRequests] = useState<ReviewRequest[]>([]);
+  const [threadQuestions, setThreadQuestions] = useState<ThreadQuestionRecord[]>([]);
   const [topicThreads, setTopicThreads] = useState<TopicThreadRecord[]>([]);
   const watchMigrationAttempted = useRef(false);
 
@@ -287,6 +291,7 @@ export default function Home() {
 
   const storyState = (id: string): StoryState => ({ ...EMPTY_STORY_STATE, ...states[id] });
   const accountStorageKey = auth?.user ? `${STORAGE_KEY}:${auth.user.id}` : null;
+  const questionStorageKey = auth?.user ? `${LOCAL_QUESTION_STORAGE_KEY}:${auth.user.id}` : null;
 
   useEffect(() => {
     const result = new URLSearchParams(window.location.search).get("github");
@@ -331,19 +336,25 @@ export default function Home() {
       setView("briefing");
       setSelectedRepositories(SCHEDULED_REPOSITORIES);
       setReviewRequests([]);
+      setThreadQuestions([]);
       setTopicThreads([]);
       watchMigrationAttempted.current = false;
       setFeedbackStatus("loading");
 
       let localState: (Partial<SavedState> & { selectedRepoIds?: string[] }) | null = null;
+      let localQuestions: ThreadQuestionRecord[] = [];
       try {
         const saved = window.localStorage.getItem(accountStorageKey) ??
           window.localStorage.getItem(STORAGE_KEY) ??
           window.localStorage.getItem(LEGACY_STORAGE_KEY);
         if (saved) localState = JSON.parse(saved) as Partial<SavedState> & { selectedRepoIds?: string[] };
+        const savedQuestions = questionStorageKey ? window.localStorage.getItem(questionStorageKey) : null;
+        if (savedQuestions) localQuestions = parseStoredQuestionRecords(JSON.parse(savedQuestions));
       } catch {
         window.localStorage.removeItem(accountStorageKey);
+        if (questionStorageKey) window.localStorage.removeItem(questionStorageKey);
       }
+      setThreadQuestions(localQuestions);
 
       try {
         const response = await fetch("/api/feedback/state", { signal: controller.signal });
@@ -352,6 +363,7 @@ export default function Home() {
         if (controller.signal.aborted) return;
         setFeedbackConfigured(remote.configured);
         setReviewRequests(remote.reviewRequests ?? []);
+        setThreadQuestions([...(remote.threadQuestions ?? []), ...localQuestions]);
         setTopicThreads(remote.topicThreads ?? []);
         applySavedState(remote.state ?? localState ?? {});
         setFeedbackStatus(remote.configured ? "saved" : "local");
@@ -367,7 +379,7 @@ export default function Home() {
 
     void hydrate();
     return () => controller.abort();
-  }, [accountStorageKey, auth?.authenticated]);
+  }, [accountStorageKey, auth?.authenticated, questionStorageKey]);
 
   useEffect(() => {
     if (!hasHydrated || !accountStorageKey) return;
@@ -407,6 +419,12 @@ export default function Home() {
       controller.abort();
     };
   }, [accountStorageKey, activeMapRepository, feedbackConfigured, hasHydrated, hideUnderstood, mapStates, questionStates, selectedRepositories, states, view]);
+
+  useEffect(() => {
+    if (!hasHydrated || !questionStorageKey) return;
+    const localQuestions = threadQuestions.filter((question) => question._id.startsWith("local:"));
+    window.localStorage.setItem(questionStorageKey, JSON.stringify(localQuestions));
+  }, [hasHydrated, questionStorageKey, threadQuestions]);
 
   useEffect(() => {
     if (!hasHydrated || !feedbackConfigured || watchMigrationAttempted.current) return;
@@ -504,6 +522,17 @@ export default function Home() {
       ...current,
       [id]: { ...EMPTY_STORY_STATE, ...current[id], ...patch },
     }));
+  };
+
+  const saveThreadQuestion = (question: ThreadQuestionRecord, topic?: TopicThreadRecord) => {
+    setThreadQuestions((current) => [question, ...current.filter((item) => item._id !== question._id)]);
+    if (topic) {
+      setTopicThreads((current) => [topic, ...current.filter((item) => item._id !== topic._id && item.sourceKey !== topic.sourceKey)]);
+    }
+  };
+
+  const updateThreadQuestion = (question: ThreadQuestionRecord) => {
+    setThreadQuestions((current) => current.map((item) => item._id === question._id ? question : item));
   };
 
   const isStoryWatching = (story: Story) => Boolean(activeWatchThreadFor(topicThreads, story) || storyState(story.id).watching);
@@ -809,6 +838,8 @@ export default function Home() {
     setHasHydrated(false);
     setAuth((current) => current ? { ...current, authenticated: false, user: null } : current);
     setRepositories([]);
+    setThreadQuestions([]);
+    setTopicThreads([]);
     setActivity({});
   };
 
@@ -1092,7 +1123,21 @@ export default function Home() {
                         {state.expanded && (
                           <>
                             {story.repository && story.codeEvidence?.length ? (
-                              <StoryCode evidence={story.codeEvidence} repository={story.repository} storyId={story.id} />
+                              <StoryCode
+                                  defaultQuestionLens={REVIEW_POLICY.defaultLens}
+                                  editionId={EDITION.id}
+                                  evidence={story.codeEvidence}
+                                  feedbackConfigured={feedbackConfigured}
+                                  onQuestionSaved={saveThreadQuestion}
+                                  onQuestionUpdated={updateThreadQuestion}
+                                  questionLenses={REVIEW_POLICY.lenses}
+                                  questions={threadQuestions}
+                                  repository={story.repository}
+                                  storyId={story.id}
+                                  storyTitle={story.title}
+                                  topicId={story.topicId}
+                                  topicThread={topicThreadFor(topicThreads, story)}
+                                />
                             ) : null}
                             <details className="story-analysis">
                               <summary>Explanation, verification, and evidence</summary>
