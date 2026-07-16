@@ -1,0 +1,34 @@
+name: Apply interaction patch
+
+on:
+  push:
+    branches:
+      - codex/interaction-wiring
+    paths:
+      - .github/patches/interaction-wiring.patch
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: codex/interaction-wiring
+          fetch-depth: 0
+
+      - name: Apply reviewed patch
+        run: |
+          git apply --index .github/patches/interaction-wiring.patch
+          rm .github/patches/interaction-wiring.patch
+          rm .github/workflows/apply-interaction-patch.yml
+          rm -f .github/workflows/source-snapshot.yml
+          printf 'Interaction patch applied by GitHub Actions.\n' > .github/interaction-wiring-applied
+          git add -A
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Wire Baxtori controls to their destinations"
+          git push origin HEAD:codex/interaction-wiring
