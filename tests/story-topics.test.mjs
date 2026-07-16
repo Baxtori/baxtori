@@ -58,6 +58,10 @@ test("watch input preserves the exact originating evidence address", () => {
   });
 });
 
+test("watch input waits for an exact evidence excerpt", () => {
+  assert.equal(storyWatchInput({ ...firstEditionStory, codeEvidence: [] }, "2026-07-13"), null);
+});
+
 test("active watch lookup ignores resolved and unrelated threads", () => {
   const active = {
     _id: "active",
