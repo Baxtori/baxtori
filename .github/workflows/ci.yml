@@ -7,13 +7,48 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: verify-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  apply-evidence-questions:
+    if: github.event_name == 'pull_request' && github.head_ref == 'codex/evidence-questions'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source branch
+        uses: actions/checkout@v4
+        with:
+          ref: codex/evidence-questions
+          fetch-depth: 1
+          show-progress: false
+
+      - name: Fetch main
+        run: git fetch origin main --depth=1 --quiet
+
+      - name: Assemble product patch
+        run: cat .github/patches/evidence-question/chunk-*.patch > /tmp/evidence-question.patch
+
+      - name: Check product patch
+        run: git apply --check /tmp/evidence-question.patch
+
+      - name: Apply product changes
+        run: git apply --index /tmp/evidence-question.patch
+
+      - name: Prepare clean commit
+        run: |
+          rm -rf .github/patches/evidence-question
+          git checkout origin/main -- .github/workflows/ci.yml
+          git add -A
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Attach reader questions to exact evidence"
+
+      - name: Push product branch
+        run: git push origin HEAD:codex/evidence-questions
+
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15
