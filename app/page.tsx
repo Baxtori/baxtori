@@ -8,6 +8,7 @@ import repositoryMap from "@/data/repo-map.json";
 import reviewPolicy from "@/data/review-policy.json";
 import reviewScope from "@/data/review-scope.json";
 import { mapWithConcurrency } from "@/lib/async-pool";
+import type { EditionSelectionRecord } from "@/lib/edition-ledger";
 import { buildContinueQueue, planContinueQueue, type ContinueItem, type ContinueItemKind } from "@/lib/continue-queue";
 import { focusTargetFor, planStoryOpening, shouldClearReviewMarker, type FocusTarget } from "@/lib/reader-navigation";
 import { parseStoredQuestionRecords, type ThreadQuestionRecord } from "@/lib/story-questions";
@@ -26,6 +27,7 @@ import {
 } from "@/lib/repository-modes";
 import { activeWatchThreadFor, storyWatchInput, topicThreadFor, type TopicThreadRecord } from "@/lib/story-topics";
 import type { ReaderStatePayload, ReaderStoryState, ReviewRequest } from "@/lib/feedback-contract";
+import { EditionSelectionLedger } from "./edition-selection-ledger";
 import { RepositoryModeControl } from "./repository-mode-control";
 import repositoryModeStyles from "./repository-modes.module.css";
 import { RepositoryMaps } from "./repository-maps";
@@ -62,6 +64,7 @@ type Edition = {
   periodEnd: string;
   periodStart: string;
   quietRepositories: string[];
+  selection?: EditionSelectionRecord;
   stories: Story[];
 };
 
@@ -1158,6 +1161,8 @@ export default function Home() {
             )}
           </section>
         )}
+
+        {view === "briefing" && <EditionSelectionLedger edition={EDITION} />}
 
         {view === "briefing" && (
           <section className="briefing-view" aria-labelledby="briefing-heading">
