@@ -2,14 +2,14 @@ diff --git a/app/page.tsx b/app/page.tsx
 index 0f65ef0..33f1653 100644
 --- a/app/page.tsx
 +++ b/app/page.tsx
-@@ -8,6 +8,7 @@ import repositoryMap from "@/data/repo-map.json";
+@@ -8,5 +8,6 @@ import repositoryMap from "@/data/repo-map.json";
  import reviewPolicy from "@/data/review-policy.json";
  import reviewScope from "@/data/review-scope.json";
 +import { mapWithConcurrency } from "@/lib/async-pool";
  import { buildContinueQueue, planContinueQueue, type ContinueItem, type ContinueItemKind } from "@/lib/continue-queue";
  import { focusTargetFor, planStoryOpening, shouldClearReviewMarker, type FocusTarget } from "@/lib/reader-navigation";
  import { parseStoredQuestionRecords, type ThreadQuestionRecord } from "@/lib/story-questions";
-@@ -147,7 +148,6 @@ const STORAGE_KEY = "baxtori:backstory:v1";
+@@ -147,6 +148,5 @@ const STORAGE_KEY = "baxtori:backstory:v1";
  const LEGACY_STORAGE_KEY = "glimpse:rundown:v2";
  const LOCAL_QUESTION_STORAGE_KEY = "baxtori:evidence-questions:v1";
 -const MAX_SELECTED_REPOSITORIES = 8;
