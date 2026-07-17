@@ -136,24 +136,58 @@ function repositoryDecision(repository, repositoryModes) {
   };
 }
 
+function sourcePlanDecision(entry, repositoryModes) {
+  const mode = repositoryModeFor(repositoryModes, entry.fullName);
+  if (entry.activityCandidate) {
+    return {
+      commitCount: entry.activityCommitCount ?? 0,
+      mode,
+      reason: "Recent commit metadata was detected, but exact source evidence is not cached yet.",
+      repository: entry.fullName,
+      status: "review-candidate",
+      touchedFileCount: 0,
+    };
+  }
+  if (entry.activityStatus === "quiet" || entry.sourceStatus === "muted") {
+    return {
+      mode,
+      reason: entry.activityReason ?? entry.reason,
+      repository: entry.fullName,
+      status: "quiet",
+    };
+  }
+  return {
+    mode,
+    reason: entry.activityReason ?? entry.reason,
+    repository: entry.fullName,
+    status: "inaccessible",
+  };
+}
+
 export function buildRepositoryReviewLedger({
   repositories,
   repositoryModes = {},
+  sourcePlanEntries = [],
   unconfiguredSelections = [],
 }) {
   if (!Array.isArray(repositories)) throw new Error("repositories must be an array.");
+  if (!Array.isArray(sourcePlanEntries)) throw new Error("sourcePlanEntries must be an array.");
   if (!Array.isArray(unconfiguredSelections)) throw new Error("unconfiguredSelections must be an array.");
   const decisions = repositories.map((repository) => repositoryDecision(repository, repositoryModes));
   const configured = new Set(decisions.map((decision) => decision.repository));
+  const sourceEntries = new Map(sourcePlanEntries.map((entry) => [entry.fullName, entry]));
   for (const repository of unconfiguredSelections) {
     const fullName = requireNonEmptyString(repository, "Unconfigured repository");
     if (configured.has(fullName)) continue;
-    decisions.push({
-      mode: repositoryModeFor(repositoryModes, fullName),
-      reason: "Selected by the reader, but no configured source can provide inspectable code evidence.",
-      repository: fullName,
-      status: "inaccessible",
-    });
+    const sourceEntry = sourceEntries.get(fullName);
+    decisions.push(sourceEntry
+      ? sourcePlanDecision(sourceEntry, repositoryModes)
+      : {
+        mode: repositoryModeFor(repositoryModes, fullName),
+        reason: "Selected by the reader, but no configured source can provide inspectable code evidence.",
+        repository: fullName,
+        status: "inaccessible",
+      });
   }
   const rank = { "review-candidate": 0, inaccessible: 1, quiet: 2 };
   decisions.sort((left, right) => {
