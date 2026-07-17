@@ -137,5 +137,5 @@ test("muted repositories never enter scheduled collection", () => {
 
   assert.equal(plan.sourcesToCollect.length, 0);
   assert.equal(plan.entries[0].sourceStatus, "muted");
-  assert.equal(plan.entries[0].activityCandidate, true);
+  assert.equal(plan.entries[0].activityCandidate, false);
 });
