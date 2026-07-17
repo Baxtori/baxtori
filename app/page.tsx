@@ -413,7 +413,7 @@ export default function Home() {
   }, [accountStorageKey, auth?.authenticated, questionStorageKey]);
 
   useEffect(() => {
-    if (!hasHydrated || !accountStorageKey) return;
+    if (!hasHydrated || !accountStorageKey || !repositoryModesInitialized) return;
     const saved: SavedState = {
       activeMapRepository,
       editionId: EDITION.id,
@@ -450,7 +450,7 @@ export default function Home() {
       window.clearTimeout(timeout);
       controller.abort();
     };
-  }, [accountStorageKey, activeMapRepository, feedbackConfigured, hasHydrated, hideUnderstood, mapStates, questionStates, repositoryModes, selectedRepositories, states, view]);
+  }, [accountStorageKey, activeMapRepository, feedbackConfigured, hasHydrated, hideUnderstood, mapStates, questionStates, repositoryModes, repositoryModesInitialized, selectedRepositories, states, view]);
 
   useEffect(() => {
     if (!hasHydrated || !questionStorageKey) return;

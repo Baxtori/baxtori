@@ -1,30 +1,26 @@
-name: Apply repository mode persistence gate
+name: Verify Baxtori
 
 on:
   pull_request:
+  push:
+    branches:
+      - main
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: repository-mode-persistence-${{ github.ref }}
+  group: verify-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  apply-and-verify:
-    if: github.event.pull_request.head.ref == 'codex/repository-modes'
+  verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
-      - name: Check out branch
+      - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          ref: codex/repository-modes
-          fetch-depth: 0
-
-      - name: Apply persistence gate
-        run: python3 .github/patches/repository-mode-persistence.py
 
       - name: Use Node.js 22
         uses: actions/setup-node@v4
@@ -43,14 +39,3 @@ jobs:
 
       - name: Build and test
         run: npm test
-
-      - name: Commit verified gate
-        run: |
-          git show origin/main:.github/workflows/ci.yml > .github/workflows/ci.yml
-          rm .github/patches/repository-mode-persistence.py
-          rmdir .github/patches 2>/dev/null || true
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add app/page.tsx .github/workflows/ci.yml .github/patches
-          git commit -m "Protect repository choices during mode migration"
-          git push origin HEAD:codex/repository-modes
