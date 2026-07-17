@@ -1,30 +1,26 @@
-name: Apply edition selection policy
+name: Verify Baxtori
 
 on:
   pull_request:
+  push:
+    branches:
+      - main
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: edition-selection-${{ github.ref }}
+  group: verify-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  apply-and-verify:
-    if: github.event.pull_request.head.ref == 'codex/edition-selection-policy'
+  verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
-      - name: Check out branch
+      - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          ref: codex/edition-selection-policy
-          fetch-depth: 0
-
-      - name: Apply collector integration
-        run: python3 .github/patches/edition-selection.py
 
       - name: Use Node.js 22
         uses: actions/setup-node@v4
@@ -43,19 +39,3 @@ jobs:
 
       - name: Build and test
         run: npm test
-
-      - name: Verify collector contract
-        run: |
-          npm run backstory:collect
-          node -e 'const fs=require("fs"); const c=JSON.parse(fs.readFileSync("data/candidates.json","utf8")); if(c.instructions.storyLimit!==undefined) throw new Error("storyLimit remains"); if(c.instructions.readingBudgetMinutes!==15) throw new Error("missing reading budget"); if(!c.reviewLedger) throw new Error("missing review ledger");'
-
-      - name: Commit verified changes
-        run: |
-          git show origin/main:.github/workflows/ci.yml > .github/workflows/ci.yml
-          rm -rf .github/patches
-          rm -f data/candidates.json
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add scripts/collect-backstory.mjs scripts/validate-edition.mjs .github/workflows/ci.yml .github/patches
-          git commit -m "Replace story quota with edition selection policy"
-          git push origin HEAD:codex/edition-selection-policy
