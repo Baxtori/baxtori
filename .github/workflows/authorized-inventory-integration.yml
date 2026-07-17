@@ -26,50 +26,7 @@ jobs:
       - name: Apply inventory integration
         run: |
           python3 .github/patches/authorized-inventory.py
-          python3 - <<'PY'
-          from pathlib import Path
-
-          source_plan = Path("scripts/lib/authorized-source-plan.mjs")
-          text = source_plan.read_text()
-          old = '''  configuredSources,
-            inventoryAvailable = repositoryInventory.length > 0,
-            repositoryInventory = [],
-            repositoryModes = {},'''
-          if old not in text:
-              old = '''  configuredSources,
-            inventoryAvailable = repositoryInventory.length > 0,
-            repositoryInventory = [],
-            repositoryModes = {},'''.replace("    ", "  ")
-          new = '''  configuredSources,
-            repositoryInventory = [],
-            inventoryAvailable = repositoryInventory.length > 0,
-            repositoryModes = {},'''
-          if old not in text:
-              raise SystemExit("Expected generated source-plan parameters were not found.")
-          source_plan.write_text(text.replace(old, new.replace("    ", "  "), 1))
-
-          library = Path("lib/github-repository-library.ts")
-          text = library.read_text()
-          old = '''export class GitHubRepositoryLibraryError extends Error {
-            constructor(message: string, readonly status: number) {
-              super(message);
-              this.name = "GitHubRepositoryLibraryError";
-            }
-          }'''
-          old = old.replace("    ", "  ")
-          new = '''export class GitHubRepositoryLibraryError extends Error {
-            readonly status: number;
-
-            constructor(message: string, status: number) {
-              super(message);
-              this.name = "GitHubRepositoryLibraryError";
-              this.status = status;
-            }
-          }'''.replace("    ", "  ")
-          if old not in text:
-              raise SystemExit("Expected repository library error class was not found.")
-          library.write_text(text.replace(old, new, 1))
-          PY
+          python3 .github/patches/fix-authorized-inventory.py
 
       - name: Use Node.js 22
         uses: actions/setup-node@v4
