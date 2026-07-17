@@ -75,6 +75,7 @@ export function buildAuthorizedSourcePlan({
     if (!eligible) {
       entries.push({
         ...activitySummary,
+        activityCandidate: false,
         archived: entry.archived,
         collect: false,
         defaultBranch: entry.defaultBranch,
