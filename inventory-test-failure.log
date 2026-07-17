@@ -1,120 +1,137 @@
-  duration_ms: 1.017778
-  type: 'test'
-  ...
-# Subtest: keeps same filenames in other directories outside the map match
-ok 87 - keeps same filenames in other directories outside the map match
+TAP version 13
+# Subtest: authorized plan collects configured caches and records metadata-only sources
+not ok 1 - authorized plan collects configured caches and records metadata-only sources
   ---
-  duration_ms: 0.248376
+  duration_ms: 0.734889
   type: 'test'
+  location: '/home/runner/work/baxtori/baxtori/tests/authorized-source-plan.test.mjs:23:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot access 'repositoryInventory' before initialization"
+  code: 'ERR_TEST_FAILURE'
+  name: 'ReferenceError'
+  stack: |-
+    buildAuthorizedSourcePlan (file:///home/runner/work/baxtori/baxtori/scripts/lib/authorized-source-plan.mjs:23:24)
+    TestContext.<anonymous> (file:///home/runner/work/baxtori/baxtori/tests/authorized-source-plan.test.mjs:24:16)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
   ...
-# Subtest: explains selection as editorial judgment instead of codebase percentage
-ok 88 - explains selection as editorial judgment instead of codebase percentage
+# Subtest: a current inventory blocks stale configured selections that lost authorization
+not ok 2 - a current inventory blocks stale configured selections that lost authorization
   ---
-  duration_ms: 0.465394
+  duration_ms: 0.122114
   type: 'test'
+  location: '/home/runner/work/baxtori/baxtori/tests/authorized-source-plan.test.mjs:46:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot access 'repositoryInventory' before initialization"
+  code: 'ERR_TEST_FAILURE'
+  name: 'ReferenceError'
+  stack: |-
+    buildAuthorizedSourcePlan (file:///home/runner/work/baxtori/baxtori/scripts/lib/authorized-source-plan.mjs:23:24)
+    TestContext.<anonymous> (file:///home/runner/work/baxtori/baxtori/tests/authorized-source-plan.test.mjs:47:16)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
   ...
-# Subtest: questions retain a selected range inside the active exact evidence
-ok 89 - questions retain a selected range inside the active exact evidence
+# Subtest: legacy exports preserve configured source behavior before inventory exists
+not ok 3 - legacy exports preserve configured source behavior before inventory exists
   ---
-  duration_ms: 3.387735
+  duration_ms: 0.117357
   type: 'test'
+  location: '/home/runner/work/baxtori/baxtori/tests/authorized-source-plan.test.mjs:61:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot access 'repositoryInventory' before initialization"
+  code: 'ERR_TEST_FAILURE'
+  name: 'ReferenceError'
+  stack: |-
+    buildAuthorizedSourcePlan (file:///home/runner/work/baxtori/baxtori/scripts/lib/authorized-source-plan.mjs:23:24)
+    TestContext.<anonymous> (file:///home/runner/work/baxtori/baxtori/tests/authorized-source-plan.test.mjs:62:16)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
   ...
-# Subtest: question ranges cannot escape the active evidence
-ok 90 - question ranges cannot escape the active evidence
+# Subtest: muted repositories never enter scheduled collection
+not ok 4 - muted repositories never enter scheduled collection
   ---
-  duration_ms: 0.694512
+  duration_ms: 0.924256
   type: 'test'
+  location: '/home/runner/work/baxtori/baxtori/tests/authorized-source-plan.test.mjs:74:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot access 'repositoryInventory' before initialization"
+  code: 'ERR_TEST_FAILURE'
+  name: 'ReferenceError'
+  stack: |-
+    buildAuthorizedSourcePlan (file:///home/runner/work/baxtori/baxtori/scripts/lib/authorized-source-plan.mjs:23:24)
+    TestContext.<anonymous> (file:///home/runner/work/baxtori/baxtori/tests/authorized-source-plan.test.mjs:75:16)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
+    Test.postRun (node:internal/test_runner/test:1173:19)
+    Test.run (node:internal/test_runner/test:1101:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
   ...
-# Subtest: question input preserves private or explicitly queued intent
-ok 91 - question input preserves private or explicitly queued intent
+# node:internal/modules/run_main:123
+#     triggerUncaughtException(
+#     ^
+# file:///home/runner/work/baxtori/baxtori/lib/github-repository-library.ts:39
+# export class GitHubRepositoryLibraryError extends Error {
+#   constructor(message: string, readonly status: number) {
+#                                         ^^^^^^^^^^^^^^
+#     super(message);
+# SyntaxError [ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX]: TypeScript parameter property is not supported in strip-only mode
+#     at parseTypeScript (node:internal/modules/typescript:63:40)
+#     at processTypeScriptCode (node:internal/modules/typescript:133:42)
+#     at stripTypeScriptModuleTypes (node:internal/modules/typescript:163:10)
+#     at ModuleLoader.<anonymous> (node:internal/modules/esm/translators:536:16)
+#     at \#translate (node:internal/modules/esm/loader:540:12)
+#     at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:587:27)
+#     at async ModuleJob._link (node:internal/modules/esm/module_job:162:19) {
+#   code: 'ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX'
+# }
+# Node.js v22.19.0
+# Subtest: tests/github-repository-library.test.mjs
+not ok 2 - tests/github-repository-library.test.mjs
   ---
-  duration_ms: 0.335864
+  duration_ms: 89.148073
   type: 'test'
+  location: '/home/runner/work/baxtori/baxtori/tests/github-repository-library.test.mjs:1:1'
+  failureType: 'testCodeFailure'
+  exitCode: 1
+  signal: ~
+  error: 'test failed'
+  code: 'ERR_TEST_FAILURE'
   ...
-# Subtest: question input rejects blank text
-ok 92 - question input rejects blank text
+# Subtest: repository inventory canonicalizes, deduplicates, and sorts by recent push
+ok 6 - repository inventory canonicalizes, deduplicates, and sorts by recent push
   ---
-  duration_ms: 0.251831
+  duration_ms: 2.283127
   type: 'test'
   ...
-# Subtest: evidence filtering returns questions attached to the active excerpt
-ok 93 - evidence filtering returns questions attached to the active excerpt
+# Subtest: library conversion keeps only compiler-safe metadata
+ok 7 - library conversion keeps only compiler-safe metadata
   ---
-  duration_ms: 0.386509
+  duration_ms: 0.231449
   type: 'test'
   ...
-# Subtest: local private questions survive validated device storage
-ok 94 - local private questions survive validated device storage
+# Subtest: repository inventory rejects malformed metadata
+ok 8 - repository inventory rejects malformed metadata
   ---
-  duration_ms: 5.07712
+  duration_ms: 0.50967
   type: 'test'
   ...
-# Subtest: watch identity survives story IDs and repository aliases
-ok 95 - watch identity survives story IDs and repository aliases
-  ---
-  duration_ms: 1.136643
-  type: 'test'
-  ...
-# Subtest: watch input preserves the exact originating evidence address
-ok 96 - watch input preserves the exact originating evidence address
-  ---
-  duration_ms: 0.996907
-  type: 'test'
-  ...
-# Subtest: watch input waits for an exact evidence excerpt
-ok 97 - watch input waits for an exact evidence excerpt
-  ---
-  duration_ms: 0.175328
-  type: 'test'
-  ...
-# Subtest: active watch lookup ignores resolved and unrelated threads
-ok 98 - active watch lookup ignores resolved and unrelated threads
-  ---
-  duration_ms: 0.25801
-  type: 'test'
-  ...
-# Subtest: evidence addresses canonicalize repository aliases and preserve exact history
-ok 99 - evidence addresses canonicalize repository aliases and preserve exact history
-  ---
-  duration_ms: 4.198418
-  type: 'test'
-  ...
-# Subtest: evidence addresses reject traversal, invalid commits, and oversized ranges
-ok 100 - evidence addresses reject traversal, invalid commits, and oversized ranges
-  ---
-  duration_ms: 2.85392
-  type: 'test'
-  ...
-# Subtest: topic threads retain a stable source identity independent of an edition story ID
-ok 101 - topic threads retain a stable source identity independent of an edition story ID
-  ---
-  duration_ms: 0.452826
-  type: 'test'
-  ...
-# Subtest: snoozed threads and questions require a wake date
-ok 102 - snoozed threads and questions require a wake date
-  ---
-  duration_ms: 0.517822
-  type: 'test'
-  ...
-# Subtest: questions preserve their own evidence address and explicit compiler disposition
-ok 103 - questions preserve their own evidence address and explicit compiler disposition
-  ---
-  duration_ms: 1.663939
-  type: 'test'
-  ...
-# Subtest: compiler input includes active watches and only explicitly queued open questions
-ok 104 - compiler input includes active watches and only explicitly queued open questions
-  ---
-  duration_ms: 0.408781
-  type: 'test'
-  ...
-1..104
-# tests 104
+1..8
+# tests 8
 # suites 0
-# pass 99
+# pass 3
 # fail 5
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 2873.930253
+# duration_ms 257.024231
