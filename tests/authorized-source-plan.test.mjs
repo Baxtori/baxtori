@@ -20,6 +20,17 @@ function inventory(fullName, overrides = {}) {
   };
 }
 
+function activity(repository, status, overrides = {}) {
+  return {
+    commits: status === "active" ? [{ sha: "a".repeat(40) }] : [],
+    reason: `Activity is ${status}.`,
+    repository,
+    status,
+    truncated: false,
+    ...overrides,
+  };
+}
+
 test("authorized plan collects configured caches and records metadata-only sources", () => {
   const plan = buildAuthorizedSourcePlan({
     configuredSources,
@@ -41,6 +52,36 @@ test("authorized plan collects configured caches and records metadata-only sourc
   assert.equal(plan.entries[0].fullName, "teamleaderleo/inventory-only");
   assert.equal(plan.entries[0].sourceStatus, "metadata-only");
   assert.equal(plan.counts.muted, 1);
+});
+
+test("active metadata becomes a review candidate without entering source collection", () => {
+  const plan = buildAuthorizedSourcePlan({
+    configuredSources,
+    repositoryActivity: [activity("teamleaderleo/inventory-only", "active", { commits: [{ sha: "a" }, { sha: "b" }] })],
+    repositoryInventory: [inventory("teamleaderleo/inventory-only")],
+    repositoryModes: { "teamleaderleo/inventory-only": "pinned" },
+    selectedRepositories: ["teamleaderleo/inventory-only"],
+  });
+
+  assert.equal(plan.sourcesToCollect.length, 0);
+  assert.equal(plan.entries[0].activityCandidate, true);
+  assert.equal(plan.entries[0].activityCommitCount, 2);
+  assert.equal(plan.entries[0].sourceStatus, "metadata-only");
+  assert.equal(plan.counts["activity-candidate"], 1);
+  assert.match(plan.entries[0].reason, /no source cache/);
+});
+
+test("quiet activity remains explicit and does not become a review candidate", () => {
+  const plan = buildAuthorizedSourcePlan({
+    configuredSources,
+    repositoryActivity: [activity("teamleaderleo/inventory-only", "quiet")],
+    repositoryInventory: [inventory("teamleaderleo/inventory-only")],
+    repositoryModes: {},
+    selectedRepositories: ["teamleaderleo/inventory-only"],
+  });
+  assert.equal(plan.entries[0].activityCandidate, false);
+  assert.equal(plan.entries[0].activityStatus, "quiet");
+  assert.equal(plan.counts["activity-candidate"], 0);
 });
 
 test("a current inventory blocks stale configured selections that lost authorization", () => {
@@ -88,6 +129,7 @@ test("legacy exports preserve configured source behavior before inventory exists
 test("muted repositories never enter scheduled collection", () => {
   const plan = buildAuthorizedSourcePlan({
     configuredSources,
+    repositoryActivity: [activity("teamleaderleo/configured", "active")],
     repositoryInventory: [inventory("teamleaderleo/configured")],
     repositoryModes: { "teamleaderleo/configured": "muted" },
     selectedRepositories: [],
@@ -95,4 +137,5 @@ test("muted repositories never enter scheduled collection", () => {
 
   assert.equal(plan.sourcesToCollect.length, 0);
   assert.equal(plan.entries[0].sourceStatus, "muted");
+  assert.equal(plan.entries[0].activityCandidate, true);
 });
