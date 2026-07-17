@@ -1,0 +1,4 @@
+  File "/tmp/repository-activity-wiring.py", line 188
+    replace_once(
+                ^
+SyntaxError: '(' was never closed
