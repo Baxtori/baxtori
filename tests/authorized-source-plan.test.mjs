@@ -58,6 +58,20 @@ test("a current inventory blocks stale configured selections that lost authoriza
   assert.equal(plan.entries.find((entry) => entry.fullName === "teamleaderleo/legacy")?.sourceStatus, "authorization-missing");
 });
 
+test("a completed empty inventory revokes stale configured collection", () => {
+  const plan = buildAuthorizedSourcePlan({
+    configuredSources,
+    inventoryAvailable: true,
+    repositoryInventory: [],
+    repositoryModes: { "teamleaderleo/legacy": "pinned" },
+    selectedRepositories: ["teamleaderleo/legacy"],
+  });
+
+  assert.equal(plan.inventoryIsCurrent, true);
+  assert.equal(plan.sourcesToCollect.length, 0);
+  assert.equal(plan.entries[0].sourceStatus, "authorization-missing");
+});
+
 test("legacy exports preserve configured source behavior before inventory exists", () => {
   const plan = buildAuthorizedSourcePlan({
     configuredSources,
