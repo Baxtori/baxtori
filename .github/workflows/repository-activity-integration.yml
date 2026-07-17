@@ -20,7 +20,6 @@ jobs:
         run: |
           head -n 189 .github/patches/repository-activity-snapshots.py > /tmp/repository-activity-wiring.py
           python3 /tmp/repository-activity-wiring.py
-          python3 .github/patches/fix-muted-activity.py
       - uses: actions/setup-node@v4
         with:
           node-version: 22.19.0
