@@ -1,1 +1,1 @@
-Expected one match in app/page.tsx, found 0: '                   const commitCount = repositoryActivity?.commits?.length ?? 0;'
+Expected one match in app/page.tsx, found 0: '                           {scope && <span>{scope.mapStatus === "mapped" ? "Mapp'
