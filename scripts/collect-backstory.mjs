@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildAuthorizedSourcePlan } from "./lib/authorized-source-plan.mjs";
 import { buildRepositoryReviewLedger, EDITION_SELECTION_PRIORITIES } from "./lib/edition-selection.mjs";
 import { buildFollowUpCandidates } from "./lib/follow-up-candidates.mjs";
 import { buildMapImpacts } from "./lib/map-impact.mjs";
@@ -131,13 +132,16 @@ function collectRepository(source) {
 
 const requestedRepositories = readerFeedback?.readerState?.payload?.selectedRepositories;
 const repositoryModes = readerFeedback?.readerState?.payload?.repositoryModes ?? {};
-const selectedRepositorySet = Array.isArray(requestedRepositories) ? new Set(requestedRepositories) : null;
-const configuredSources = selectedRepositorySet
-  ? config.repositories.filter((source) => selectedRepositorySet.has(source.fullName))
-  : config.repositories;
-const unconfiguredSelections = Array.isArray(requestedRepositories)
-  ? requestedRepositories.filter((repository) => !config.repositories.some((source) => source.fullName === repository))
-  : [];
+const repositoryInventory = readerFeedback?.repositoryInventory ?? null;
+const sourcePlan = buildAuthorizedSourcePlan({
+  configuredSources: config.repositories,
+  inventoryAvailable: repositoryInventory !== null,
+  repositoryInventory: repositoryInventory?.repositories ?? [],
+  repositoryModes,
+  selectedRepositories: requestedRepositories,
+});
+const configuredSources = sourcePlan.sourcesToCollect;
+const unconfiguredSelections = sourcePlan.unconfiguredSelections;
 const repositories = configuredSources.map(collectRepository);
 const reviewLedger = buildRepositoryReviewLedger({ repositories, repositoryModes, unconfiguredSelections });
 const mapImpact = buildMapImpacts(repositoryMaps, repositories);
@@ -170,6 +174,18 @@ const output = {
     unconfiguredSelections,
   } : null,
   reviewLedger,
+  sourcePlan: {
+    counts: sourcePlan.counts,
+    entries: sourcePlan.entries,
+    inventory: repositoryInventory ? {
+      repositoryCount: repositoryInventory.repositoryCount,
+      revision: repositoryInventory.revision,
+      truncated: repositoryInventory.truncated,
+      updatedAt: repositoryInventory.updatedAt,
+    } : null,
+    inventoryIsCurrent: sourcePlan.inventoryIsCurrent,
+    requestedRepositories: sourcePlan.requestedRepositories,
+  },
   periodEnd: new Date().toISOString().slice(0, 10),
   periodStart: since.slice(0, 10),
   repositories,
@@ -179,6 +195,7 @@ const output = {
 await mkdir(resolve(root, "data"), { recursive: true });
 await writeFile(resolve(root, "data/candidates.json"), `${JSON.stringify(output, null, 2)}\n`);
 
+console.log(`Source plan: ${sourcePlan.counts["configured-cache"]} configured caches; ${sourcePlan.counts["metadata-only"]} metadata-only; ${sourcePlan.counts["authorization-missing"]} missing authorization; ${sourcePlan.counts.muted} not scheduled.`);
 console.log(`Collected ${reviewLedger.inspectedCount} configured repositories from ${reviewLedger.requestedCount} requested sources.`);
 console.log(`Review ledger: ${reviewLedger.counts["review-candidate"]} candidates; ${reviewLedger.counts.quiet} quiet; ${reviewLedger.counts.inaccessible} inaccessible.`);
 console.log(`Map impact: ${mapImpact.affectedAreas.length} affected areas; ${mapImpact.unmappedFiles.length} changed files remain unmapped.`);
