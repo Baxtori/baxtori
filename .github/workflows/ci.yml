@@ -47,7 +47,17 @@ jobs:
         run: npm ci
 
       - name: Lint
-        run: npm run lint
+        run: |
+          if ! npm run lint > /tmp/repository-modes-lint.log 2>&1; then
+            cp /tmp/repository-modes-lint.log .github/patches/repository-modes/lint-error.txt
+            git config user.name github-actions[bot]
+            git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+            git add .github/patches/repository-modes/lint-error.txt
+            git commit -m "Record repository mode lint error"
+            git push origin HEAD:codex/repository-modes
+            cat /tmp/repository-modes-lint.log
+            exit 1
+          fi
 
       - name: Type-check
         run: npx tsc --noEmit
