@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { buildEditionLedgerView, type EditionLedgerInput } from "@/lib/edition-ledger";
 import styles from "./edition-selection-ledger.module.css";
 
@@ -99,7 +100,7 @@ function LedgerSection({
   empty,
   title,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   empty: string;
   title: string;
 }) {
