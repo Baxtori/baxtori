@@ -41,6 +41,7 @@ export type ReviewRequest = {
 };
 
 const REPOSITORY_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+const MAX_REPOSITORY_STATE_ENTRIES = 5_000;
 const MAP_STATES = new Set(["introduced", "revisit", "skipped", "understood", "unexplored"]);
 const QUESTION_STATES = new Set(["irrelevant", "open", "resolved"]);
 const VIEWS = new Set(["briefing", "map", "repositories", "timeline"]);
@@ -61,7 +62,7 @@ export function parseReaderState(input: unknown): ReaderStatePayload {
       watching: readBoolean(value.watching),
     };
   });
-  const selectedRepositories = canonicalizeRepositoryList(readStringArray(input.selectedRepositories, 20, 200));
+  const selectedRepositories = canonicalizeRepositoryList(readStringArray(input.selectedRepositories, MAX_REPOSITORY_STATE_ENTRIES, 200));
   if (!selectedRepositories.every((repository) => REPOSITORY_PATTERN.test(repository))) throw new Error("Invalid selected repository.");
   const view = readString(input.view, 20);
   if (!VIEWS.has(view)) throw new Error("Invalid reader view.");

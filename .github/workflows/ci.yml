@@ -1,32 +1,26 @@
-name: Apply repository scope patch
+name: Verify Baxtori
 
 on:
   pull_request:
+  push:
+    branches:
+      - main
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: apply-repository-scope-${{ github.ref }}
+  group: verify-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  apply-and-verify:
-    if: github.event.pull_request.head.ref == 'codex/remove-repository-cap'
+  verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
-      - name: Check out branch
+      - name: Check out repository
         uses: actions/checkout@v4
-        with:
-          ref: codex/remove-repository-cap
-          fetch-depth: 1
-
-      - name: Apply staged patch
-        run: |
-          git apply --check .github/patches/remove-repository-cap.patch
-          git apply .github/patches/remove-repository-cap.patch
 
       - name: Use Node.js 22
         uses: actions/setup-node@v4
@@ -45,14 +39,3 @@ jobs:
 
       - name: Build and test
         run: npm test
-
-      - name: Commit verified changes
-        run: |
-          git fetch origin main --depth=1
-          git show FETCH_HEAD:.github/workflows/ci.yml > .github/workflows/ci.yml
-          rm .github/patches/remove-repository-cap.patch
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "Remove arbitrary repository selection cap"
-          git push origin HEAD:codex/remove-repository-cap

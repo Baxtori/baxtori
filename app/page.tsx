@@ -7,6 +7,7 @@ import oneMoreLegendMap from "@/data/maps/one-more-legend.json";
 import repositoryMap from "@/data/repo-map.json";
 import reviewPolicy from "@/data/review-policy.json";
 import reviewScope from "@/data/review-scope.json";
+import { mapWithConcurrency } from "@/lib/async-pool";
 import { buildContinueQueue, planContinueQueue, type ContinueItem, type ContinueItemKind } from "@/lib/continue-queue";
 import { focusTargetFor, planStoryOpening, shouldClearReviewMarker, type FocusTarget } from "@/lib/reader-navigation";
 import { parseStoredQuestionRecords, type ThreadQuestionRecord } from "@/lib/story-questions";
@@ -145,7 +146,6 @@ type FeedbackStatus = "loading" | "local" | "saved" | "saving";
 const STORAGE_KEY = "baxtori:backstory:v1";
 const LEGACY_STORAGE_KEY = "glimpse:rundown:v2";
 const LOCAL_QUESTION_STORAGE_KEY = "baxtori:evidence-questions:v1";
-const MAX_SELECTED_REPOSITORIES = 8;
 const CONTINUE_BUDGETS = [5, 15, 30] as const;
 const CONTINUE_KIND_LABELS: Record<ContinueItemKind, string> = {
   area: "Map frontier",
@@ -498,12 +498,14 @@ export default function Home() {
     queueMicrotask(() => {
       if (!cancelled) setActivityLoading(true);
     });
-    Promise.all(
-      selectedRepositories.slice(0, MAX_SELECTED_REPOSITORIES).map(async (repository) => {
+    mapWithConcurrency(
+      selectedRepositories,
+      6,
+      async (repository) => {
         const response = await fetch(`/api/github/activity?repo=${encodeURIComponent(repository)}&since=${encodeURIComponent(REVIEW_SCOPE.lastReviewedAt)}`);
         const payload = (await response.json()) as ActivityResponse;
         return [repository, payload] as const;
-      }),
+      },
     )
       .then((entries) => {
         if (!cancelled) setActivity(Object.fromEntries(entries));
@@ -710,10 +712,6 @@ export default function Home() {
   const toggleRepository = (repository: string) => {
     setSelectedRepositories((current) => {
       if (current.includes(repository)) return current.filter((item) => item !== repository);
-      if (current.length >= MAX_SELECTED_REPOSITORIES) {
-        setNotice(`Keep the first pass focused: choose up to ${MAX_SELECTED_REPOSITORIES} repositories.`);
-        return current;
-      }
       return [...current, repository];
     });
   };
@@ -1307,7 +1305,7 @@ export default function Home() {
                 </div>
               </div>
               <div className="connection-actions">
-                <span>{selectedRepositories.length}/{MAX_SELECTED_REPOSITORIES} selected</span>
+                <span>{selectedRepositories.length} in review scope · no repository limit</span>
                 {auth.appSlug && <><a href={`https://github.com/apps/${auth.appSlug}/installations/new`} rel="noreferrer" target="_blank">Add repositories ↗</a><a href="https://github.com/settings/installations" rel="noreferrer" target="_blank">Manage installation ↗</a></>}
               </div>
             </div>
