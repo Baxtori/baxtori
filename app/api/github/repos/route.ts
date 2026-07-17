@@ -1,3 +1,4 @@
+import { feedbackIsConfigured, saveAuthorizedRepositoryInventory } from "@/lib/feedback-store";
 import { getGitHubSession, withSessionCookie } from "@/lib/github-auth";
 import { fetchGitHubRepositoryLibrary, GitHubRepositoryLibraryError } from "@/lib/github-repository-library";
 
@@ -12,8 +13,17 @@ export async function GET(request: Request) {
 
   try {
     const library = await fetchGitHubRepositoryLibrary(session.accessToken);
+    let inventorySaved = false;
+    if (feedbackIsConfigured()) {
+      try {
+        await saveAuthorizedRepositoryInventory(String(session.user.id), session.user.login, library.repositories, library.truncated);
+        inventorySaved = true;
+      } catch {
+        // Repository browsing remains available when account-backed inventory sync needs attention.
+      }
+    }
     return withSessionCookie(Response.json(
-      library,
+      { ...library, inventorySaved },
       {
         headers: { "Cache-Control": "private, max-age=60" },
       },
@@ -23,6 +33,7 @@ export async function GET(request: Request) {
     return withSessionCookie(Response.json(
       {
         error: error instanceof Error ? error.message : "GitHub repositories could not be loaded.",
+        inventorySaved: false,
         repositories: [],
         truncated: false,
       },

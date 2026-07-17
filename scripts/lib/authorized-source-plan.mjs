@@ -21,6 +21,7 @@ function normalizedMode(repositoryModes, repository, archived = false) {
 export function buildAuthorizedSourcePlan({
   configuredSources,
   repositoryInventory = [],
+  inventoryAvailable = repositoryInventory.length > 0,
   repositoryModes = {},
   selectedRepositories = null,
 }) {
@@ -32,7 +33,7 @@ export function buildAuthorizedSourcePlan({
     const fullName = canonicalRepository(entry.fullName);
     return [fullName, { ...entry, fullName }];
   }));
-  const inventoryIsCurrent = repositoryInventory.length > 0;
+  const inventoryIsCurrent = Boolean(inventoryAvailable);
   const requested = Array.isArray(selectedRepositories)
     ? uniqueRepositories(selectedRepositories)
     : inventoryIsCurrent

@@ -5,6 +5,7 @@ import {
   questionReviewStateValidator,
   questionStatusValidator,
   readerStateValidator,
+  repositoryInventoryEntryValidator,
   reviewStatusValidator,
   topicOriginValidator,
   topicStatusValidator,
@@ -18,6 +19,28 @@ export default defineSchema({
     updatedAt: v.number(),
     userId: v.string(),
   }).index("by_user", ["userId"]),
+  repositoryInventoryChunks: defineTable({
+    chunkIndex: v.number(),
+    githubLogin: v.string(),
+    repositories: v.array(repositoryInventoryEntryValidator),
+    revision: v.number(),
+    updatedAt: v.number(),
+    userId: v.string(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_revision", ["userId", "revision"])
+    .index("by_user_revision_chunk", ["userId", "revision", "chunkIndex"]),
+  repositoryInventorySyncs: defineTable({
+    completedRevision: v.number(),
+    githubLogin: v.string(),
+    pendingRevision: v.union(v.number(), v.null()),
+    repositoryCount: v.number(),
+    truncated: v.boolean(),
+    updatedAt: v.number(),
+    userId: v.string(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_login", ["githubLogin"]),
   topicThreads: defineTable({
     areaId: v.optional(v.string()),
     createdAt: v.number(),

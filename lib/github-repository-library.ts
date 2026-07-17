@@ -1,4 +1,4 @@
-import { githubHeaders } from "./github-auth";
+import { githubHeaders } from "./github-auth.ts";
 
 export const GITHUB_REPOSITORY_PAGE_SIZE = 100;
 export const GITHUB_REPOSITORY_MAX_PAGES = 50;
@@ -36,9 +36,12 @@ export type RepositoryLibraryEntry = {
 };
 
 export class GitHubRepositoryLibraryError extends Error {
-  constructor(message: string, readonly status: number) {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
     super(message);
     this.name = "GitHubRepositoryLibraryError";
+    this.status = status;
   }
 }
 

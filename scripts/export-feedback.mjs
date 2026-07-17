@@ -22,7 +22,10 @@ const githubLogin = process.env.FEEDBACK_GITHUB_LOGIN?.trim();
 if (!url || !secret || !githubLogin) throw new Error("Feedback export needs CONVEX_URL, FEEDBACK_API_SECRET, and FEEDBACK_GITHUB_LOGIN.");
 
 const client = new ConvexHttpClient(url);
-const input = await client.query(api.feedback.getCompilerInput, { githubLogin, secret });
+const [input, repositoryInventory] = await Promise.all([
+  client.query(api.feedback.getCompilerInput, { githubLogin, secret }),
+  client.query(api.repositoryInventory.getCompilerInventory, { githubLogin, secret }),
+]);
 const readerState = input.readerState ? {
   ...input.readerState,
   payload: {
@@ -52,9 +55,10 @@ const output = {
   exportedAt: new Date().toISOString(),
   queuedQuestions,
   readerState,
+  repositoryInventory,
   reviewRequests,
   topicThreads,
 };
 
 await writeFile(resolve(root, "data/feedback-input.json"), `${JSON.stringify(output, null, 2)}\n`);
-console.log(`Exported reader state, ${output.topicThreads.length} active topics, ${output.queuedQuestions.length} queued questions, and ${output.reviewRequests.length} queued review requests.`);
+console.log(`Exported reader state, ${repositoryInventory?.repositoryCount ?? 0} authorized repositories, ${output.topicThreads.length} active topics, ${output.queuedQuestions.length} queued questions, and ${output.reviewRequests.length} queued review requests.`);

@@ -2,8 +2,10 @@ import { ConvexHttpClient } from "convex/browser";
 import type { Id } from "@/convex/_generated/dataModel";
 import { api } from "@/convex/_generated/api";
 import type { ReaderStatePayload } from "@/lib/feedback-contract";
+import { repositoryInventoryFromLibrary, type RepositoryInventorySource } from "@/lib/repository-inventory";
 import type { ThreadQuestionInput, ThreadQuestionUpdate, TopicThreadInput, TopicThreadUpdate } from "@/lib/topic-contract";
 
+const REPOSITORY_INVENTORY_CHUNK_SIZE = 200;
 let feedbackClient: ConvexHttpClient | null = null;
 
 function feedbackConfig() {
@@ -31,6 +33,34 @@ export async function getReaderFeedback(userId: string) {
 export async function saveReaderFeedback(userId: string, githubLogin: string, payload: ReaderStatePayload) {
   const { client, secret } = getFeedbackClient();
   return client.mutation(api.feedback.saveReaderState, { githubLogin, payload, secret, userId });
+}
+
+export async function saveAuthorizedRepositoryInventory(userId: string, githubLogin: string, repositories: RepositoryInventorySource[], truncated: boolean) {
+  const inventory = repositoryInventoryFromLibrary(repositories);
+  const { client, secret } = getFeedbackClient();
+  const { revision } = await client.mutation(api.repositoryInventory.beginInventorySync, { githubLogin, secret, userId });
+  const chunks = Array.from(
+    { length: Math.ceil(inventory.length / REPOSITORY_INVENTORY_CHUNK_SIZE) },
+    (_, index) => inventory.slice(index * REPOSITORY_INVENTORY_CHUNK_SIZE, (index + 1) * REPOSITORY_INVENTORY_CHUNK_SIZE),
+  );
+  for (const [chunkIndex, chunk] of chunks.entries()) {
+    await client.mutation(api.repositoryInventory.saveInventoryChunk, {
+      chunkIndex,
+      githubLogin,
+      repositories: chunk,
+      revision,
+      secret,
+      userId,
+    });
+  }
+  return client.mutation(api.repositoryInventory.completeInventorySync, {
+    chunkCount: chunks.length,
+    repositoryCount: inventory.length,
+    revision,
+    secret,
+    truncated,
+    userId,
+  });
 }
 
 export async function queueReviewFeedback(userId: string, request: {
