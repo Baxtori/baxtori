@@ -25,6 +25,15 @@ jobs:
 
       - name: Apply staged integration
         run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('.github/patches/repository-modes/apply.py')
+          text = path.read_text()
+          text = text.replace('                   const commitCount', '                  const commitCount')
+          text = text.replace('                   const mode', '                  const mode')
+          text = text.replace('                   return (', '                  return (')
+          path.write_text(text)
+          PY
           if ! python3 .github/patches/repository-modes/apply.py > /tmp/repository-modes-apply.log 2>&1; then
             cp /tmp/repository-modes-apply.log .github/patches/repository-modes/error.txt
             git config user.name github-actions[bot]
