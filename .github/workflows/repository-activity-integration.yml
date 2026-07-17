@@ -1,0 +1,38 @@
+name: Apply repository activity snapshots
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-verify:
+    if: github.event.pull_request.head.ref == 'codex/repository-activity-snapshots'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: codex/repository-activity-snapshots
+          fetch-depth: 0
+      - name: Apply integration
+        run: python3 .github/patches/repository-activity-snapshots.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.19.0
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      - name: Test activity contracts
+        run: node --experimental-strip-types --test tests/repository-activity-snapshot.test.mjs tests/repository-activity-ledger.test.mjs tests/authorized-source-plan.test.mjs
+      - run: npm test
+      - name: Commit integration
+        run: |
+          rm -rf .github/patches .github/workflows/repository-activity-integration.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Sync bounded repository activity snapshots"
+          git push origin HEAD:codex/repository-activity-snapshots
