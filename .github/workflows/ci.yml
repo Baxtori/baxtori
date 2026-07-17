@@ -24,7 +24,17 @@ jobs:
           fetch-depth: 0
 
       - name: Apply staged integration
-        run: python3 .github/patches/repository-modes/apply.py
+        run: |
+          if ! python3 .github/patches/repository-modes/apply.py > /tmp/repository-modes-apply.log 2>&1; then
+            cp /tmp/repository-modes-apply.log .github/patches/repository-modes/error.txt
+            git config user.name github-actions[bot]
+            git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+            git add .github/patches/repository-modes/error.txt
+            git commit -m "Record repository mode integration error"
+            git push origin HEAD:codex/repository-modes
+            cat /tmp/repository-modes-apply.log
+            exit 1
+          fi
 
       - name: Use Node.js 22
         uses: actions/setup-node@v4
