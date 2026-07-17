@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { validateEditionSelectionRecord } from "./lib/edition-selection-record.mjs";
 
 const edition = JSON.parse(await readFile(new URL("../data/latest.json", import.meta.url), "utf8"));
 const requiredEditionFields = ["id", "generatedAt", "periodStart", "periodEnd", "stories", "quietRepositories"];
@@ -14,6 +15,8 @@ if (!Array.isArray(edition.stories)) {
   throw new Error("Edition stories must be an array.");
 }
 const storyIds = new Set();
+validateEditionSelectionRecord(edition.selection, edition.stories, edition.quietRepositories);
+
 for (const story of edition.stories) {
   for (const field of requiredStoryFields) {
     if (!(field in story)) throw new Error(`${story.id ?? "Story"} is missing ${field}.`);
