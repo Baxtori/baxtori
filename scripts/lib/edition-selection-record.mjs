@@ -37,15 +37,20 @@ function validatePriority(value, field) {
   return priority;
 }
 
-function validateIncludedFinding(value, index, storyIds) {
+function validateIncludedFinding(value, index, storyById) {
   const finding = requireObject(value, `selection.included[${index}]`);
   const storyId = requireString(finding.storyId, `selection.included[${index}].storyId`, 160);
-  if (!storyIds.has(storyId)) throw new Error(`selection.included[${index}] references an unknown story ${storyId}.`);
+  const story = storyById.get(storyId);
+  if (!story) throw new Error(`selection.included[${index}] references an unknown story ${storyId}.`);
+  const repository = requireRepository(finding.repository, `selection.included[${index}].repository`);
+  if (repository !== story.repository) {
+    throw new Error(`selection.included[${index}] repository must match story ${storyId}.`);
+  }
   return {
     estimatedMinutes: requireInteger(finding.estimatedMinutes, `selection.included[${index}].estimatedMinutes`, 1),
     priority: validatePriority(finding.priority, `selection.included[${index}].priority`),
     reason: requireString(finding.reason, `selection.included[${index}].reason`),
-    repository: requireRepository(finding.repository, `selection.included[${index}].repository`),
+    repository,
     storyId,
   };
 }
@@ -78,16 +83,29 @@ function assertUnique(values, field) {
   }
 }
 
-export function validateEditionSelectionRecord(selection, stories) {
+function assertSameValues(left, right, field) {
+  const leftValues = [...left].sort();
+  const rightValues = [...right].sort();
+  if (leftValues.length !== rightValues.length || leftValues.some((value, index) => value !== rightValues[index])) {
+    throw new Error(`${field} must match exactly.`);
+  }
+}
+
+export function validateEditionSelectionRecord(selection, stories, quietRepositories = []) {
   if (selection === undefined) return null;
   requireObject(selection, "selection");
   if (!Array.isArray(stories)) throw new Error("stories must be an array before validating selection.");
+  if (!Array.isArray(quietRepositories)) throw new Error("quietRepositories must be an array before validating selection.");
 
-  const storyIds = new Set(stories.map((story) => requireString(story?.id, "Story ID", 160)));
-  if (storyIds.size !== stories.length) throw new Error("Story IDs must be unique before validating selection.");
+  const storyById = new Map(stories.map((story) => {
+    const id = requireString(story?.id, "Story ID", 160);
+    const repository = requireRepository(story?.repository, `Story ${id} repository`);
+    return [id, { id, repository }];
+  }));
+  if (storyById.size !== stories.length) throw new Error("Story IDs must be unique before validating selection.");
 
   const included = requireArray(selection.included, "selection.included")
-    .map((finding, index) => validateIncludedFinding(finding, index, storyIds));
+    .map((finding, index) => validateIncludedFinding(finding, index, storyById));
   const deferred = requireArray(selection.deferred, "selection.deferred")
     .map((finding, index) => validateSelectionFinding(finding, index, "deferred"));
   const excluded = requireArray(selection.excluded, "selection.excluded")
@@ -98,11 +116,15 @@ export function validateEditionSelectionRecord(selection, stories) {
     .map((decision, index) => validateRepositoryDecision(decision, index, "inaccessible"));
 
   assertUnique(included.map((finding) => finding.storyId), "selection.included");
-  if (included.length !== stories.length || included.some((finding) => !storyIds.has(finding.storyId))) {
+  if (included.length !== stories.length || included.some((finding) => !storyById.has(finding.storyId))) {
     throw new Error("selection.included must account for every published story exactly once.");
   }
   assertUnique([...deferred, ...excluded].map((finding) => finding.id), "selection deferred/excluded findings");
   assertUnique([...quiet, ...inaccessible].map((decision) => decision.repository), "selection quiet/inaccessible repositories");
+
+  const validatedQuietRepositories = quietRepositories.map((repository, index) => requireRepository(repository, `quietRepositories[${index}]`));
+  assertUnique(validatedQuietRepositories, "quietRepositories");
+  assertSameValues(quiet.map((decision) => decision.repository), validatedQuietRepositories, "selection.quiet and quietRepositories");
 
   const plannedMinutes = requireInteger(selection.plannedMinutes, "selection.plannedMinutes");
   const calculatedMinutes = included.reduce((total, finding) => total + finding.estimatedMinutes, 0);
