@@ -102,6 +102,14 @@ test("reader state accepts and canonicalizes repository modes", () => {
   assert.deepEqual(parsed.selectedRepositories, ["teamleaderleo/baxtori"]);
 });
 
+test("version-one reader state remains valid before repository modes existed", () => {
+  const legacy = readerState({ selectedRepositories: ["teamleaderleo/glimpse"] });
+  delete legacy.repositoryModes;
+  const parsed = parseReaderState(legacy);
+  assert.deepEqual(parsed.repositoryModes, {});
+  assert.deepEqual(parsed.selectedRepositories, ["teamleaderleo/baxtori"]);
+});
+
 test("reader state rejects unknown repository modes", () => {
   assert.throws(() => parseReaderState(readerState({
     repositoryModes: { "teamleaderleo/alpha": "urgent" },
