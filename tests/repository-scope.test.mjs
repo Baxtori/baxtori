@@ -37,6 +37,17 @@ test("repository activity work remains concurrency-bounded without truncating re
   assert.deepEqual(results, Array.from({ length: 25 }, (_, index) => index * 2));
 });
 
+test("an empty repository scope completes without starting workers", async () => {
+  let calls = 0;
+  const results = await mapWithConcurrency([], 4, async () => {
+    calls += 1;
+    return "unexpected";
+  });
+
+  assert.deepEqual(results, []);
+  assert.equal(calls, 0);
+});
+
 test("repository activity rejects an invalid concurrency", async () => {
   await assert.rejects(() => mapWithConcurrency([1], 0, async (value) => value), /positive integer/);
 });
