@@ -15,7 +15,7 @@ if (!Array.isArray(edition.stories)) {
   throw new Error("Edition stories must be an array.");
 }
 const storyIds = new Set();
-validateEditionSelectionRecord(edition.selection, edition.stories);
+validateEditionSelectionRecord(edition.selection, edition.stories, edition.quietRepositories);
 
 for (const story of edition.stories) {
   for (const field of requiredStoryFields) {
