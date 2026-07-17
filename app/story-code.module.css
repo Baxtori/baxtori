@@ -1,0 +1,370 @@
+.reader {
+  --reader-gutter: #0c1511;
+}
+
+.bearings {
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+  background: #101a15;
+}
+
+.bearingsHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 0.9rem;
+}
+
+.bearingsHeading > div {
+  display: grid;
+  gap: 0.22rem;
+  min-width: 0;
+}
+
+.bearingsHeading span,
+.sectionLabel {
+  color: #8db99a;
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.bearingsHeading strong {
+  color: #e8eee9;
+  font-family: var(--serif);
+  font-size: 1rem;
+  font-weight: 520;
+}
+
+.bearingsHeading p {
+  max-width: 48rem;
+  margin: 0;
+  color: #9fb0a6;
+  font-family: var(--serif);
+  font-size: 0.72rem;
+  line-height: 1.42;
+}
+
+.bearingsHeading button {
+  flex: 0 0 auto;
+  min-height: 1.9rem;
+  padding: 0.28rem 0.58rem;
+  color: #b9c9bf;
+  background: transparent;
+  border: 1px solid rgb(255 255 255 / 16%);
+  cursor: pointer;
+  font-size: 0.58rem;
+  font-weight: 760;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.28rem;
+  padding: 0.55rem 0.9rem;
+  color: #778b80;
+  border-top: 1px solid rgb(255 255 255 / 8%);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.56rem;
+}
+
+.breadcrumb strong {
+  color: #b7c8be;
+  font-weight: 650;
+}
+
+.breadcrumb i {
+  color: #52635a;
+  font-style: normal;
+}
+
+.bearingsBody {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(16rem, 0.85fr);
+  gap: 1rem;
+  padding: 0 0.9rem 0.9rem;
+}
+
+.locationCard,
+.selectionCard {
+  min-width: 0;
+  padding: 0.85rem;
+  border: 1px solid rgb(255 255 255 / 10%);
+}
+
+.locationCard h5,
+.selectionCard h5 {
+  margin: 0.28rem 0 0.35rem;
+  color: #edf3ef;
+  font-family: var(--serif);
+  font-size: 1rem;
+  font-weight: 520;
+  letter-spacing: -0.02em;
+}
+
+.locationCard p,
+.selectionCard p {
+  margin: 0;
+  color: #9fb0a6;
+  font-size: 0.68rem;
+  line-height: 1.42;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 0.75rem;
+  border: 1px solid rgb(255 255 255 / 10%);
+}
+
+.metrics > div {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+  padding: 0.52rem;
+  border-right: 1px solid rgb(255 255 255 / 10%);
+}
+
+.metrics > div:last-child {
+  border-right: 0;
+}
+
+.metrics strong {
+  overflow: hidden;
+  color: #e8eee9;
+  font-family: var(--serif);
+  font-size: 0.92rem;
+  font-weight: 520;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metrics span {
+  color: #778b80;
+  font-size: 0.52rem;
+  font-weight: 760;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+
+.signalList,
+.connectionList,
+.conceptList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.7rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.signalList li,
+.conceptList li {
+  padding: 0.22rem 0.34rem;
+  color: #b7c8be;
+  background: rgb(255 255 255 / 5%);
+  border: 1px solid rgb(255 255 255 / 9%);
+  font-size: 0.55rem;
+}
+
+.connections {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.45rem;
+  padding-top: 0.1rem;
+}
+
+.connectionList li {
+  display: grid;
+  gap: 0.1rem;
+  min-width: min(100%, 12rem);
+  padding: 0.48rem 0.58rem;
+  border-left: 2px solid #5c8368;
+  background: rgb(255 255 255 / 4%);
+}
+
+.connectionList strong {
+  color: #d9e3dc;
+  font-family: var(--serif);
+  font-size: 0.72rem;
+  font-weight: 520;
+}
+
+.connectionList span {
+  color: #7f9387;
+  font-size: 0.53rem;
+}
+
+.modelNote {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #71847a;
+  font-size: 0.57rem;
+  line-height: 1.4;
+}
+
+.viewportControls {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-left: auto;
+}
+
+.wrapButton {
+  min-height: 1.85rem;
+  padding: 0.25rem 0.6rem;
+  color: #8fa096;
+  background: transparent;
+  border: 1px solid rgb(255 255 255 / 13%);
+  cursor: pointer;
+  font-size: 0.58rem;
+  font-weight: 760;
+}
+
+.wrapButton[aria-pressed="true"] {
+  color: #101914;
+  background: #b8d8c0;
+  border-color: #b8d8c0;
+}
+
+.scrollMeter {
+  display: grid;
+  width: 4.5rem;
+  height: 0.22rem;
+  overflow: hidden;
+  background: rgb(255 255 255 / 10%);
+}
+
+.scrollMeter > span {
+  display: block;
+  width: var(--scroll-progress);
+  background: #91c19e;
+  transition: width 120ms ease-out;
+}
+
+.frame {
+  position: relative;
+  scrollbar-color: #61766a #0c1511;
+  scrollbar-width: thin;
+}
+
+.frame::-webkit-scrollbar {
+  width: 0.65rem;
+  height: 0.65rem;
+}
+
+.frame::-webkit-scrollbar-track {
+  background: #0c1511;
+}
+
+.frame::-webkit-scrollbar-thumb {
+  background: #52675b;
+  border: 2px solid #0c1511;
+}
+
+.frame::-webkit-scrollbar-thumb:hover {
+  background: #718a7b;
+}
+
+.wrapped {
+  overflow-x: hidden;
+}
+
+.wrapped :global(pre) {
+  width: 100%;
+  min-width: 0;
+}
+
+.wrapped :global(.code-line),
+.wrapped :global(.diff-line) {
+  align-items: start;
+  min-width: 0;
+}
+
+.wrapped :global(.code-line > code),
+.wrapped :global(.diff-line > code) {
+  min-width: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.frame :global(.code-line-number),
+.frame :global(.diff-marker),
+.frame :global(.diff-number) {
+  position: sticky;
+  z-index: 2;
+  background: var(--reader-gutter);
+}
+
+.frame :global(.code-line-number),
+.frame :global(.diff-marker) {
+  left: 0;
+}
+
+.frame :global(.diff-marker + .diff-number) {
+  left: 1.7rem;
+}
+
+.frame :global(.diff-marker + .diff-number + .diff-number) {
+  left: 4.7rem;
+}
+
+.frame:focus-visible {
+  outline: 2px solid #91c19e;
+  outline-offset: -2px;
+}
+
+.unmapped {
+  color: #d5b27f !important;
+}
+
+@media (max-width: 680px) {
+  .bearingsBody {
+    grid-template-columns: 1fr;
+  }
+
+  .connections,
+  .modelNote {
+    grid-column: auto;
+  }
+
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .metrics > div {
+    border-right: 0;
+    border-bottom: 1px solid rgb(255 255 255 / 10%);
+  }
+
+  .metrics > div:last-child {
+    border-bottom: 0;
+  }
+
+  .viewportControls {
+    width: 100%;
+    justify-content: space-between;
+    margin-left: 0;
+  }
+
+  .scrollMeter {
+    flex: 1;
+  }
+
+  .frame :global(.diff-marker + .diff-number) {
+    left: 1.45rem;
+  }
+
+  .frame :global(.diff-marker + .diff-number + .diff-number) {
+    left: 3.8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrollMeter > span {
+    transition: none;
+  }
+}
