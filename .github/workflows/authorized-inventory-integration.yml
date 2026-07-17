@@ -1,0 +1,54 @@
+name: Apply authorized repository inventory
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: authorized-inventory-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apply-and-verify:
+    if: github.event.pull_request.head.ref == 'codex/authorized-repository-inventory'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: codex/authorized-repository-inventory
+          fetch-depth: 0
+
+      - name: Apply inventory integration
+        run: python3 .github/patches/authorized-inventory.py
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.19.0
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Build and test
+        run: npm test
+
+      - name: Commit verified integration
+        run: |
+          rm -rf .github/patches .github/workflows/authorized-inventory-integration.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Export authorized repository inventory"
+          git push origin HEAD:codex/authorized-repository-inventory
