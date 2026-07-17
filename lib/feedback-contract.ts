@@ -1,4 +1,5 @@
 import { canonicalRepository, canonicalizeRepositoryList, canonicalizeRepositoryStateRecord } from "./repository-identity.ts";
+import type { RepositoryMode } from "./repository-modes.ts";
 
 export type ReaderStoryState = {
   expanded: boolean;
@@ -18,6 +19,7 @@ export type ReaderStatePayload = {
   hideUnderstood: boolean;
   mapStates: Record<string, "introduced" | "revisit" | "skipped" | "understood" | "unexplored">;
   questionStates: Record<string, "irrelevant" | "open" | "resolved">;
+  repositoryModes: Record<string, RepositoryMode>;
   selectedRepositories: string[];
   states: Record<string, ReaderStoryState>;
   version: 1;
@@ -44,6 +46,7 @@ const REPOSITORY_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const MAX_REPOSITORY_STATE_ENTRIES = 5_000;
 const MAP_STATES = new Set(["introduced", "revisit", "skipped", "understood", "unexplored"]);
 const QUESTION_STATES = new Set(["irrelevant", "open", "resolved"]);
+const REPOSITORY_MODES = new Set(["automatic", "muted", "pinned"]);
 const VIEWS = new Set(["briefing", "map", "repositories", "timeline"]);
 
 export function parseReaderState(input: unknown): ReaderStatePayload {
@@ -62,6 +65,8 @@ export function parseReaderState(input: unknown): ReaderStatePayload {
       watching: readBoolean(value.watching),
     };
   });
+  const repositoryModes = canonicalizeRepositoryStateRecord(parseEnumRecord<RepositoryMode>(input.repositoryModes ?? {}, REPOSITORY_MODES, MAX_REPOSITORY_STATE_ENTRIES));
+  if (!Object.keys(repositoryModes).every((repository) => REPOSITORY_PATTERN.test(repository))) throw new Error("Invalid repository mode target.");
   const selectedRepositories = canonicalizeRepositoryList(readStringArray(input.selectedRepositories, MAX_REPOSITORY_STATE_ENTRIES, 200));
   if (!selectedRepositories.every((repository) => REPOSITORY_PATTERN.test(repository))) throw new Error("Invalid selected repository.");
   const view = readString(input.view, 20);
@@ -73,6 +78,7 @@ export function parseReaderState(input: unknown): ReaderStatePayload {
     hideUnderstood: readBoolean(input.hideUnderstood),
     mapStates: canonicalizeRepositoryStateRecord(parseEnumRecord<ReaderStatePayload["mapStates"][string]>(input.mapStates, MAP_STATES)),
     questionStates: canonicalizeRepositoryStateRecord(parseEnumRecord<ReaderStatePayload["questionStates"][string]>(input.questionStates, QUESTION_STATES)),
+    repositoryModes,
     selectedRepositories,
     states,
     version: 1,
@@ -96,8 +102,8 @@ export function parseReviewRequest(input: unknown) {
   };
 }
 
-function parseEnumRecord<T extends string>(input: unknown, allowed: Set<string>) {
-  return parseRecord(input, 500, (value) => {
+function parseEnumRecord<T extends string>(input: unknown, allowed: Set<string>, maximumEntries = 500) {
+  return parseRecord(input, maximumEntries, (value) => {
     const parsed = readString(value, 40);
     if (!allowed.has(parsed)) throw new Error("Invalid reader disposition.");
     return parsed as T;

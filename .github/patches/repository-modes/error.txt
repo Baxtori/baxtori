@@ -1,1 +1,0 @@
-Expected one match in app/page.tsx, found 0: '                       <div className="scope-row-actions">\n                     '
