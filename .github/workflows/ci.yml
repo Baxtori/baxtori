@@ -36,6 +36,7 @@ jobs:
             cat /tmp/repository-modes-apply.log
             exit 1
           fi
+          python3 .github/patches/repository-modes/post.py
 
       - name: Use Node.js 22
         uses: actions/setup-node@v4
