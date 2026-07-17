@@ -9,6 +9,7 @@
  */
 
 import type * as feedback from "../feedback.js";
+import type * as repositoryInventory from "../repositoryInventory.js";
 import type * as validators from "../validators.js";
 
 import type {
@@ -19,6 +20,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   feedback: typeof feedback;
+  repositoryInventory: typeof repositoryInventory;
   validators: typeof validators;
 }>;
 
