@@ -25,25 +25,7 @@ jobs:
 
       - name: Apply staged integration
         run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          path = Path('.github/patches/repository-modes/apply.py')
-          text = path.read_text()
-          text = text.replace('                   const commitCount', '                  const commitCount')
-          text = text.replace('                   const mode', '                  const mode')
-          text = text.replace('                   return (', '                  return (')
-          text = text.replace('                           {scope &&', '                          {scope &&')
-          text = text.replace('                           <span>{REPOSITORY_MODE_LABELS', '                          <span>{REPOSITORY_MODE_LABELS')
-          text = text.replace(
-              ''''                       <div className="scope-row-actions">\n                         <a href={repository.url} rel="noreferrer" target="_blank">GitHub ↗</a>\n                         <button onClick={() => toggleRepository(repository.fullName)} type="button">Remove</button>\n                       </div>\n',''',
-              ''''                      <div className="scope-row-actions">\n                        <a href={repository.url} rel="noreferrer" target="_blank">GitHub ↗</a>\n                        <button onClick={() => toggleRepository(repository.fullName)} type="button">Remove</button>\n                      </div>\n',''',
-          )
-          text = text.replace(
-              ''''                       <div className={repositoryModeStyles.scopeActions}>\n                         <a href={repository.url} rel="noreferrer" target="_blank">GitHub ↗</a>\n                         <RepositoryModeControl mode={mode} onChange={(nextMode) => updateRepositoryMode(repository.fullName, nextMode)} repository={repository.fullName} />\n                       </div>\n',''',
-              ''''                      <div className={repositoryModeStyles.scopeActions}>\n                        <a href={repository.url} rel="noreferrer" target="_blank">GitHub ↗</a>\n                        <RepositoryModeControl mode={mode} onChange={(nextMode) => updateRepositoryMode(repository.fullName, nextMode)} repository={repository.fullName} />\n                      </div>\n',''',
-          )
-          path.write_text(text)
-          PY
+          python3 .github/patches/repository-modes/fix.py
           if ! python3 .github/patches/repository-modes/apply.py > /tmp/repository-modes-apply.log 2>&1; then
             cp /tmp/repository-modes-apply.log .github/patches/repository-modes/error.txt
             git config user.name github-actions[bot]
