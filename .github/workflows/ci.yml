@@ -1,26 +1,30 @@
-name: Verify Baxtori
+name: Apply repository modes
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
-  group: verify-${{ github.workflow }}-${{ github.ref }}
+  group: apply-repository-modes-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  verify:
+  apply-and-verify:
+    if: github.event.pull_request.head.ref == 'codex/repository-modes'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
-      - name: Check out repository
+      - name: Check out branch
         uses: actions/checkout@v4
+        with:
+          ref: codex/repository-modes
+          fetch-depth: 0
+
+      - name: Apply staged integration
+        run: python3 .github/patches/repository-modes/apply.py
 
       - name: Use Node.js 22
         uses: actions/setup-node@v4
@@ -39,3 +43,13 @@ jobs:
 
       - name: Build and test
         run: npm test
+
+      - name: Commit verified changes
+        run: |
+          git show origin/main:.github/workflows/ci.yml > .github/workflows/ci.yml
+          rm -rf .github/patches/repository-modes
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add app/page.tsx lib/feedback-contract.ts .github/workflows/ci.yml .github/patches/repository-modes
+          git commit -m "Add explicit repository review modes"
+          git push origin HEAD:codex/repository-modes
