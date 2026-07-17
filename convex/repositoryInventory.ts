@@ -7,6 +7,26 @@ function verifySecret(secret: string) {
   if (!expected || secret !== expected) throw new Error("Unauthorized repository inventory request.");
 }
 
+async function completedInventory(ctx: Parameters<Parameters<typeof query>[0]["handler"]>[0], userId: string) {
+  const sync = await ctx.db.query("repositoryInventorySyncs")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .unique();
+  if (!sync || sync.completedRevision < 1) return null;
+  const chunks = await ctx.db.query("repositoryInventoryChunks")
+    .withIndex("by_user_revision", (q) => q.eq("userId", userId).eq("revision", sync.completedRevision))
+    .collect();
+  chunks.sort((left, right) => left.chunkIndex - right.chunkIndex);
+  const repositories = chunks.flatMap((chunk) => chunk.repositories);
+  if (repositories.length !== sync.repositoryCount) throw new Error("Completed repository inventory is inconsistent.");
+  return {
+    repositories,
+    repositoryCount: sync.repositoryCount,
+    revision: sync.completedRevision,
+    truncated: sync.truncated,
+    updatedAt: sync.updatedAt,
+  };
+}
+
 export const beginInventorySync = mutation({
   args: {
     githubLogin: v.string(),
@@ -122,27 +142,22 @@ export const completeInventorySync = mutation({
   },
 });
 
+export const getReaderInventory = query({
+  args: { secret: v.string(), userId: v.string() },
+  handler: async (ctx, args) => {
+    verifySecret(args.secret);
+    return completedInventory(ctx, args.userId);
+  },
+});
+
 export const getCompilerInventory = query({
   args: { githubLogin: v.string(), secret: v.string() },
   handler: async (ctx, args) => {
     verifySecret(args.secret);
-    const syncs = (await ctx.db.query("repositoryInventorySyncs").collect())
-      .filter((sync) => sync.githubLogin.toLowerCase() === args.githubLogin.toLowerCase())
-      .sort((left, right) => right.updatedAt - left.updatedAt);
-    const sync = syncs[0] ?? null;
-    if (!sync || sync.completedRevision < 1) return null;
-    const chunks = await ctx.db.query("repositoryInventoryChunks")
-      .withIndex("by_user_revision", (q) => q.eq("userId", sync.userId).eq("revision", sync.completedRevision))
+    const syncs = await ctx.db.query("repositoryInventorySyncs")
+      .withIndex("by_login", (q) => q.eq("githubLogin", args.githubLogin))
       .collect();
-    chunks.sort((left, right) => left.chunkIndex - right.chunkIndex);
-    const repositories = chunks.flatMap((chunk) => chunk.repositories);
-    if (repositories.length !== sync.repositoryCount) throw new Error("Completed repository inventory is inconsistent.");
-    return {
-      repositories,
-      repositoryCount: sync.repositoryCount,
-      revision: sync.completedRevision,
-      truncated: sync.truncated,
-      updatedAt: sync.updatedAt,
-    };
+    const sync = syncs.sort((left, right) => right.updatedAt - left.updatedAt)[0] ?? null;
+    return sync ? completedInventory(ctx, sync.userId) : null;
   },
 });
