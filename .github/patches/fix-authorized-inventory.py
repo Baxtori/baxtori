@@ -24,6 +24,12 @@ replace_once(
 
 replace_once(
     "lib/github-repository-library.ts",
+    'import { githubHeaders } from "./github-auth";',
+    'import { githubHeaders } from "./github-auth.ts";',
+)
+
+replace_once(
+    "lib/github-repository-library.ts",
     '''export class GitHubRepositoryLibraryError extends Error {
   constructor(message: string, readonly status: number) {
     super(message);
