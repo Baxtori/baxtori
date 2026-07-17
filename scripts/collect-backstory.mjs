@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildRepositoryReviewLedger, EDITION_SELECTION_PRIORITIES } from "./lib/edition-selection.mjs";
 import { buildFollowUpCandidates } from "./lib/follow-up-candidates.mjs";
 import { buildMapImpacts } from "./lib/map-impact.mjs";
 import { sourceReviewRef } from "./lib/source-ref.mjs";
@@ -129,11 +130,16 @@ function collectRepository(source) {
 }
 
 const requestedRepositories = readerFeedback?.readerState?.payload?.selectedRepositories;
+const repositoryModes = readerFeedback?.readerState?.payload?.repositoryModes ?? {};
 const selectedRepositorySet = Array.isArray(requestedRepositories) ? new Set(requestedRepositories) : null;
 const configuredSources = selectedRepositorySet
   ? config.repositories.filter((source) => selectedRepositorySet.has(source.fullName))
   : config.repositories;
+const unconfiguredSelections = Array.isArray(requestedRepositories)
+  ? requestedRepositories.filter((repository) => !config.repositories.some((source) => source.fullName === repository))
+  : [];
 const repositories = configuredSources.map(collectRepository);
+const reviewLedger = buildRepositoryReviewLedger({ repositories, repositoryModes, unconfiguredSelections });
 const mapImpact = buildMapImpacts(repositoryMaps, repositories);
 const followUpCandidates = buildFollowUpCandidates({
   mapImpact,
@@ -144,9 +150,12 @@ const followUpCandidates = buildFollowUpCandidates({
 const output = {
   collectedAt: new Date().toISOString(),
   instructions: {
+    budgetRule: "Estimate reading time only after a finding has been reviewed and can be explained. Pack qualifying findings by priority into the target budget; do not impose a story-count ceiling. If the highest-priority finding exceeds the target, publish it alone rather than hiding it.",
     evidenceRule: "Every claim must be supported by the listed commits and files. Do not infer unobserved behavior.",
+    priorityOrder: EDITION_SELECTION_PRIORITIES,
+    publicationThresholdRule: "A finding qualifies only after review establishes exact evidence, a concrete consequence, an explanation that adds more than the commit message, and a reason to spend reader attention now.",
     quietRule: "Publish no story for repositories with no commits or only routine lockfile/documentation churn unless that churn changes behavior.",
-    storyLimit: 5,
+    readingBudgetMinutes: 15,
     followUpRule: "Treat follow-up candidates as review prompts only. Publish a return to the reader only after inspecting the original evidence and the new commits, then record the exact match reason and new evidence.",
     mapRule: "Review every affected map area against its exact commits before changing confidence, freshness, verdict, walkthrough, or questions. New unmapped files may suggest a new area, but are not proof of one.",
   },
@@ -158,10 +167,9 @@ const output = {
     queuedQuestions: readerFeedback.queuedQuestions ?? [],
     reviewRequests: readerFeedback.reviewRequests,
     topicThreads: readerFeedback.topicThreads ?? [],
-    unconfiguredSelections: Array.isArray(requestedRepositories)
-      ? requestedRepositories.filter((repository) => !config.repositories.some((source) => source.fullName === repository))
-      : [],
+    unconfiguredSelections,
   } : null,
+  reviewLedger,
   periodEnd: new Date().toISOString().slice(0, 10),
   periodStart: since.slice(0, 10),
   repositories,
@@ -171,7 +179,7 @@ const output = {
 await mkdir(resolve(root, "data"), { recursive: true });
 await writeFile(resolve(root, "data/candidates.json"), `${JSON.stringify(output, null, 2)}\n`);
 
-const active = repositories.filter((repository) => repository.commits.length && !repository.routineOnly).length;
-console.log(`Collected ${repositories.length} selected repositories; ${active} have potentially meaningful changes.`);
+console.log(`Collected ${reviewLedger.inspectedCount} configured repositories from ${reviewLedger.requestedCount} requested sources.`);
+console.log(`Review ledger: ${reviewLedger.counts["review-candidate"]} candidates; ${reviewLedger.counts.quiet} quiet; ${reviewLedger.counts.inaccessible} inaccessible.`);
 console.log(`Map impact: ${mapImpact.affectedAreas.length} affected areas; ${mapImpact.unmappedFiles.length} changed files remain unmapped.`);
 console.log(`Follow-up preflight: ${followUpCandidates.candidates.length} candidates; ${followUpCandidates.unmatchedThreads.length} active threads have no related collected change.`);

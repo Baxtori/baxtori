@@ -10,13 +10,16 @@ const requiredStoryFields = [
 for (const field of requiredEditionFields) {
   if (!(field in edition)) throw new Error(`Edition is missing ${field}.`);
 }
-if (!Array.isArray(edition.stories) || edition.stories.length > 5) {
-  throw new Error("Edition stories must be an array with at most five entries.");
+if (!Array.isArray(edition.stories)) {
+  throw new Error("Edition stories must be an array.");
 }
+const storyIds = new Set();
 for (const story of edition.stories) {
   for (const field of requiredStoryFields) {
     if (!(field in story)) throw new Error(`${story.id ?? "Story"} is missing ${field}.`);
   }
+  if (storyIds.has(story.id)) throw new Error(`Edition contains duplicate story ID ${story.id}.`);
+  storyIds.add(story.id);
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(story.topicId) || story.topicId.length > 120) throw new Error(`${story.id} has an invalid topic ID.`);
   if (!["blue", "green", "rust"].includes(story.tone)) throw new Error(`${story.id} has an invalid tone.`);
   if (!Number.isInteger(story.learningValue) || story.learningValue < 1 || story.learningValue > 5) {
