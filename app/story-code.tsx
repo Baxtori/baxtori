@@ -1,11 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type UIEvent } from "react";
+import latestEdition from "@/data/latest.json";
+import ourchivalMap from "@/data/maps/ourchival.json";
+import oneMoreLegendMap from "@/data/maps/one-more-legend.json";
+import repositoryMap from "@/data/repo-map.json";
 import type { DiffLine } from "@/lib/code-diff";
 import { highlightCodeLines, type SyntaxToken } from "@/lib/code-highlight";
+import {
+  buildStoryOrientation,
+  type OrientationMap,
+  type OrientationStory,
+} from "@/lib/story-orientation";
 import type { ThreadQuestionRecord } from "@/lib/story-questions";
 import type { TopicThreadRecord } from "@/lib/story-topics";
 import { EvidenceQuestion, type QuestionReviewLens } from "./evidence-question";
+import styles from "./story-code.module.css";
 
 export type CodeEvidence = {
   baseCommit: string;
@@ -36,6 +46,11 @@ type HighlightedDiffLine = DiffLine & {
   tokens: SyntaxToken[];
 };
 
+type PublishedStory = OrientationStory & {
+  codeEvidence?: CodeEvidence[];
+  id: string;
+};
+
 type StoryCodeProps = {
   defaultQuestionLens: string;
   editionId: string;
@@ -53,6 +68,15 @@ type StoryCodeProps = {
 };
 
 type ViewMode = "current" | "diff";
+
+const REPOSITORY_MAPS = [repositoryMap, ourchivalMap, oneMoreLegendMap] as unknown as OrientationMap[];
+const PUBLISHED_STORIES = latestEdition.stories as unknown as PublishedStory[];
+
+function scrollPercentage(element: HTMLElement) {
+  const scrollable = element.scrollHeight - element.clientHeight;
+  if (scrollable <= 0) return 100;
+  return Math.max(0, Math.min(100, Math.round((element.scrollTop / scrollable) * 100)));
+}
 
 export function StoryCode({
   defaultQuestionLens,
@@ -76,7 +100,15 @@ export function StoryCode({
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [fullScreen, setFullScreen] = useState(false);
+  const [showBearings, setShowBearings] = useState(true);
+  const [wrapLines, setWrapLines] = useState(true);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const frameRef = useRef<HTMLDivElement>(null);
   const active = evidence[activeIndex];
+  const publishedStory = PUBLISHED_STORIES.find((story) => story.id === storyId);
+  const orientation = active && publishedStory
+    ? buildStoryOrientation({ active, maps: REPOSITORY_MAPS, repository, story: publishedStory })
+    : null;
   const headingId = `code-heading-${storyId}`;
   const panelId = `code-panel-${storyId}`;
   const activeTabId = `code-tab-${storyId}-${activeIndex}`;
@@ -112,6 +144,7 @@ export function StoryCode({
       setDiffResponse(null);
       setViewMode("diff");
       setCopied(false);
+      setScrollProgress(0);
     });
 
     Promise.all([
@@ -155,6 +188,13 @@ export function StoryCode({
     };
   }, [fullScreen]);
 
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      if (frameRef.current) setScrollProgress(scrollPercentage(frameRef.current));
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeIndex, fullScreen, loading, viewMode, wrapLines]);
+
   if (!active) return null;
 
   const copyVisibleCode = async () => {
@@ -174,12 +214,17 @@ export function StoryCode({
     setCopied(true);
   };
 
+  const handleScroll = (event: UIEvent<HTMLDivElement>) => {
+    setScrollProgress(scrollPercentage(event.currentTarget));
+  };
+
   const visibleSourceUrl = viewMode === "diff" ? diffResponse?.sourceUrl : codeResponse?.sourceUrl;
   const visibleError = viewMode === "diff" ? diffResponse?.error : codeResponse?.error;
   const hasVisibleCode = viewMode === "diff" ? highlightedDiffLines.length > 0 : highlightedLines.length > 0;
+  const repositoryLabel = orientation?.repository.split("/").at(-1) ?? repository.split("/").at(-1) ?? repository;
 
   return (
-    <section className={`story-code ${fullScreen ? "is-fullscreen" : ""}`} aria-labelledby={headingId}>
+    <section className={`story-code ${styles.reader} ${fullScreen ? "is-fullscreen" : ""}`} aria-labelledby={headingId}>
       <header className="story-code-heading">
         <div>
           <span>Code evidence {activeIndex + 1}/{evidence.length}</span>
@@ -213,12 +258,107 @@ export function StoryCode({
       )}
 
       <div aria-labelledby={evidence.length > 1 ? activeTabId : headingId} id={panelId} role="tabpanel">
+        {orientation && (
+          <section className={styles.bearings} aria-label="Repository bearings">
+            <div className={styles.bearingsHeading}>
+              <div>
+                <span>Repository bearings</span>
+                <strong>{orientation.area?.name ?? "Outside the current repository map"}</strong>
+                <p>{orientation.repositorySummary ?? `Current evidence in ${orientation.repository}.`}</p>
+              </div>
+              <button aria-expanded={showBearings} onClick={() => setShowBearings((current) => !current)} type="button">
+                {showBearings ? "Hide bearings" : "Show bearings"}
+              </button>
+            </div>
+
+            <nav className={styles.breadcrumb} aria-label="Code location">
+              <strong>{repositoryLabel}</strong>
+              <i aria-hidden="true">/</i>
+              {orientation.area && <><strong>{orientation.area.name}</strong><i aria-hidden="true">/</i></>}
+              {orientation.pathParts.map((part, index) => (
+                <span key={`${part}-${index}`}>
+                  {part}{index < orientation.pathParts.length - 1 && <i aria-hidden="true"> / </i>}
+                </span>
+              ))}
+              <strong>L{active.startLine}–{active.endLine}</strong>
+            </nav>
+
+            {showBearings && (
+              <div className={styles.bearingsBody}>
+                <section className={styles.locationCard}>
+                  <span className={styles.sectionLabel}>Where this sits</span>
+                  <h5 className={orientation.area ? undefined : styles.unmapped}>
+                    {orientation.area ? `${orientation.area.kind} · ${orientation.area.name}` : "Unmapped in the current repository model"}
+                  </h5>
+                  <p>{orientation.area?.purpose ?? "The exact file remains inspectable, while the current repository map has no reviewed area claiming this path yet."}</p>
+                  {orientation.area && (
+                    <>
+                      <div className={styles.metrics}>
+                        <div>
+                          <strong>{orientation.area.position}/{orientation.area.totalAreas}</strong>
+                          <span>Mapped area position</span>
+                        </div>
+                        <div>
+                          <strong>{orientation.area.evidencePosition ?? "—"}/{orientation.area.evidenceCount}</strong>
+                          <span>File in area evidence</span>
+                        </div>
+                        <div>
+                          <strong>{orientation.area.coverageEstimate}%</strong>
+                          <span>Map coverage estimate</span>
+                        </div>
+                      </div>
+                      <ul className={styles.conceptList} aria-label="Area concepts">
+                        {orientation.area.concepts.slice(0, 4).map((concept) => <li key={concept}>{concept}</li>)}
+                      </ul>
+                    </>
+                  )}
+                </section>
+
+                <section className={styles.selectionCard}>
+                  <span className={styles.sectionLabel}>Why this is here</span>
+                  <h5>{orientation.selection.headline}</h5>
+                  <p>{orientation.selection.explanation}</p>
+                  <ul className={styles.signalList} aria-label="Selection signals">
+                    {orientation.selection.signals.map((signal) => <li key={signal}>{signal}</li>)}
+                  </ul>
+                </section>
+
+                {orientation.connections.length > 0 && (
+                  <section className={styles.connections}>
+                    <span className={styles.sectionLabel}>Connected through this story</span>
+                    <ul className={styles.connectionList}>
+                      {orientation.connections.map((connection) => (
+                        <li key={connection.id}>
+                          <strong>{connection.name}</strong>
+                          <span>{connection.kind} · {connection.sharedPaths.join(", ")}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+
+                <p className={styles.modelNote}>
+                  Map position and coverage describe Baxtori&apos;s reviewed knowledge model. They are bearings for reading, not a literal count of repository files or lines.
+                </p>
+              </div>
+            )}
+          </section>
+        )}
+
         <div className="code-view-bar">
           <div aria-label="Code view" className="code-view-toggle">
             <button aria-pressed={viewMode === "diff"} disabled={loading || !diffResponse?.lines} onClick={() => { setViewMode("diff"); setCopied(false); }} type="button">Change</button>
             <button aria-pressed={viewMode === "current"} disabled={loading || !codeResponse?.lines} onClick={() => { setViewMode("current"); setCopied(false); }} type="button">Current code</button>
           </div>
           {diffResponse?.lines && <span><strong>+{diffResponse.additions}</strong> <em>−{diffResponse.deletions}</em></span>}
+          <div className={styles.viewportControls}>
+            <button className={styles.wrapButton} aria-pressed={wrapLines} onClick={() => setWrapLines((current) => !current)} type="button">
+              {wrapLines ? "Wrapped" : "Raw lines"}
+            </button>
+            <span className={styles.scrollMeter} aria-label={`Code scroll position ${scrollProgress}%`} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={scrollProgress}>
+              <span style={{ "--scroll-progress": `${scrollProgress}%` } as CSSProperties} />
+            </span>
+          </div>
         </div>
 
         <div className="code-context">
@@ -226,7 +366,13 @@ export function StoryCode({
           <code>{active.path}:{active.startLine}–{active.endLine}</code>
         </div>
 
-        <div className="code-frame" aria-busy={loading}>
+        <div
+          className={`code-frame ${styles.frame} ${wrapLines ? styles.wrapped : styles.scrollable}`}
+          aria-busy={loading}
+          onScroll={handleScroll}
+          ref={frameRef}
+          tabIndex={0}
+        >
           {loading && <div className="code-state">Loading the reviewed change from GitHub…</div>}
           {!loading && visibleError && <div className="code-state is-error">{visibleError}</div>}
           {!loading && viewMode === "diff" && highlightedDiffLines.length > 0 && (
