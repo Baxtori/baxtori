@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseReaderState } from "../lib/feedback-contract.ts";
-import { parseRepositoryInventory } from "../lib/repository-inventory.ts";
+import { parseRepositoryInventory, repositoryInventoryFromLibrary } from "../lib/repository-inventory.ts";
 
 function inventoryEntry(overrides = {}) {
   return {
@@ -17,22 +16,6 @@ function inventoryEntry(overrides = {}) {
   };
 }
 
-function readerState(overrides = {}) {
-  return {
-    activeMapRepository: "teamleaderleo/baxtori",
-    editionId: "2026-07-17",
-    hideUnderstood: false,
-    mapStates: {},
-    questionStates: {},
-    repositoryModes: {},
-    selectedRepositories: [],
-    states: {},
-    version: 1,
-    view: "repositories",
-    ...overrides,
-  };
-}
-
 test("repository inventory canonicalizes, deduplicates, and sorts by recent push", () => {
   const parsed = parseRepositoryInventory([
     inventoryEntry({ fullName: "teamleaderleo/glimpse", id: 10, pushedAt: "2026-07-16T09:00:00Z", updatedAt: "2026-07-16T09:00:00Z" }),
@@ -44,14 +27,24 @@ test("repository inventory canonicalizes, deduplicates, and sorts by recent push
   assert.equal(parsed[0].pushedAt, "2026-07-17T09:00:00Z");
 });
 
-test("legacy reader state defaults to an empty inventory", () => {
-  assert.deepEqual(parseReaderState(readerState()).repositoryInventory, []);
-});
-
-test("reader state retains sanitized repository inventory", () => {
-  const parsed = parseReaderState(readerState({ repositoryInventory: [inventoryEntry()] }));
-  assert.equal(parsed.repositoryInventory[0].fullName, "teamleaderleo/alpha");
-  assert.equal(parsed.repositoryInventory[0].private, true);
+test("library conversion keeps only compiler-safe metadata", () => {
+  const parsed = repositoryInventoryFromLibrary([{
+    ...inventoryEntry(),
+    description: "not exported",
+    language: "TypeScript",
+    openIssues: 12,
+    url: "https://github.com/teamleaderleo/alpha",
+  }]);
+  assert.deepEqual(Object.keys(parsed[0]).sort(), [
+    "archived",
+    "defaultBranch",
+    "fork",
+    "fullName",
+    "id",
+    "private",
+    "pushedAt",
+    "updatedAt",
+  ]);
 });
 
 test("repository inventory rejects malformed metadata", () => {
