@@ -1,0 +1,120 @@
+  duration_ms: 1.017778
+  type: 'test'
+  ...
+# Subtest: keeps same filenames in other directories outside the map match
+ok 87 - keeps same filenames in other directories outside the map match
+  ---
+  duration_ms: 0.248376
+  type: 'test'
+  ...
+# Subtest: explains selection as editorial judgment instead of codebase percentage
+ok 88 - explains selection as editorial judgment instead of codebase percentage
+  ---
+  duration_ms: 0.465394
+  type: 'test'
+  ...
+# Subtest: questions retain a selected range inside the active exact evidence
+ok 89 - questions retain a selected range inside the active exact evidence
+  ---
+  duration_ms: 3.387735
+  type: 'test'
+  ...
+# Subtest: question ranges cannot escape the active evidence
+ok 90 - question ranges cannot escape the active evidence
+  ---
+  duration_ms: 0.694512
+  type: 'test'
+  ...
+# Subtest: question input preserves private or explicitly queued intent
+ok 91 - question input preserves private or explicitly queued intent
+  ---
+  duration_ms: 0.335864
+  type: 'test'
+  ...
+# Subtest: question input rejects blank text
+ok 92 - question input rejects blank text
+  ---
+  duration_ms: 0.251831
+  type: 'test'
+  ...
+# Subtest: evidence filtering returns questions attached to the active excerpt
+ok 93 - evidence filtering returns questions attached to the active excerpt
+  ---
+  duration_ms: 0.386509
+  type: 'test'
+  ...
+# Subtest: local private questions survive validated device storage
+ok 94 - local private questions survive validated device storage
+  ---
+  duration_ms: 5.07712
+  type: 'test'
+  ...
+# Subtest: watch identity survives story IDs and repository aliases
+ok 95 - watch identity survives story IDs and repository aliases
+  ---
+  duration_ms: 1.136643
+  type: 'test'
+  ...
+# Subtest: watch input preserves the exact originating evidence address
+ok 96 - watch input preserves the exact originating evidence address
+  ---
+  duration_ms: 0.996907
+  type: 'test'
+  ...
+# Subtest: watch input waits for an exact evidence excerpt
+ok 97 - watch input waits for an exact evidence excerpt
+  ---
+  duration_ms: 0.175328
+  type: 'test'
+  ...
+# Subtest: active watch lookup ignores resolved and unrelated threads
+ok 98 - active watch lookup ignores resolved and unrelated threads
+  ---
+  duration_ms: 0.25801
+  type: 'test'
+  ...
+# Subtest: evidence addresses canonicalize repository aliases and preserve exact history
+ok 99 - evidence addresses canonicalize repository aliases and preserve exact history
+  ---
+  duration_ms: 4.198418
+  type: 'test'
+  ...
+# Subtest: evidence addresses reject traversal, invalid commits, and oversized ranges
+ok 100 - evidence addresses reject traversal, invalid commits, and oversized ranges
+  ---
+  duration_ms: 2.85392
+  type: 'test'
+  ...
+# Subtest: topic threads retain a stable source identity independent of an edition story ID
+ok 101 - topic threads retain a stable source identity independent of an edition story ID
+  ---
+  duration_ms: 0.452826
+  type: 'test'
+  ...
+# Subtest: snoozed threads and questions require a wake date
+ok 102 - snoozed threads and questions require a wake date
+  ---
+  duration_ms: 0.517822
+  type: 'test'
+  ...
+# Subtest: questions preserve their own evidence address and explicit compiler disposition
+ok 103 - questions preserve their own evidence address and explicit compiler disposition
+  ---
+  duration_ms: 1.663939
+  type: 'test'
+  ...
+# Subtest: compiler input includes active watches and only explicitly queued open questions
+ok 104 - compiler input includes active watches and only explicitly queued open questions
+  ---
+  duration_ms: 0.408781
+  type: 'test'
+  ...
+1..104
+# tests 104
+# suites 0
+# pass 99
+# fail 5
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2873.930253
