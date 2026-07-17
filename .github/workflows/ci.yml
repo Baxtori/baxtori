@@ -53,9 +53,9 @@ jobs:
         run: |
           git show origin/main:.github/workflows/ci.yml > .github/workflows/ci.yml
           rm -rf .github/patches
-          git checkout -- data/candidates.json
+          rm -f data/candidates.json
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add scripts/collect-backstory.mjs .github/workflows/ci.yml .github/patches
+          git add scripts/collect-backstory.mjs scripts/validate-edition.mjs .github/workflows/ci.yml .github/patches
           git commit -m "Replace story quota with edition selection policy"
           git push origin HEAD:codex/edition-selection-policy
