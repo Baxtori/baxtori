@@ -17,7 +17,37 @@ jobs:
           ref: codex/repository-activity-snapshots
           fetch-depth: 0
       - name: Apply integration
-        run: python3 .github/patches/repository-activity-snapshots.py
+        run: |
+          head -n 189 .github/patches/repository-activity-snapshots.py > /tmp/repository-activity-wiring.py
+          python3 /tmp/repository-activity-wiring.py
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("scripts/lib/authorized-source-plan.mjs")
+          text = path.read_text()
+          old = '''    if (!eligible) {
+              entries.push({
+                ...activitySummary,
+                archived: entry.archived,'''.replace("      ", "")
+          new = '''    if (!eligible) {
+              entries.push({
+                ...activitySummary,
+                activityCandidate: false,
+                archived: entry.archived,'''.replace("      ", "")
+          if text.count(old) != 1:
+              raise SystemExit("Expected one muted source-plan target.")
+          path.write_text(text.replace(old, new, 1))
+
+          path = Path("tests/authorized-source-plan.test.mjs")
+          text = path.read_text()
+          old = '''  assert.equal(plan.entries[0].sourceStatus, "muted");
+            assert.equal(plan.entries[0].activityCandidate, true);'''.replace("    ", "  ")
+          new = '''  assert.equal(plan.entries[0].sourceStatus, "muted");
+            assert.equal(plan.entries[0].activityCandidate, false);'''.replace("    ", "  ")
+          if text.count(old) != 1:
+              raise SystemExit("Expected one muted source-plan test target.")
+          path.write_text(text.replace(old, new, 1))
+          PY
       - uses: actions/setup-node@v4
         with:
           node-version: 22.19.0
