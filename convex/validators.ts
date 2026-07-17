@@ -1,5 +1,22 @@
 import { v } from "convex/values";
 
+export const repositoryModeValidator = v.union(
+  v.literal("automatic"),
+  v.literal("muted"),
+  v.literal("pinned"),
+);
+
+export const repositoryInventoryEntryValidator = v.object({
+  archived: v.boolean(),
+  defaultBranch: v.string(),
+  fork: v.boolean(),
+  fullName: v.string(),
+  id: v.number(),
+  private: v.boolean(),
+  pushedAt: v.union(v.string(), v.null()),
+  updatedAt: v.string(),
+});
+
 export const storyStateValidator = v.object({
   expanded: v.boolean(),
   locked: v.boolean(),
@@ -28,6 +45,7 @@ export const readerStateValidator = v.object({
     v.literal("open"),
     v.literal("resolved"),
   )),
+  repositoryModes: v.record(v.string(), repositoryModeValidator),
   selectedRepositories: v.array(v.string()),
   states: v.record(v.string(), storyStateValidator),
   version: v.literal(1),
