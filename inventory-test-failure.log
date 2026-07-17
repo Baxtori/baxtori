@@ -1,105 +1,47 @@
 TAP version 13
 # Subtest: authorized plan collects configured caches and records metadata-only sources
-not ok 1 - authorized plan collects configured caches and records metadata-only sources
+ok 1 - authorized plan collects configured caches and records metadata-only sources
   ---
-  duration_ms: 0.734889
+  duration_ms: 1.731375
   type: 'test'
-  location: '/home/runner/work/baxtori/baxtori/tests/authorized-source-plan.test.mjs:23:1'
-  failureType: 'testCodeFailure'
-  error: "Cannot access 'repositoryInventory' before initialization"
-  code: 'ERR_TEST_FAILURE'
-  name: 'ReferenceError'
-  stack: |-
-    buildAuthorizedSourcePlan (file:///home/runner/work/baxtori/baxtori/scripts/lib/authorized-source-plan.mjs:23:24)
-    TestContext.<anonymous> (file:///home/runner/work/baxtori/baxtori/tests/authorized-source-plan.test.mjs:24:16)
-    Test.runInAsyncScope (node:async_hooks:214:14)
-    Test.run (node:internal/test_runner/test:1047:25)
-    Test.start (node:internal/test_runner/test:944:17)
-    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
   ...
 # Subtest: a current inventory blocks stale configured selections that lost authorization
-not ok 2 - a current inventory blocks stale configured selections that lost authorization
+ok 2 - a current inventory blocks stale configured selections that lost authorization
   ---
-  duration_ms: 0.122114
+  duration_ms: 0.958602
   type: 'test'
-  location: '/home/runner/work/baxtori/baxtori/tests/authorized-source-plan.test.mjs:46:1'
-  failureType: 'testCodeFailure'
-  error: "Cannot access 'repositoryInventory' before initialization"
-  code: 'ERR_TEST_FAILURE'
-  name: 'ReferenceError'
-  stack: |-
-    buildAuthorizedSourcePlan (file:///home/runner/work/baxtori/baxtori/scripts/lib/authorized-source-plan.mjs:23:24)
-    TestContext.<anonymous> (file:///home/runner/work/baxtori/baxtori/tests/authorized-source-plan.test.mjs:47:16)
-    Test.runInAsyncScope (node:async_hooks:214:14)
-    Test.run (node:internal/test_runner/test:1047:25)
-    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
-    Test.postRun (node:internal/test_runner/test:1173:19)
-    Test.run (node:internal/test_runner/test:1101:12)
-    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
   ...
 # Subtest: legacy exports preserve configured source behavior before inventory exists
-not ok 3 - legacy exports preserve configured source behavior before inventory exists
+ok 3 - legacy exports preserve configured source behavior before inventory exists
   ---
-  duration_ms: 0.117357
+  duration_ms: 0.256863
   type: 'test'
-  location: '/home/runner/work/baxtori/baxtori/tests/authorized-source-plan.test.mjs:61:1'
-  failureType: 'testCodeFailure'
-  error: "Cannot access 'repositoryInventory' before initialization"
-  code: 'ERR_TEST_FAILURE'
-  name: 'ReferenceError'
-  stack: |-
-    buildAuthorizedSourcePlan (file:///home/runner/work/baxtori/baxtori/scripts/lib/authorized-source-plan.mjs:23:24)
-    TestContext.<anonymous> (file:///home/runner/work/baxtori/baxtori/tests/authorized-source-plan.test.mjs:62:16)
-    Test.runInAsyncScope (node:async_hooks:214:14)
-    Test.run (node:internal/test_runner/test:1047:25)
-    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
-    Test.postRun (node:internal/test_runner/test:1173:19)
-    Test.run (node:internal/test_runner/test:1101:12)
-    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
   ...
 # Subtest: muted repositories never enter scheduled collection
-not ok 4 - muted repositories never enter scheduled collection
+ok 4 - muted repositories never enter scheduled collection
   ---
-  duration_ms: 0.924256
+  duration_ms: 0.198634
   type: 'test'
-  location: '/home/runner/work/baxtori/baxtori/tests/authorized-source-plan.test.mjs:74:1'
-  failureType: 'testCodeFailure'
-  error: "Cannot access 'repositoryInventory' before initialization"
-  code: 'ERR_TEST_FAILURE'
-  name: 'ReferenceError'
-  stack: |-
-    buildAuthorizedSourcePlan (file:///home/runner/work/baxtori/baxtori/scripts/lib/authorized-source-plan.mjs:23:24)
-    TestContext.<anonymous> (file:///home/runner/work/baxtori/baxtori/tests/authorized-source-plan.test.mjs:75:16)
-    Test.runInAsyncScope (node:async_hooks:214:14)
-    Test.run (node:internal/test_runner/test:1047:25)
-    Test.processPendingSubtests (node:internal/test_runner/test:744:18)
-    Test.postRun (node:internal/test_runner/test:1173:19)
-    Test.run (node:internal/test_runner/test:1101:12)
-    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
   ...
-# node:internal/modules/run_main:123
-#     triggerUncaughtException(
-#     ^
-# file:///home/runner/work/baxtori/baxtori/lib/github-repository-library.ts:39
-# export class GitHubRepositoryLibraryError extends Error {
-#   constructor(message: string, readonly status: number) {
-#                                         ^^^^^^^^^^^^^^
-#     super(message);
-# SyntaxError [ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX]: TypeScript parameter property is not supported in strip-only mode
-#     at parseTypeScript (node:internal/modules/typescript:63:40)
-#     at processTypeScriptCode (node:internal/modules/typescript:133:42)
-#     at stripTypeScriptModuleTypes (node:internal/modules/typescript:163:10)
-#     at ModuleLoader.<anonymous> (node:internal/modules/esm/translators:536:16)
-#     at \#translate (node:internal/modules/esm/loader:540:12)
-#     at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:587:27)
-#     at async ModuleJob._link (node:internal/modules/esm/module_job:162:19) {
-#   code: 'ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX'
+# node:internal/modules/esm/resolve:274
+#     throw new ERR_MODULE_NOT_FOUND(
+#           ^
+# Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/runner/work/baxtori/baxtori/lib/github-auth' imported from /home/runner/work/baxtori/baxtori/lib/github-repository-library.ts
+#     at finalizeResolution (node:internal/modules/esm/resolve:274:11)
+#     at moduleResolve (node:internal/modules/esm/resolve:859:10)
+#     at defaultResolve (node:internal/modules/esm/resolve:983:11)
+#     at \#cachedDefaultResolve (node:internal/modules/esm/loader:717:20)
+#     at ModuleLoader.resolve (node:internal/modules/esm/loader:694:38)
+#     at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:308:38)
+#     at ModuleJob._link (node:internal/modules/esm/module_job:183:49) {
+#   code: 'ERR_MODULE_NOT_FOUND',
+#   url: 'file:///home/runner/work/baxtori/baxtori/lib/github-auth'
 # }
 # Node.js v22.19.0
 # Subtest: tests/github-repository-library.test.mjs
 not ok 2 - tests/github-repository-library.test.mjs
   ---
-  duration_ms: 89.148073
+  duration_ms: 119.238252
   type: 'test'
   location: '/home/runner/work/baxtori/baxtori/tests/github-repository-library.test.mjs:1:1'
   failureType: 'testCodeFailure'
@@ -111,27 +53,27 @@ not ok 2 - tests/github-repository-library.test.mjs
 # Subtest: repository inventory canonicalizes, deduplicates, and sorts by recent push
 ok 6 - repository inventory canonicalizes, deduplicates, and sorts by recent push
   ---
-  duration_ms: 2.283127
+  duration_ms: 2.338228
   type: 'test'
   ...
 # Subtest: library conversion keeps only compiler-safe metadata
 ok 7 - library conversion keeps only compiler-safe metadata
   ---
-  duration_ms: 0.231449
+  duration_ms: 0.263897
   type: 'test'
   ...
 # Subtest: repository inventory rejects malformed metadata
 ok 8 - repository inventory rejects malformed metadata
   ---
-  duration_ms: 0.50967
+  duration_ms: 0.777662
   type: 'test'
   ...
 1..8
 # tests 8
 # suites 0
-# pass 3
-# fail 5
+# pass 7
+# fail 1
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 257.024231
+# duration_ms 321.675204
