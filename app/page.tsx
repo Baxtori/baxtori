@@ -11,8 +11,23 @@ import { mapWithConcurrency } from "@/lib/async-pool";
 import { buildContinueQueue, planContinueQueue, type ContinueItem, type ContinueItemKind } from "@/lib/continue-queue";
 import { focusTargetFor, planStoryOpening, shouldClearReviewMarker, type FocusTarget } from "@/lib/reader-navigation";
 import { parseStoredQuestionRecords, type ThreadQuestionRecord } from "@/lib/story-questions";
+import {
+  initializeRepositoryModes,
+  repositoryModeCounts,
+  repositoryModeFor,
+  restorePublishedRepositoryModes,
+  reviewRepositoriesFromModes,
+  sortRepositoriesByMode,
+  withRepositoryMode,
+  REPOSITORY_MODE_DESCRIPTIONS,
+  REPOSITORY_MODE_LABELS,
+  type RepositoryMode,
+  type RepositoryPreferenceSource,
+} from "@/lib/repository-modes";
 import { activeWatchThreadFor, storyWatchInput, topicThreadFor, type TopicThreadRecord } from "@/lib/story-topics";
 import type { ReaderStatePayload, ReaderStoryState, ReviewRequest } from "@/lib/feedback-contract";
+import { RepositoryModeControl } from "./repository-mode-control";
+import repositoryModeStyles from "./repository-modes.module.css";
 import { RepositoryMaps } from "./repository-maps";
 import { type QuestionDisposition, type RepoArea, type RepoMapData, type RepoQuestion, type UnderstandingState } from "./repo-map";
 import { type CodeEvidence, StoryCode } from "./story-code";
@@ -284,12 +299,18 @@ export default function Home() {
   const [repositoryLoading, setRepositoryLoading] = useState(false);
   const [repositoryError, setRepositoryError] = useState("");
   const [repositorySearch, setRepositorySearch] = useState("");
+  const [repositoryModeFilter, setRepositoryModeFilter] = useState<"all" | RepositoryMode>("all");
   const [showAllRepositories, setShowAllRepositories] = useState(false);
-  const [selectedRepositories, setSelectedRepositories] = useState<string[]>([]);
+  const [repositoryModes, setRepositoryModes] = useState<Record<string, RepositoryMode>>({});
+  const [repositoryModesInitialized, setRepositoryModesInitialized] = useState(false);
+  const [repositoriesLoaded, setRepositoriesLoaded] = useState(false);
+  const legacySelectedRepositories = useRef<string[]>(SCHEDULED_REPOSITORIES);
+  const repositoryPreferenceSource = useRef<RepositoryPreferenceSource>("legacy");
   const [activity, setActivity] = useState<Record<string, ActivityResponse>>({});
   const [activityLoading, setActivityLoading] = useState(false);
 
   const storyState = (id: string): StoryState => ({ ...EMPTY_STORY_STATE, ...states[id] });
+  const selectedRepositories = useMemo(() => reviewRepositoriesFromModes(repositoryModes), [repositoryModes]);
   const accountStorageKey = auth?.user ? `${STORAGE_KEY}:${auth.user.id}` : null;
   const questionStorageKey = auth?.user ? `${LOCAL_QUESTION_STORAGE_KEY}:${auth.user.id}` : null;
 
@@ -323,8 +344,15 @@ export default function Home() {
       }
       if (typeof parsed.hideUnderstood === "boolean") setHideUnderstood(parsed.hideUnderstood);
       if (parsed.view === "briefing" || parsed.view === "map" || parsed.view === "timeline" || parsed.view === "repositories") setView(parsed.view);
-      const savedRepositories = parsed.selectedRepositories ?? parsed.selectedRepoIds;
-      if (Array.isArray(savedRepositories)) setSelectedRepositories(savedRepositories);
+      const savedRepositories = parsed.selectedRepositories ?? parsed.selectedRepoIds ?? SCHEDULED_REPOSITORIES;
+      legacySelectedRepositories.current = Array.isArray(savedRepositories) ? savedRepositories : SCHEDULED_REPOSITORIES;
+      if (parsed.repositoryModes && Object.keys(parsed.repositoryModes).length) {
+        setRepositoryModes(parsed.repositoryModes);
+        repositoryPreferenceSource.current = "explicit";
+      } else {
+        setRepositoryModes({});
+        repositoryPreferenceSource.current = "legacy";
+      }
     };
 
     const hydrate = async () => {
@@ -334,7 +362,10 @@ export default function Home() {
       setQuestionStates({});
       setActiveMapRepository(REPOSITORY_MAP.repository);
       setView("briefing");
-      setSelectedRepositories(SCHEDULED_REPOSITORIES);
+      setRepositoryModes({});
+      setRepositoryModesInitialized(false);
+      legacySelectedRepositories.current = SCHEDULED_REPOSITORIES;
+      repositoryPreferenceSource.current = "legacy";
       setReviewRequests([]);
       setThreadQuestions([]);
       setTopicThreads([]);
@@ -382,13 +413,14 @@ export default function Home() {
   }, [accountStorageKey, auth?.authenticated, questionStorageKey]);
 
   useEffect(() => {
-    if (!hasHydrated || !accountStorageKey) return;
+    if (!hasHydrated || !accountStorageKey || !repositoryModesInitialized) return;
     const saved: SavedState = {
       activeMapRepository,
       editionId: EDITION.id,
       hideUnderstood,
       mapStates,
       questionStates,
+      repositoryModes,
       selectedRepositories,
       states,
       version: 1,
@@ -418,7 +450,7 @@ export default function Home() {
       window.clearTimeout(timeout);
       controller.abort();
     };
-  }, [accountStorageKey, activeMapRepository, feedbackConfigured, hasHydrated, hideUnderstood, mapStates, questionStates, selectedRepositories, states, view]);
+  }, [accountStorageKey, activeMapRepository, feedbackConfigured, hasHydrated, hideUnderstood, mapStates, questionStates, repositoryModes, repositoryModesInitialized, selectedRepositories, states, view]);
 
   useEffect(() => {
     if (!hasHydrated || !questionStorageKey) return;
@@ -462,7 +494,10 @@ export default function Home() {
     if (!auth?.authenticated) return;
     let cancelled = false;
     queueMicrotask(() => {
-      if (!cancelled) setRepositoryLoading(true);
+      if (!cancelled) {
+        setRepositoryLoading(true);
+        setRepositoriesLoaded(false);
+      }
     });
     fetch("/api/github/repos")
       .then(async (response) => {
@@ -480,7 +515,10 @@ export default function Home() {
         setRepositoryError(error.message);
       })
       .finally(() => {
-        if (!cancelled) setRepositoryLoading(false);
+        if (!cancelled) {
+          setRepositoryLoading(false);
+          setRepositoriesLoaded(true);
+        }
       });
 
     return () => {
@@ -489,7 +527,32 @@ export default function Home() {
   }, [auth?.authenticated]);
 
   useEffect(() => {
-    if (!auth?.authenticated || !selectedRepositories.length) {
+    if (!hasHydrated || !repositoriesLoaded || repositoryModesInitialized) return;
+    queueMicrotask(() => {
+      setRepositoryModes((current) => initializeRepositoryModes({
+        legacySelectedRepositories: legacySelectedRepositories.current,
+        repositories,
+        source: repositoryPreferenceSource.current,
+        storedModes: current,
+      }));
+      setRepositoryModesInitialized(true);
+    });
+  }, [hasHydrated, repositories, repositoriesLoaded, repositoryModesInitialized]);
+
+  useEffect(() => {
+    if (!repositoryModesInitialized || !repositories.length) return;
+    queueMicrotask(() => {
+      setRepositoryModes((current) => initializeRepositoryModes({
+        legacySelectedRepositories: [],
+        repositories,
+        source: "explicit",
+        storedModes: current,
+      }));
+    });
+  }, [repositories, repositoryModesInitialized]);
+
+  useEffect(() => {
+    if (!auth?.authenticated || !repositoryModesInitialized || !selectedRepositories.length) {
       queueMicrotask(() => setActivity({}));
       return;
     }
@@ -517,7 +580,7 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [auth?.authenticated, selectedRepositories]);
+  }, [auth?.authenticated, repositoryModesInitialized, selectedRepositories]);
 
   const updateStory = (id: string, patch: Partial<StoryState>) => {
     setStates((current) => ({
@@ -560,9 +623,10 @@ export default function Home() {
   const continuePlan = planContinueQueue(continueQueue, continueBudget);
   const nextContinueItem = continuePlan.items[0];
 
-  const selectedRepositoryData = repositories.filter((repository) =>
+  const selectedRepositoryData = sortRepositoriesByMode(repositories.filter((repository) =>
     selectedRepositories.includes(repository.fullName),
-  );
+  ), repositoryModes);
+  const repositoryCounts = repositoryModeCounts(repositories, repositoryModes);
   const scheduledRepositorySet = new Set(SCHEDULED_REPOSITORIES);
   const selectedRepositorySet = new Set(selectedRepositories);
   const pendingAddedRepositories = selectedRepositories.filter((repository) => !scheduledRepositorySet.has(repository));
@@ -582,13 +646,15 @@ export default function Home() {
 
   const filteredRepositories = useMemo(() => {
     const query = repositorySearch.trim().toLowerCase();
-    return repositories.filter((repository) => {
+    return sortRepositoriesByMode(repositories.filter((repository) => {
+      const mode = repositoryModeFor(repositoryModes, repository.fullName, repository.archived ? "muted" : "automatic");
+      if (repositoryModeFilter !== "all" && mode !== repositoryModeFilter) return false;
       if (!query) return true;
       return repository.fullName.toLowerCase().includes(query) ||
         repository.description?.toLowerCase().includes(query) ||
         repository.language?.toLowerCase().includes(query);
-    });
-  }, [repositories, repositorySearch]);
+    }), repositoryModes);
+  }, [repositories, repositoryModeFilter, repositoryModes, repositorySearch]);
 
   const displayedRepositories = showAllRepositories
     ? filteredRepositories
@@ -709,11 +775,18 @@ export default function Home() {
     }
   };
 
-  const toggleRepository = (repository: string) => {
-    setSelectedRepositories((current) => {
-      if (current.includes(repository)) return current.filter((item) => item !== repository);
-      return [...current, repository];
-    });
+  const updateRepositoryMode = (repository: string, mode: RepositoryMode) => {
+    setRepositoryModes((current) => withRepositoryMode(current, repository, mode));
+    setNotice(`${repository} is now ${REPOSITORY_MODE_LABELS[mode].toLowerCase()}.`);
+  };
+
+  const restorePublishedScope = () => {
+    setRepositoryModes(restorePublishedRepositoryModes({
+      modes: repositoryModes,
+      publishedRepositories: SCHEDULED_REPOSITORIES,
+      repositories,
+    }));
+    setNotice("Repository modes restored to the published review scope.");
   };
 
   const updateUnderstanding = (repository: string, area: RepoArea, state: UnderstandingState) => {
@@ -836,6 +909,9 @@ export default function Home() {
     setHasHydrated(false);
     setAuth((current) => current ? { ...current, authenticated: false, user: null } : current);
     setRepositories([]);
+    setRepositoriesLoaded(false);
+    setRepositoryModes({});
+    setRepositoryModesInitialized(false);
     setThreadQuestions([]);
     setTopicThreads([]);
     setActivity({});
@@ -1305,7 +1381,11 @@ export default function Home() {
                 </div>
               </div>
               <div className="connection-actions">
-                <span>{selectedRepositories.length} in review scope · no repository limit</span>
+                <div className={repositoryModeStyles.summary}>
+                  <span>{repositoryCounts.pinned} pinned</span>
+                  <span>{repositoryCounts.automatic} automatic</span>
+                  <span>{repositoryCounts.muted} muted</span>
+                </div>
                 {auth.appSlug && <><a href={`https://github.com/apps/${auth.appSlug}/installations/new`} rel="noreferrer" target="_blank">Add repositories ↗</a><a href="https://github.com/settings/installations" rel="noreferrer" target="_blank">Manage installation ↗</a></>}
               </div>
             </div>
@@ -1315,7 +1395,7 @@ export default function Home() {
                 <div>
                   <span className="eyebrow">Next scheduled review · {REVIEW_SCOPE.schedule}</span>
                   <h2 id="review-preview-heading">Monday’s scope</h2>
-                  <p>Recent commits from the repositories below.</p>
+                  <p>Pinned repositories are checked first. Automatic repositories join when their activity provides a useful reason. Muted repositories remain in your library without scheduled checks.</p>
                 </div>
                 <div className="review-preview-metrics" aria-label="Scheduled review preview">
                   <div><strong>{recentCommitCount}{Object.values(activity).some((item) => item.truncated) ? "+" : ""}</strong><span>candidate commits</span></div>
@@ -1330,7 +1410,7 @@ export default function Home() {
                     <strong>Your next review scope has changed.</strong>
                     <span>{pendingAddedRepositories.length} added · {pendingRemovedRepositories.length} removed</span>
                   </div>
-                  <button onClick={() => setSelectedRepositories(SCHEDULED_REPOSITORIES)} type="button">Restore published scope</button>
+                  <button onClick={restorePublishedScope} type="button">Restore published scope</button>
                 </div>
               )}
 
@@ -1339,15 +1419,17 @@ export default function Home() {
                   const repositoryActivity = activity[repository.fullName];
                   const scheduled = scheduledRepositorySet.has(repository.fullName);
                   const scope = REVIEW_SCOPE.repositories.find((item) => item.fullName === repository.fullName);
-                  const commitCount = repositoryActivity?.commits?.length ?? 0;
-                  return (
-                    <article className="scope-row" key={repository.fullName}>
+                   const commitCount = repositoryActivity?.commits?.length ?? 0;
+                   const mode = repositoryModeFor(repositoryModes, repository.fullName);
+                   return (
+<article className="scope-row" key={repository.fullName}>
                       <div className="scope-row-main">
                         <div className="scope-row-title">
                           <strong>{repository.name}</strong>
                           <span className={scheduled ? "is-scheduled" : "is-preview"}>{scheduled ? "Published scope" : "Next review"}</span>
-                          {scope && <span>{scope.mapStatus === "mapped" ? "Mapped" : scope.mapStatus === "empty" ? "No code yet" : "Not mapped"}</span>}
-                        </div>
+                           <span>{REPOSITORY_MODE_LABELS[mode]}</span>
+                           {scope && <span>{scope.mapStatus === "mapped" ? "Mapped" : scope.mapStatus === "empty" ? "No code yet" : "Not mapped"}</span>}
+</div>
                         <p>
                           {activityLoading && !repositoryActivity
                             ? "Checking GitHub activity…"
@@ -1368,11 +1450,11 @@ export default function Home() {
                           </details>
                         ) : null}
                       </div>
-                      <div className="scope-row-actions">
-                        <a href={repository.url} rel="noreferrer" target="_blank">GitHub ↗</a>
-                        <button onClick={() => toggleRepository(repository.fullName)} type="button">Remove</button>
-                      </div>
-                    </article>
+                       <div className={repositoryModeStyles.scopeActions}>
+                         <a href={repository.url} rel="noreferrer" target="_blank">GitHub ↗</a>
+                         <RepositoryModeControl mode={mode} onChange={(nextMode) => updateRepositoryMode(repository.fullName, nextMode)} repository={repository.fullName} />
+                       </div>
+</article>
                   );
                 })}
                 {inaccessibleScheduledRepositories.map((repository) => (
@@ -1386,7 +1468,7 @@ export default function Home() {
                   <div className="scope-empty"><strong>No repositories selected.</strong><span>Add a source below or restore the published scope.</span></div>
                 )}
               </div>
-              <p className="scope-boundary">Selections sync to your account. New repositories stay pending until their review cache is configured.</p>
+              <p className="scope-boundary">Modes sync to your account. They influence the activity pass and priority, but a repository still needs configured source access before Baxtori can publish code claims.</p>
             </section>
 
             <div className="repo-toolbar">
@@ -1394,13 +1476,22 @@ export default function Home() {
                 <span>Sources</span>
                 <h2 id="repositories-heading">Your repositories</h2>
               </div>
-              <input
-                aria-label="Search repositories"
-                onChange={(event) => setRepositorySearch(event.target.value)}
-                placeholder="Search repositories"
-                type="search"
-                value={repositorySearch}
-              />
+              <div className={repositoryModeStyles.toolbarControls}>
+                <input
+                  aria-label="Search repositories"
+                  onChange={(event) => setRepositorySearch(event.target.value)}
+                  placeholder="Search repositories"
+                  type="search"
+                  value={repositorySearch}
+                />
+                <div className={repositoryModeStyles.filters} aria-label="Filter repositories by review mode">
+                  {(["all", "pinned", "automatic", "muted"] as const).map((filter) => (
+                    <button aria-pressed={repositoryModeFilter === filter} key={filter} onClick={() => setRepositoryModeFilter(filter)} type="button">
+                      {filter === "all" ? `All ${repositories.length}` : `${REPOSITORY_MODE_LABELS[filter]} ${repositoryCounts[filter]}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {repositoryLoading ? (
@@ -1409,11 +1500,12 @@ export default function Home() {
               <div className="repo-loading is-error">{repositoryError}</div>
             ) : repositories.length ? (
               <div className="repo-list">
-                {displayedRepositories.map((repository) => {
-                  const selected = selectedRepositories.includes(repository.fullName);
-                  return (
-                    <article className={selected ? "repo-row is-selected" : "repo-row"} key={repository.id}>
-                      <div className="repo-main">
+                 {displayedRepositories.map((repository) => {
+                   const mode = repositoryModeFor(repositoryModes, repository.fullName, repository.archived ? "muted" : "automatic");
+                   const rowClass = mode === "pinned" ? repositoryModeStyles.pinnedRow : mode === "muted" ? repositoryModeStyles.mutedRow : "";
+                   return (
+                     <article className={`repo-row ${rowClass}`} key={repository.id}>
+<div className="repo-main">
                         <div>
                           <strong>{repository.name}</strong>
                           {repository.private && <span>Private</span>}
@@ -1421,10 +1513,11 @@ export default function Home() {
                         </div>
                         <p>{repository.language ?? "Unspecified"} · {formatRelativeDate(repository.pushedAt)} · {repository.defaultBranch}</p>
                       </div>
-                      <button aria-pressed={selected} onClick={() => toggleRepository(repository.fullName)} type="button">
-                        {selected ? "Included ✓" : "Include"}
-                      </button>
-                    </article>
+                       <div>
+                         <RepositoryModeControl mode={mode} onChange={(nextMode) => updateRepositoryMode(repository.fullName, nextMode)} repository={repository.fullName} />
+                         <span className={repositoryModeStyles.modeNote}>{REPOSITORY_MODE_DESCRIPTIONS[mode]}</span>
+                       </div>
+</article>
                   );
                 })}
                 {filteredRepositories.length > 10 && (
