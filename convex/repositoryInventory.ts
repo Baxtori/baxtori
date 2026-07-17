@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, type QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { repositoryInventoryEntryValidator } from "./validators";
 
@@ -7,7 +7,7 @@ function verifySecret(secret: string) {
   if (!expected || secret !== expected) throw new Error("Unauthorized repository inventory request.");
 }
 
-async function completedInventory(ctx: Parameters<Parameters<typeof query>[0]["handler"]>[0], userId: string) {
+async function completedInventory(ctx: QueryCtx, userId: string) {
   const sync = await ctx.db.query("repositoryInventorySyncs")
     .withIndex("by_user", (q) => q.eq("userId", userId))
     .unique();
