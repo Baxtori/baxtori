@@ -1,11 +1,15 @@
 # Baxtori
 
-**The backstory behind your code.**
+**Stay the author of your code.**
 
-Baxtori is a calm personal briefing that explains what changed across selected
-repositories, why it matters, and where to start reading. It is designed for a
-world where agents can produce more code than a person wants to review day by
-day.
+Baxtori is a durable, evidence-backed working memory for software built with
+agents. It decides what is worth understanding, opens on the exact code, and
+remembers the questions, watches, and system knowledge that should shape later
+reviews. It is designed for a world where agents can produce more code than a
+person can continuously absorb.
+
+The product and information-density contract lives in
+[`docs/NORTH_STAR.md`](docs/NORTH_STAR.md).
 
 The product started as **Glimpse** and is being rebranded around
 [baxtori.com](https://baxtori.com).

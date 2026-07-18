@@ -265,6 +265,30 @@ summary:focus-visible {
   font-size: 0.65rem;
 }
 
+.secondary-nav {
+  display: grid;
+  gap: 0;
+  margin-top: 1.2rem;
+}
+
+.secondary-nav button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 2.3rem;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 0.65rem;
+  text-align: left;
+}
+
+.secondary-nav button:hover,
+.secondary-nav button[aria-current="page"] { color: var(--ink); }
+.secondary-nav small { color: inherit; font-size: 0.6rem; }
+
 .connection-card,
 .account-card {
   display: flex;
@@ -821,6 +845,25 @@ kbd {
   font-weight: 680;
 }
 
+.section-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.45rem 0.8rem;
+}
+.section-actions > span { margin: 0; color: var(--muted); letter-spacing: 0; text-transform: none; }
+.section-actions > button {
+  min-height: 2.4rem;
+  padding: 0.4rem 0.65rem;
+  color: var(--blue);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--blue) 40%, var(--line));
+  cursor: pointer;
+  font-size: 0.67rem;
+  font-weight: 750;
+}
+
 .section-heading input {
   width: 1rem;
   height: 1rem;
@@ -1331,6 +1374,30 @@ kbd {
 .review-queue li span { color: #9aa9a0; font-size: 0.58rem; }
 .review-queue li button { flex: 0 0 auto; padding: 0.3rem 0; color: #b8c6bd; background: transparent; border: 0; cursor: pointer; font-size: 0.6rem; font-weight: 730; }
 .review-queue li button:hover { color: #fff; text-decoration: underline; }
+
+.memory-summary {
+  margin-top: 1.5rem;
+  padding: clamp(1rem, 3vw, 1.4rem);
+  color: var(--paper-light);
+  background: var(--ink);
+}
+
+.memory-summary-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.memory-summary-heading > div:first-child > span { color: #a8c8b3; font-size: 0.61rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; }
+.memory-summary-heading h3 { margin: 0.35rem 0 0.25rem; font-family: var(--serif); font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 500; letter-spacing: -0.04em; }
+.memory-summary-heading p { margin: 0; color: #aebbb3; font-family: var(--serif); font-size: 0.8rem; }
+.memory-summary-heading > div:last-child { display: flex; flex: 0 0 auto; gap: 0.35rem; }
+.memory-summary-heading button { min-height: 2.4rem; padding: 0.45rem 0.65rem; color: var(--paper-light); background: transparent; border: 1px solid rgb(255 255 255 / 25%); cursor: pointer; font-size: 0.65rem; font-weight: 740; }
+.memory-summary-heading button:first-child { color: var(--ink); background: var(--paper); border-color: var(--paper); }
+.memory-summary dl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 1rem 0 0; border-top: 1px solid rgb(255 255 255 / 16%); }
+.memory-summary dl > div { display: flex; flex-direction: column-reverse; gap: 0.15rem; padding: 0.8rem 0.7rem 0 0; }
+.memory-summary dt { color: #9aa9a0; font-size: 0.59rem; font-weight: 720; text-transform: uppercase; }
+.memory-summary dd { margin: 0; font-family: var(--serif); font-size: 1.35rem; }
 
 .quiet-note {
   margin-top: 2rem;
@@ -2140,7 +2207,7 @@ kbd {
   .primary-nav {
     grid-row: 1 / span 2;
     grid-column: 2;
-    grid-template-columns: repeat(5, auto);
+    grid-template-columns: repeat(3, auto);
     align-self: center;
     margin-top: 0;
     border-top: 0;
@@ -2155,6 +2222,18 @@ kbd {
   .connection-card,
   .account-card,
   .rail-note { display: none; }
+
+  .secondary-nav {
+    grid-row: 3;
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.4rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .secondary-nav button { gap: 0.5rem; }
 }
 
 @media (max-width: 680px) {
@@ -2164,7 +2243,7 @@ kbd {
 
   .primary-nav {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     margin-top: 1.25rem;
     border-block: 1px solid var(--line);
   }
@@ -2190,6 +2269,8 @@ kbd {
     border: 0;
   }
 
+  .secondary-nav { margin-top: 0.6rem; }
+
   .masthead-top { align-items: flex-start; }
 
   .masthead-top > div { flex-wrap: wrap; justify-content: flex-end; }
@@ -2206,6 +2287,8 @@ kbd {
     align-items: flex-start;
     flex-direction: column;
   }
+
+  .section-actions { align-items: flex-start; justify-content: flex-start; }
 
   .history-view > .section-heading > p { text-align: left; }
   .history-filters { grid-template-columns: 1fr; }
@@ -2299,6 +2382,9 @@ kbd {
 
   .timeline-view li { grid-template-columns: 1fr; gap: 0.35rem; }
   .review-queue { grid-template-columns: 1fr; }
+  .memory-summary-heading { flex-direction: column; }
+  .memory-summary-heading > div:last-child { flex-wrap: wrap; }
+  .memory-summary dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
   .repo-toolbar input { width: 100%; }
 

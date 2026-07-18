@@ -618,6 +618,8 @@ export default function Home() {
   const reviewedRepositoryCount = new Set(STORIES.map((story) => story.repository ?? story.project)).size;
   const watchedStories = STORIES.filter(isStoryWatching);
   const queuedReviewRequests = reviewRequests.filter((request) => request.status === "queued");
+  const openThreadQuestionCount = threadQuestions.filter((question) => question.status === "open").length;
+  const memoryAttentionCount = watchedStories.length + openThreadQuestionCount;
   const visibleStories = STORIES.filter(
     (story) => storyState(story.id).locked || (!storyState(story.id).muted && (!hideUnderstood || !storyState(story.id).understood)),
   );
@@ -1033,25 +1035,24 @@ export default function Home() {
           <span className="brand-mark" aria-hidden="true">B</span>
           <div>
             <strong>Baxtori</strong>
-            <span>baxtori.com</span>
+            <span>Stay the author</span>
           </div>
         </div>
         <nav className="primary-nav" aria-label="Primary">
           <button aria-current={view === "briefing" ? "page" : undefined} className={view === "briefing" ? "is-active" : ""} onClick={() => setView("briefing")} type="button">
-            <span>Briefing</span><small>{STORIES.length - understoodCount}</small>
+            <span>Now</span><small>{continueQueue.length}</small>
           </button>
           <button aria-current={view === "map" ? "page" : undefined} className={view === "map" ? "is-active" : ""} onClick={() => setView("map")} type="button">
-            <span>Repo map</span><small>{Object.values(mapStates).filter((state) => state === "understood").length}</small>
-          </button>
-          <button aria-current={view === "timeline" ? "page" : undefined} className={view === "timeline" ? "is-active" : ""} onClick={() => setView("timeline")} type="button">
-            <span>Timeline</span><small>7d</small>
+            <span>System</span><small>{REPOSITORY_MAPS.length}</small>
           </button>
           <button aria-current={view === "history" ? "page" : undefined} className={view === "history" ? "is-active" : ""} onClick={() => setView("history")} type="button">
-            <span>History</span><small>{HISTORY_EDITION_COUNT}</small>
+            <span>Memory</span><small>{memoryAttentionCount || HISTORY_EDITION_COUNT}</small>
           </button>
-          <button aria-current={view === "repositories" ? "page" : undefined} className={view === "repositories" ? "is-active" : ""} onClick={openRepositoryControls} type="button">
-            <span>Repositories</span><small>{selectedRepositories.length}</small>
-          </button>
+        </nav>
+
+        <nav className="secondary-nav" aria-label="Edition and source tools">
+          <button aria-current={view === "timeline" ? "page" : undefined} onClick={() => setView("timeline")} type="button"><span>Edition record</span><small>7d</small></button>
+          <button aria-current={view === "repositories" ? "page" : undefined} onClick={openRepositoryControls} type="button"><span>Review sources</span><small>{selectedRepositories.length}</small></button>
         </nav>
 
         <div className="account-card">
@@ -1068,33 +1069,43 @@ export default function Home() {
       <main id="content">
         <header className="masthead">
           <div className="masthead-top">
-            <span>Weekly backstory · {formatEditionDate(EDITION.periodStart)}–{formatEditionDate(EDITION.periodEnd)}</span>
+            <span>
+              {view === "history"
+                ? `Working memory · ${HISTORY_EDITION_COUNT} immutable ${HISTORY_EDITION_COUNT === 1 ? "edition" : "editions"}`
+                : view === "map"
+                  ? `System model · ${REPOSITORY_MAPS.length} repositories`
+                  : view === "repositories"
+                    ? "Compiler input · repository scope"
+                    : `Current edition · ${formatEditionDate(EDITION.periodStart)}–${formatEditionDate(EDITION.periodEnd)}`}
+            </span>
             <div>
               <button aria-pressed={focusMode} onClick={() => setFocusMode((current) => !current)} type="button">
                 {focusMode ? "Exit focus" : "Focus"}
               </button>
-              <button onClick={copyBackstory} type="button">Copy briefing</button>
+              {(view === "briefing" || view === "timeline") && <button onClick={copyBackstory} type="button">Copy edition</button>}
               <button aria-expanded={showHelp} aria-label={showHelp ? "Hide keyboard shortcuts" : "Show keyboard shortcuts"} onClick={() => setShowHelp((current) => !current)} type="button">?</button>
             </div>
           </div>
-          <h1>{view === "repositories" ? "Repositories." : view === "map" ? "Repository map." : view === "history" ? "Edition history." : view === "timeline" ? "Edition timeline." : "Weekly review."}</h1>
+          <h1>{view === "repositories" ? "Review sources." : view === "map" ? "Know the system." : view === "history" ? "Working memory." : view === "timeline" ? "This edition, in order." : "What deserves attention."}</h1>
           <p className="dek">
             {view === "repositories"
-              ? "Choose what Monday reviews."
+              ? "Choose what the compiler may inspect and what should stay quiet."
               : view === "map"
-                ? "Coverage, questions, and what to study next."
+                ? "Evidence-backed bearings, uncertainty, and what to study next."
                 : view === "history"
-                  ? "Browse prior explanations and reopen their exact reviewed changes."
-              : `${STORIES.length} ${STORIES.length === 1 ? "item" : "items"} from ${reviewedRepositoryCount} ${reviewedRepositoryCount === 1 ? "repository" : "repositories"}.`}
+                  ? "Return to unresolved intent and reopen the exact evidence that shaped earlier understanding."
+                  : view === "timeline"
+                    ? "The selected changes, quiet repositories, and literal reasons behind this review."
+                    : `${continueQueue.length} ${continueQueue.length === 1 ? "thing deserves" : "things deserve"} attention across ${reviewedRepositoryCount} ${reviewedRepositoryCount === 1 ? "repository" : "repositories"}.`}
           </p>
 
-          {view !== "repositories" && view !== "map" && (
+          {(view === "briefing" || view === "timeline") && (
             <p className="edition-provenance">
               Generated {formatGeneratedAt(EDITION.generatedAt)} · Mondays · <span className={`sync-status is-${feedbackStatus}`}>{feedbackStatus === "loading" ? "Loading" : feedbackStatus === "saving" ? "Saving" : feedbackStatus === "saved" ? "Saved to account" : "Saved on device"}</span>
             </p>
           )}
 
-          {view !== "repositories" && view !== "map" && <div className="source-banner">{renderSourceBanner()}</div>}
+          {(view === "briefing" || view === "timeline") && <div className="source-banner">{renderSourceBanner()}</div>}
 
           {showHelp && (
             <div className="shortcut-help">
@@ -1109,12 +1120,12 @@ export default function Home() {
 
         <p className="notice" aria-live="polite" role="status">{notice}</p>
 
-        {hasHydrated && (
+        {hasHydrated && view === "briefing" && (
           <section className={`continue-queue ${nextContinueItem ? "" : "is-complete"}`} aria-labelledby="continue-heading">
             {nextContinueItem ? (
               <>
                 <div className="continue-primary">
-                  <span className="eyebrow">Continue · {CONTINUE_KIND_LABELS[nextContinueItem.kind]}</span>
+                  <span className="eyebrow">Worth understanding now · {CONTINUE_KIND_LABELS[nextContinueItem.kind]}</span>
                   <h2 id="continue-heading">{nextContinueItem.title}</h2>
                   <p>{nextContinueItem.reason}</p>
                   <div className="continue-meta">
@@ -1128,7 +1139,7 @@ export default function Home() {
                 <div className="continue-plan">
                   <div className="continue-plan-heading">
                     <div>
-                      <span>Next up</span>
+                      <span>If you have more time</span>
                       <strong>{continuePlan.plannedMinutes} of {continueBudget} minutes planned</strong>
                     </div>
                     <div className="continue-budgets" aria-label="Continue time budget">
@@ -1173,19 +1184,21 @@ export default function Home() {
           </section>
         )}
 
-        {view === "briefing" && <EditionSelectionLedger edition={EDITION} />}
-
         {view === "briefing" && (
           <section className="briefing-view" aria-labelledby="briefing-heading">
             <div className="section-heading">
               <div>
-                <span>Reading progress</span>
-                <h2 id="briefing-heading">{understoodCount} of {STORIES.length} understood</h2>
+                <span>Understand · exact evidence on demand</span>
+                <h2 id="briefing-heading">Deep reads</h2>
               </div>
-              <label>
-                <input checked={hideUnderstood} onChange={(event) => setHideUnderstood(event.target.checked)} type="checkbox" />
-                Hide understood
-              </label>
+              <div className="section-actions">
+                <span>{understoodCount} of {STORIES.length} understood</span>
+                <button onClick={() => setView("timeline")} type="button">Edition record</button>
+                <label>
+                  <input checked={hideUnderstood} onChange={(event) => setHideUnderstood(event.target.checked)} type="checkbox" />
+                  Hide understood
+                </label>
+              </div>
             </div>
 
             {visibleStories.length ? (
@@ -1205,7 +1218,8 @@ export default function Home() {
                       <div className="story-body">
                         <div className="story-meta">
                           <span>{story.project}</span>
-                          <span>{story.learningValue}/5 learning value</span>
+                          <span>{story.codeEvidence?.length ?? 0} exact {story.codeEvidence?.length === 1 ? "excerpt" : "excerpts"}</span>
+                          <span>{story.timing}</span>
                         </div>
                         <h3>{story.title}</h3>
                         <p className="story-brief">{story.brief}</p>
@@ -1346,6 +1360,26 @@ export default function Home() {
               </section>
             )}
 
+            <section className="memory-summary" aria-labelledby="memory-summary-heading">
+              <div className="memory-summary-heading">
+                <div>
+                  <span>Remember · continuity across editions</span>
+                  <h3 id="memory-summary-heading">Your working memory</h3>
+                  <p>Personal intent can change. Published evidence cannot.</p>
+                </div>
+                <div>
+                  <button onClick={() => setView("history")} type="button">Open memory</button>
+                  <button onClick={() => setView("map")} type="button">Open system model</button>
+                </div>
+              </div>
+              <dl>
+                <div><dt>Watching</dt><dd>{watchedStories.length}</dd></div>
+                <div><dt>Open questions</dt><dd>{openThreadQuestionCount}</dd></div>
+                <div><dt>Queued reviews</dt><dd>{queuedReviewRequests.length}</dd></div>
+                <div><dt>Immutable editions</dt><dd>{HISTORY_EDITION_COUNT}</dd></div>
+              </dl>
+            </section>
+
           </section>
         )}
 
@@ -1383,6 +1417,7 @@ export default function Home() {
                 <div><span>Other repositories</span><h3>{EDITION.quietRepositories.length ? `${EDITION.quietRepositories.length} ${EDITION.quietRepositories.length === 1 ? "repository had" : "repositories had"} no selected changes.` : "No other repositories added an item."}</h3></div>
               </li>
             </ol>
+            <EditionSelectionLedger edition={EDITION} />
           </section>
         )}
 

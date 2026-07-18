@@ -1,5 +1,9 @@
 # Baxtori product roadmap
 
+The roadmap is governed by the [north-star and information-density contract](NORTH_STAR.md):
+direct attention, deepen understanding through exact evidence, preserve that
+understanding over time, and turn reader intent into better future agent work.
+
 ## Product thesis
 
 Baxtori helps a person keep up with agent-produced code by turning repository changes into a small, evidence-backed reading habit.
