@@ -35,6 +35,7 @@ type ReviewLens = {
 };
 
 type EditionHistoryProps = {
+  demoMode?: boolean;
   defaultQuestionLens: string;
   editions: readonly ArchiveEdition[];
   feedbackConfigured: boolean;
@@ -61,6 +62,7 @@ function repositoryLabel(repository: string) {
 }
 
 export function EditionHistory({
+  demoMode = false,
   defaultQuestionLens,
   editions,
   feedbackConfigured,
@@ -87,6 +89,20 @@ export function EditionHistory({
     }
     return [...labels].sort((left, right) => left[1].localeCompare(right[1]));
   }, [history]);
+  const topicEditionCounts = useMemo(() => {
+    const editionsByTopic = new Map<string, Set<string>>();
+    for (const entry of history) {
+      const editionIds = editionsByTopic.get(entry.story.topicId) ?? new Set<string>();
+      editionIds.add(entry.edition.id);
+      editionsByTopic.set(entry.story.topicId, editionIds);
+    }
+    return new Map([...editionsByTopic].map(([id, editionIds]) => [id, editionIds.size]));
+  }, [history]);
+  const longestThread = useMemo(() => {
+    return history
+      .map((entry) => ({ count: topicEditionCounts.get(entry.story.topicId) ?? 1, entry }))
+      .sort((left, right) => right.count - left.count)[0];
+  }, [history, topicEditionCounts]);
   const filtered = useMemo(() => {
     const matching = filterEditionHistory(history, { query, repository, topicId });
     if (attention === "questions") {
@@ -127,6 +143,21 @@ export function EditionHistory({
         </div>
         <p>Reading state stays live; published explanations and commit ranges do not change.</p>
       </div>
+
+      {longestThread && longestThread.count > 1 && (
+        <button
+          className="history-thread-callout"
+          onClick={() => {
+            setTopicId(longestThread.entry.story.topicId);
+            setAttention("all");
+          }}
+          type="button"
+        >
+          <span>Longest living thread · {longestThread.count} editions</span>
+          <strong>{longestThread.entry.story.title}</strong>
+          <small>Follow how one concern became a product capability <span aria-hidden="true">→</span></small>
+        </button>
+      )}
 
       <div className="history-filters" aria-label="History filters">
         <label className="history-search">
@@ -179,6 +210,11 @@ export function EditionHistory({
                       question.storyId === entry.story.id
                     ).length;
                     const watched = Boolean(activeWatchThreadFor(topicThreads, entry.story));
+                    const evidenceAvailable = Boolean(
+                      entry.story.repository &&
+                      entry.story.codeEvidence?.length &&
+                      (!demoMode || entry.repository === "teamleaderleo/baxtori")
+                    );
                     return (
                       <article className={`history-story ${isOpen ? "is-open" : ""}`} key={key}>
                         <div className="history-story-summary">
@@ -186,6 +222,7 @@ export function EditionHistory({
                             <div className="history-story-meta">
                               <span>{entry.story.project}</span>
                               <span>{entry.repository ? repositoryLabel(entry.repository) : "Repository unavailable"}</span>
+                              {(topicEditionCounts.get(entry.story.topicId) ?? 1) > 1 && <span className="is-thread">Thread · {topicEditionCounts.get(entry.story.topicId)} editions</span>}
                               {watched && <span className="is-attention">Watching</span>}
                               {openQuestions > 0 && <span className="is-attention">{openQuestions} open {openQuestions === 1 ? "question" : "questions"}</span>}
                             </div>
@@ -194,16 +231,17 @@ export function EditionHistory({
                           </div>
                           <button
                             aria-expanded={isOpen}
-                            disabled={!entry.story.repository || !entry.story.codeEvidence?.length}
+                            disabled={!evidenceAvailable}
                             onClick={() => setOpenEntry(isOpen ? null : key)}
                             type="button"
                           >
-                            {isOpen ? "Close evidence" : "Reopen exact diff"}
+                            {isOpen ? "Close evidence" : evidenceAvailable ? "Reopen exact diff" : demoMode ? "Sign in for exact diff" : "Evidence unavailable"}
                           </button>
                         </div>
                         {isOpen && entry.story.repository && entry.story.codeEvidence?.length ? (
                           <div className="history-evidence">
                             <StoryCode
+                              demoMode={demoMode}
                               defaultQuestionLens={defaultQuestionLens}
                               editionId={entry.edition.id}
                               evidence={entry.story.codeEvidence}

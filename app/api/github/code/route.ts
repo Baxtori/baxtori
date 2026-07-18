@@ -1,26 +1,40 @@
 import { buildGitHubContentsUrl, parseCodeEvidenceRequest, selectCodeLines } from "@/lib/code-evidence";
 import { getGitHubSession, githubHeaders, withSessionCookie } from "@/lib/github-auth";
+import { demoCodeEvidence } from "@/lib/demo-evidence";
 
 const MAX_SOURCE_BYTES = 250_000;
 
 export async function GET(request: Request) {
-  const { session, setCookie } = await getGitHubSession(request);
-  if (!session) {
+  const url = new URL(request.url);
+  const isDemo = url.searchParams.get("demo") === "1";
+  const auth = isDemo ? null : await getGitHubSession(request);
+  if (auth && !auth.session) {
     return withSessionCookie(
       Response.json({ error: "Sign in with GitHub to read this code." }, { status: 401 }),
-      setCookie,
+      auth.setCookie,
     );
   }
 
   let evidence;
   try {
-    evidence = parseCodeEvidenceRequest(new URL(request.url));
+    evidence = parseCodeEvidenceRequest(url);
   } catch (error) {
-    return withSessionCookie(Response.json(
+    const response = Response.json(
       { error: error instanceof Error ? error.message : "Invalid code request." },
       { status: 400 },
-    ), setCookie);
+    );
+    return auth ? withSessionCookie(response, auth.setCookie) : response;
   }
+
+  if (isDemo) {
+    const published = demoCodeEvidence(evidence);
+    return published
+      ? Response.json(published, { headers: { "Cache-Control": "public, max-age=3600" } })
+      : Response.json({ error: "This excerpt is not part of the published demo." }, { status: 404 });
+  }
+
+  const { session, setCookie } = auth!;
+  if (!session) throw new Error("Authenticated code evidence lost its session.");
 
   const response = await fetch(buildGitHubContentsUrl(evidence.repository, evidence.path, evidence.commit), {
     headers: {

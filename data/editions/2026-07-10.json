@@ -1,0 +1,45 @@
+{
+  "id": "2026-07-10",
+  "generatedAt": "2026-07-10T18:30:00+08:00",
+  "periodStart": "2026-07-03",
+  "periodEnd": "2026-07-10",
+  "quietRepositories": [],
+  "stories": [
+    {
+      "id": "glimpse-reader-habit",
+      "topicId": "reader-review-loop",
+      "project": "baxtori",
+      "repository": "teamleaderleo/baxtori",
+      "tone": "blue",
+      "timing": "Jul 10",
+      "title": "The review began remembering how you read.",
+      "brief": "The first reader workflow persisted edition, project, attention, and understanding choices so a weekly review could become a habit instead of a disposable report.",
+      "learningValue": 4,
+      "verdict": "The first durable reader loop",
+      "whatChanged": "Edition selection and per-story reading choices moved into local state, with hydration before the interface began saving updates.",
+      "whyItMatters": "A useful review should remember where the reader stopped and what they already understood. Persistence made the interface cumulative before any account service existed.",
+      "verify": "Change edition and story state, reload the page, and confirm those choices return without a network request.",
+      "tradeoff": "The state lived only in one browser, so it established the interaction model without yet providing cross-device continuity.",
+      "evidence": "1 feature commit · durable edition and story preferences",
+      "files": ["app/page.tsx"],
+      "codeEvidence": [
+        {
+          "title": "Hydrate the reader before saving again",
+          "why": "The effect restores story, view, filter, and edition choices first, then marks hydration complete so initial defaults cannot overwrite the reader's last session.",
+          "path": "app/page.tsx",
+          "baseCommit": "53a33fdb30789543ef3cdbf00fc6c7316a6bf5ed",
+          "commit": "5c813ff9ff957a85c68ae706a9bae41e7f5e096d",
+          "startLine": 205,
+          "endLine": 235,
+          "language": "typescript"
+        }
+      ],
+      "commits": [
+        {
+          "sha": "5c813ff9ff957a85c68ae706a9bae41e7f5e096d",
+          "url": "https://github.com/teamleaderleo/baxtori/commit/5c813ff9ff957a85c68ae706a9bae41e7f5e096d"
+        }
+      ]
+    }
+  ]
+}

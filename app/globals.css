@@ -115,6 +115,38 @@ input { font: inherit; }
 
 .github-button:hover { background: #26352e; }
 
+.demo-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: min(100%, 26rem);
+  min-height: 3rem;
+  margin-top: 0.65rem;
+  padding: 0.65rem 1rem;
+  color: var(--paper-light);
+  background: var(--green);
+  border: 1px solid var(--green);
+  font-size: 0.78rem;
+  font-weight: 760;
+}
+
+.demo-button:hover { background: #244b39; }
+
+.auth-card > .demo-note {
+  margin: 0.6rem 0 0;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 0.66rem;
+}
+
+.auth-card > .connection-caption {
+  max-width: 30rem;
+  margin: 0.45rem 0 0;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 0.66rem;
+}
+
 .github-button svg {
   width: 1.15rem;
   fill: currentColor;
@@ -734,6 +766,20 @@ kbd {
   text-align: right;
 }
 
+.history-thread-callout {
+  display: grid;
+  width: 100%;
+  margin-top: 1.25rem;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  text-align: left;
+  background: linear-gradient(120deg, rgb(232 238 229 / 72%), rgb(251 248 241 / 80%));
+  border: 1px solid rgb(44 78 61 / 22%);
+}
+
+.history-thread-callout > span { color: var(--green); font-size: 0.62rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; }
+.history-thread-callout > strong { margin-top: 0.45rem; font-family: var(--serif); font-size: clamp(1.25rem, 3vw, 1.8rem); font-weight: 500; letter-spacing: -0.035em; }
+.history-thread-callout > small { margin-top: 0.35rem; color: var(--muted); }
+
 .history-filters {
   display: grid;
   grid-template-columns: minmax(13rem, 1.5fr) minmax(10rem, 0.75fr) minmax(10rem, 1fr);
@@ -782,6 +828,7 @@ kbd {
 .history-story-summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 1.2rem; }
 .history-story-meta { display: flex; flex-wrap: wrap; gap: 0.35rem 0.8rem; color: var(--blue); font-size: 0.61rem; font-weight: 780; letter-spacing: 0.07em; text-transform: uppercase; }
 .history-story-meta .is-attention { color: var(--rust); }
+.history-story-meta .is-thread { color: var(--green); }
 .history-story h4 { margin: 0.45rem 0 0.35rem; font-family: var(--serif); font-size: clamp(1.3rem, 2.7vw, 1.85rem); font-weight: 500; letter-spacing: -0.04em; }
 .history-story-summary p { max-width: 47rem; margin: 0; color: var(--ink-soft); font-family: var(--serif); font-size: 0.88rem; line-height: 1.42; }
 .history-story-summary > button {

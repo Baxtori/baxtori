@@ -39,3 +39,36 @@ jobs:
 
       - name: Build and test
         run: npm test
+
+  visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.19.0
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Exercise desktop and mobile readers
+        run: npm run test:visual
+
+      - name: Upload browser report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: baxtori-browser-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14

@@ -166,6 +166,7 @@ type FeedbackStatus = "loading" | "local" | "saved" | "saving";
 const STORAGE_KEY = "baxtori:backstory:v1";
 const LEGACY_STORAGE_KEY = "glimpse:rundown:v2";
 const LOCAL_QUESTION_STORAGE_KEY = "baxtori:evidence-questions:v1";
+const DEMO_STORAGE_SUFFIX = "published-demo";
 const CONTINUE_BUDGETS = [5, 15, 30] as const;
 const CONTINUE_KIND_LABELS: Record<ContinueItemKind, string> = {
   area: "Map frontier",
@@ -252,6 +253,20 @@ const REPOSITORY_MAPS = [REPOSITORY_MAP, ourchivalMap as RepoMapData, oneMoreLeg
 const REVIEW_POLICY = reviewPolicy as ReviewPolicy;
 const REVIEW_SCOPE = reviewScope as ReviewScope;
 const SCHEDULED_REPOSITORIES = REVIEW_SCOPE.repositories.map((repository) => repository.fullName);
+const DEMO_TOPIC_THREAD: TopicThreadRecord = {
+  _id: "demo:reader-review-loop",
+  evidence: {
+    baseCommit: "cbd7740699209218ceef0a27223d9239f4c99bc5",
+    endLine: 81,
+    headCommit: "36379892e85bd1e3512663bcc7632a1c6a9a1be5",
+    path: "convex/feedback.ts",
+    repository: "teamleaderleo/baxtori",
+    startLine: 44,
+  },
+  origin: "watch",
+  sourceKey: "watch:teamleaderleo/baxtori:reader-review-loop",
+  status: "active",
+};
 
 function formatEditionDate(value: string) {
   return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
@@ -283,6 +298,7 @@ function formatRelativeDate(value: string | null) {
 
 export default function Home() {
   const [auth, setAuth] = useState<AuthStatus | null>(null);
+  const [demoMode, setDemoMode] = useState(false);
   const [authMessage, setAuthMessage] = useState("");
   const [view, setView] = useState<View>("briefing");
   const [states, setStates] = useState<Record<string, StoryState>>({});
@@ -320,12 +336,15 @@ export default function Home() {
 
   const storyState = (id: string): StoryState => ({ ...EMPTY_STORY_STATE, ...states[id] });
   const selectedRepositories = useMemo(() => reviewRepositoriesFromModes(repositoryModes), [repositoryModes]);
-  const accountStorageKey = auth?.user ? `${STORAGE_KEY}:${auth.user.id}` : null;
-  const questionStorageKey = auth?.user ? `${LOCAL_QUESTION_STORAGE_KEY}:${auth.user.id}` : null;
+  const readerAuthenticated = Boolean(auth?.authenticated || demoMode);
+  const accountStorageKey = demoMode ? `${STORAGE_KEY}:${DEMO_STORAGE_SUFFIX}` : auth?.user ? `${STORAGE_KEY}:${auth.user.id}` : null;
+  const questionStorageKey = demoMode ? `${LOCAL_QUESTION_STORAGE_KEY}:${DEMO_STORAGE_SUFFIX}` : auth?.user ? `${LOCAL_QUESTION_STORAGE_KEY}:${auth.user.id}` : null;
 
   useEffect(() => {
-    const result = new URLSearchParams(window.location.search).get("github");
+    const search = new URLSearchParams(window.location.search);
+    const result = search.get("github");
     queueMicrotask(() => {
+      if (search.get("demo") === "1") setDemoMode(true);
       if (result === "connected") setAuthMessage("GitHub connected. Now choose the repositories that matter.");
       else if (result) setAuthMessage("GitHub sign-in could not be completed. Please try again.");
     });
@@ -342,7 +361,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!accountStorageKey || !auth?.authenticated) return;
+    if (!accountStorageKey || !readerAuthenticated) return;
     const controller = new AbortController();
     const applySavedState = (parsed: Partial<SavedState> & { selectedRepoIds?: string[] }) => {
       if (parsed.states) setStates(parsed.states);
@@ -396,6 +415,18 @@ export default function Home() {
       }
       setThreadQuestions(localQuestions);
 
+      if (demoMode) {
+        applySavedState(localState ?? {});
+        setRepositoryModes(Object.fromEntries(SCHEDULED_REPOSITORIES.map((repository) => [repository, "automatic" as const])));
+        setRepositoryModesInitialized(true);
+        setRepositoriesLoaded(true);
+        setTopicThreads([DEMO_TOPIC_THREAD]);
+        setFeedbackConfigured(false);
+        setFeedbackStatus("local");
+        setHasHydrated(true);
+        return;
+      }
+
       try {
         const response = await fetch("/api/feedback/state", { signal: controller.signal });
         const remote = (await response.json()) as FeedbackStateResponse;
@@ -419,7 +450,7 @@ export default function Home() {
 
     void hydrate();
     return () => controller.abort();
-  }, [accountStorageKey, auth?.authenticated, questionStorageKey]);
+  }, [accountStorageKey, demoMode, questionStorageKey, readerAuthenticated]);
 
   useEffect(() => {
     if (!hasHydrated || !accountStorageKey || !repositoryModesInitialized) return;
@@ -500,7 +531,7 @@ export default function Home() {
   }, [feedbackConfigured, hasHydrated]);
 
   useEffect(() => {
-    if (!auth?.authenticated) return;
+    if (!auth?.authenticated || demoMode) return;
     let cancelled = false;
     queueMicrotask(() => {
       if (!cancelled) {
@@ -533,7 +564,7 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [auth?.authenticated]);
+  }, [auth?.authenticated, demoMode]);
 
   useEffect(() => {
     if (!hasHydrated || !repositoriesLoaded || repositoryModesInitialized) return;
@@ -561,7 +592,7 @@ export default function Home() {
   }, [repositories, repositoryModesInitialized]);
 
   useEffect(() => {
-    if (!auth?.authenticated || !repositoryModesInitialized || !selectedRepositories.length) {
+    if (!auth?.authenticated || demoMode || !repositoryModesInitialized || !selectedRepositories.length) {
       queueMicrotask(() => setActivity({}));
       return;
     }
@@ -589,7 +620,7 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, [auth?.authenticated, repositoryModesInitialized, selectedRepositories]);
+  }, [auth?.authenticated, demoMode, repositoryModesInitialized, selectedRepositories]);
 
   const updateStory = (id: string, patch: Partial<StoryState>) => {
     setStates((current) => ({
@@ -916,6 +947,12 @@ export default function Home() {
   };
 
   const signOut = async () => {
+    if (demoMode) {
+      setDemoMode(false);
+      setHasHydrated(false);
+      window.history.replaceState({}, "", window.location.pathname);
+      return;
+    }
     await fetch("/api/auth/github/logout", { method: "POST" });
     setHasHydrated(false);
     setAuth((current) => current ? { ...current, authenticated: false, user: null } : current);
@@ -969,6 +1006,11 @@ export default function Home() {
   }, [focusedStoryId, states, visibleStories]);
 
   const renderSourceBanner = () => {
+    if (demoMode) {
+      return (
+        <p><strong>Published demo · 3 repositories.</strong> Baxtori&apos;s exact evidence is read-only; your reading state stays on this device.</p>
+      );
+    }
     if (repositoryLoading) {
       return <p>Checking GitHub…</p>;
     }
@@ -1003,22 +1045,25 @@ export default function Home() {
     );
   }
 
-  if (!auth.authenticated) {
+  if (!auth.authenticated && !demoMode) {
     return (
       <main className="auth-shell">
         <section className="auth-card" aria-labelledby="auth-heading">
           <div className="auth-brand"><span className="brand-mark" aria-hidden="true">B</span><strong>Baxtori</strong></div>
-          <span className="auth-kicker">Sign in</span>
-          <h1 id="auth-heading">Review your repositories.</h1>
-          <p>Connect GitHub to choose repositories and read the weekly review.</p>
-          {auth.configured ? (
+          <span className="auth-kicker">A living memory for your code</span>
+          <h1 id="auth-heading">Understand what you&apos;re becoming.</h1>
+          <p>Baxtori turns repository activity into a calm, evidence-backed practice: what deserves attention now, how the system fits together, and which questions should survive the week.</p>
+          {auth.configured && (
             <a className="github-button" href="/api/auth/github/start">
               <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.11.79-.25.79-.56v-2.24c-3.22.7-3.9-1.37-3.9-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.16.08 1.78 1.2 1.78 1.2 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.57-.29-5.27-1.29-5.27-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.47.11-3.05 0 0 .97-.31 3.16 1.18A11 11 0 0 1 12 6.11c.98 0 1.95.13 2.87.39 2.2-1.49 3.16-1.18 3.16-1.18.63 1.58.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.4-2.71 5.38-5.29 5.67.42.36.79 1.07.79 2.15v3.27c0 .31.21.68.8.56A11.5 11.5 0 0 0 12 .7Z" /></svg>
               Continue with GitHub
             </a>
-          ) : (
-            <div className="setup-note"><strong>GitHub connection ready for credentials</strong><span>Add the GitHub App settings on the server to enable sign-in.</span></div>
           )}
+          <button className="demo-button" onClick={() => setDemoMode(true)} type="button">
+            Explore the published review <span aria-hidden="true">→</span>
+          </button>
+          <p className="demo-note">No account required. The demo uses real Baxtori editions and a read-only evidence allowlist.</p>
+          {!auth.configured && <p className="connection-caption">Connect your own repositories when GitHub App credentials are configured for this deployment.</p>}
           {authMessage && <p className="auth-message" role="status">{authMessage}</p>}
           <div className="auth-assurances"><span>Read-only repository access</span><span>You choose the repositories</span><span>No email or notification feed</span></div>
         </section>
@@ -1040,7 +1085,7 @@ export default function Home() {
         </div>
         <nav className="primary-nav" aria-label="Primary">
           <button aria-current={view === "briefing" ? "page" : undefined} className={view === "briefing" ? "is-active" : ""} onClick={() => setView("briefing")} type="button">
-            <span>Now</span><small>{continueQueue.length}</small>
+            <span>Now</span><small>{continuePlan.items.length}</small>
           </button>
           <button aria-current={view === "map" ? "page" : undefined} className={view === "map" ? "is-active" : ""} onClick={() => setView("map")} type="button">
             <span>System</span><small>{REPOSITORY_MAPS.length}</small>
@@ -1052,16 +1097,16 @@ export default function Home() {
 
         <nav className="secondary-nav" aria-label="Edition and source tools">
           <button aria-current={view === "timeline" ? "page" : undefined} onClick={() => setView("timeline")} type="button"><span>Edition record</span><small>7d</small></button>
-          <button aria-current={view === "repositories" ? "page" : undefined} onClick={openRepositoryControls} type="button"><span>Review sources</span><small>{selectedRepositories.length}</small></button>
+          {!demoMode && <button aria-current={view === "repositories" ? "page" : undefined} onClick={openRepositoryControls} type="button"><span>Review sources</span><small>{selectedRepositories.length}</small></button>}
         </nav>
 
         <div className="account-card">
-          {auth.user?.avatarUrl && <span aria-hidden="true" className="account-avatar" style={{ backgroundImage: `url(${auth.user.avatarUrl})` }} />}
+          {!demoMode && auth.user?.avatarUrl && <span aria-hidden="true" className="account-avatar" style={{ backgroundImage: `url(${auth.user.avatarUrl})` }} />}
           <div>
-            <strong>{auth.user?.name ?? auth.user?.login}</strong>
-            <span>@{auth.user?.login}</span>
+            <strong>{demoMode ? "Published demo" : auth.user?.name ?? auth.user?.login}</strong>
+            <span>{demoMode ? "Real editions · local state" : `@${auth.user?.login}`}</span>
           </div>
-          <button onClick={signOut} type="button">Sign out</button>
+          <button onClick={signOut} type="button">{demoMode ? "Exit" : "Sign out"}</button>
         </div>
 
       </aside>
@@ -1096,7 +1141,7 @@ export default function Home() {
                   ? "Return to unresolved intent and reopen the exact evidence that shaped earlier understanding."
                   : view === "timeline"
                     ? "The selected changes, quiet repositories, and literal reasons behind this review."
-                    : `${continueQueue.length} ${continueQueue.length === 1 ? "thing deserves" : "things deserve"} attention across ${reviewedRepositoryCount} ${reviewedRepositoryCount === 1 ? "repository" : "repositories"}.`}
+                    : `${continuePlan.items.length} ${continuePlan.items.length === 1 ? "thing fits" : "things fit"} this attention window across ${reviewedRepositoryCount} ${reviewedRepositoryCount === 1 ? "repository" : "repositories"}.`}
           </p>
 
           {(view === "briefing" || view === "timeline") && (
@@ -1218,7 +1263,7 @@ export default function Home() {
                       <div className="story-body">
                         <div className="story-meta">
                           <span>{story.project}</span>
-                          <span>{story.codeEvidence?.length ?? 0} exact {story.codeEvidence?.length === 1 ? "excerpt" : "excerpts"}</span>
+                          <span>{demoMode && story.repository !== "teamleaderleo/baxtori" ? "Published summary" : `${story.codeEvidence?.length ?? 0} exact ${story.codeEvidence?.length === 1 ? "excerpt" : "excerpts"}`}</span>
                           <span>{story.timing}</span>
                         </div>
                         <h3>{story.title}</h3>
@@ -1226,8 +1271,9 @@ export default function Home() {
 
                         {state.expanded && (
                           <>
-                            {story.repository && story.codeEvidence?.length ? (
+                            {story.repository && story.codeEvidence?.length && (!demoMode || story.repository === "teamleaderleo/baxtori") ? (
                               <StoryCode
+                                  demoMode={demoMode}
                                   defaultQuestionLens={REVIEW_POLICY.defaultLens}
                                   editionId={EDITION.id}
                                   evidence={story.codeEvidence}
@@ -1423,6 +1469,7 @@ export default function Home() {
 
         {view === "history" && (
           <EditionHistory
+            demoMode={demoMode}
             defaultQuestionLens={REVIEW_POLICY.defaultLens}
             editions={HISTORY_EDITIONS}
             feedbackConfigured={feedbackConfigured}

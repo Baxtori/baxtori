@@ -1,5 +1,6 @@
 import { buildGitHubCompareUrl, parseCodeDiffRequest, parseGitHubPatch } from "@/lib/code-diff";
 import { getGitHubSession, githubHeaders, withSessionCookie } from "@/lib/github-auth";
+import { demoDiffEvidence } from "@/lib/demo-evidence";
 
 type GitHubCompareFile = {
   additions: number;
@@ -14,20 +15,33 @@ type GitHubCompareResponse = {
 };
 
 export async function GET(request: Request) {
-  const { session, setCookie } = await getGitHubSession(request);
-  if (!session) {
-    return withSessionCookie(Response.json({ error: "Sign in with GitHub to read this diff." }, { status: 401 }), setCookie);
+  const url = new URL(request.url);
+  const isDemo = url.searchParams.get("demo") === "1";
+  const auth = isDemo ? null : await getGitHubSession(request);
+  if (auth && !auth.session) {
+    return withSessionCookie(Response.json({ error: "Sign in with GitHub to read this diff." }, { status: 401 }), auth.setCookie);
   }
 
   let evidence;
   try {
-    evidence = parseCodeDiffRequest(new URL(request.url));
+    evidence = parseCodeDiffRequest(url);
   } catch (error) {
-    return withSessionCookie(Response.json(
+    const response = Response.json(
       { error: error instanceof Error ? error.message : "Invalid diff request." },
       { status: 400 },
-    ), setCookie);
+    );
+    return auth ? withSessionCookie(response, auth.setCookie) : response;
   }
+
+  if (isDemo) {
+    const published = demoDiffEvidence(evidence);
+    return published
+      ? Response.json(published, { headers: { "Cache-Control": "public, max-age=3600" } })
+      : Response.json({ error: "This comparison is not part of the published demo." }, { status: 404 });
+  }
+
+  const { session, setCookie } = auth!;
+  if (!session) throw new Error("Authenticated diff evidence lost its session.");
 
   const response = await fetch(buildGitHubCompareUrl(evidence.repository, evidence.base, evidence.head), {
     headers: githubHeaders(session.accessToken),

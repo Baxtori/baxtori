@@ -10,6 +10,8 @@ person can continuously absorb.
 
 The product and information-density contract lives in
 [`docs/NORTH_STAR.md`](docs/NORTH_STAR.md).
+The current competitive and integration thesis lives in
+[`docs/PRODUCT_LANDSCAPE.md`](docs/PRODUCT_LANDSCAPE.md).
 
 The product started as **Glimpse** and is being rebranded around
 [baxtori.com](https://baxtori.com).
@@ -37,6 +39,8 @@ The product started as **Glimpse** and is being rebranded around
 - Independent Repo Maps and learning state for every repository with enough reviewed evidence
 - An explicit no-code-yet state instead of fabricated coverage for empty repositories
 - Lock, dismiss, and re-review controls with versioned review lenses, custom guidance, and a durable review queue
+- A credential-free published demo with an allowlisted, exact Baxtori evidence path
+- Desktop and mobile Playwright checks that capture the entrance, briefing, evidence, and cross-edition memory
 
 ## Run it locally
 
@@ -65,6 +69,18 @@ sent to browser JavaScript. Use a random value of at least 32 bytes for
 ```bash
 npm run build
 ```
+
+## Inspect the reader in a browser
+
+```bash
+npx playwright install chromium
+npm run test:visual
+```
+
+The visual suite starts the real Vinext development server, exercises the
+public entrance and `?demo=1` reader at desktop and mobile sizes, fails on
+browser exceptions, and attaches full-page screenshots to the Playwright test
+artifacts. CI retains the screenshots, report, and failure traces for 14 days.
 
 ## Direction
 

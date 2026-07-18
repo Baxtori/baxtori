@@ -1,0 +1,45 @@
+{
+  "id": "2026-07-12",
+  "generatedAt": "2026-07-12T17:15:00+08:00",
+  "periodStart": "2026-07-05",
+  "periodEnd": "2026-07-12",
+  "quietRepositories": [],
+  "stories": [
+    {
+      "id": "baxtori-inspectable-review-scope",
+      "topicId": "reader-review-loop",
+      "project": "baxtori",
+      "repository": "teamleaderleo/baxtori",
+      "tone": "green",
+      "timing": "Jul 12",
+      "title": "The next review exposed its boundaries.",
+      "brief": "Repository choices, activity since the last review, and scheduled scope became visible before collection, turning an invisible automation into an inspectable contract.",
+      "learningValue": 5,
+      "verdict": "A strong trust boundary for automation",
+      "whatChanged": "The reader gained live repository selection, a review cursor, bounded activity windows, and a preview of what the next scheduled review would inspect.",
+      "whyItMatters": "Automation is easier to trust when its inputs are legible. The reader can see which repositories are in scope and whether they contain candidate work before compilation begins.",
+      "verify": "Select and remove repositories, then confirm the preview distinguishes newly added, hidden scheduled, inaccessible, candidate, and quiet sources.",
+      "tradeoff": "The preview described scope but did not yet feed reader intent back into the compiler; that closed-loop handoff arrived in the following edition.",
+      "evidence": "1 feature commit · bounded activity and visible scheduled scope",
+      "files": ["app/page.tsx", "lib/github-activity.ts", "data/review-scope.json"],
+      "codeEvidence": [
+        {
+          "title": "Make the review cursor explicit and bounded",
+          "why": "The activity window accepts a saved review cursor only when it is valid and no more than 90 days old, otherwise falling back to a bounded rolling window.",
+          "path": "lib/github-activity.ts",
+          "baseCommit": "dc58f598d770ba6dc0a3596088756225fa121b63",
+          "commit": "a27740e4560407947019ccce880b13de4a986559",
+          "startLine": 1,
+          "endLine": 22,
+          "language": "typescript"
+        }
+      ],
+      "commits": [
+        {
+          "sha": "a27740e4560407947019ccce880b13de4a986559",
+          "url": "https://github.com/teamleaderleo/baxtori/commit/a27740e4560407947019ccce880b13de4a986559"
+        }
+      ]
+    }
+  ]
+}

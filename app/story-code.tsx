@@ -52,6 +52,7 @@ type PublishedStory = OrientationStory & {
 };
 
 type StoryCodeProps = {
+  demoMode?: boolean;
   defaultQuestionLens: string;
   editionId: string;
   evidence: CodeEvidence[];
@@ -79,6 +80,7 @@ function scrollPercentage(element: HTMLElement) {
 }
 
 export function StoryCode({
+  demoMode = false,
   defaultQuestionLens,
   editionId,
   evidence,
@@ -138,6 +140,10 @@ export function StoryCode({
       repo: repository,
       start: String(active.startLine),
     });
+    if (demoMode) {
+      codeQuery.set("demo", "1");
+      diffQuery.set("demo", "1");
+    }
     queueMicrotask(() => {
       setLoading(true);
       setCodeResponse(null);
@@ -172,7 +178,7 @@ export function StoryCode({
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [active, repository]);
+  }, [active, demoMode, repository]);
 
   useEffect(() => {
     if (!fullScreen) return;

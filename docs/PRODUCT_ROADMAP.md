@@ -117,9 +117,10 @@ history, deduplicated when the current edition is also in the archive, and
 filtered by canonical repository identity, durable topic, search text, watched
 threads, or unresolved questions. Archived stories reopen their exact published
 commit ranges in the authenticated diff reader while personal state remains
-separate from the evidence record. Showing mapped-area change across several
-reviews remains the next history refinement once the archive contains enough
-editions to make that comparison meaningful.
+separate from the evidence record. The archive now includes three authentic
+Baxtori editions and makes recurring topics visible as cross-edition threads.
+Showing mapped-area change across several reviews remains the next history
+refinement.
 
 Add a history view that can:
 
