@@ -12,6 +12,8 @@ The product and information-density contract lives in
 [`docs/NORTH_STAR.md`](docs/NORTH_STAR.md).
 The current competitive and integration thesis lives in
 [`docs/PRODUCT_LANDSCAPE.md`](docs/PRODUCT_LANDSCAPE.md).
+The proposed finite, scroll-led reader experiment lives in
+[`docs/SCROLL_TRAIL_PROPOSAL.md`](docs/SCROLL_TRAIL_PROPOSAL.md).
 
 The product started as **Glimpse** and is being rebranded around
 [baxtori.com](https://baxtori.com).
