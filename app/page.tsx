@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import archivedEdition20260713 from "@/data/editions/2026-07-13.json";
 import latestEdition from "@/data/latest.json";
 import ourchivalMap from "@/data/maps/ourchival.json";
 import oneMoreLegendMap from "@/data/maps/one-more-legend.json";
@@ -244,8 +245,7 @@ const DEMO_STORIES: Story[] = [
 
 const EDITION = latestEdition as Edition;
 const STORIES: Story[] = EDITION.stories.length ? EDITION.stories : DEMO_STORIES;
-const ARCHIVED_EDITION_MODULES = import.meta.glob<{ default: ArchiveEdition }>("../data/editions/*.json", { eager: true });
-const ARCHIVED_EDITIONS = Object.values(ARCHIVED_EDITION_MODULES).map((module) => module.default);
+const ARCHIVED_EDITIONS = [archivedEdition20260713 as ArchiveEdition];
 const HISTORY_EDITIONS = [EDITION, ...ARCHIVED_EDITIONS] as unknown as readonly ArchiveEdition[];
 const HISTORY_EDITION_COUNT = new Set((HISTORY_EDITIONS as readonly HistoricalEdition[]).map((edition) => edition.id)).size;
 const REPOSITORY_MAP = repositoryMap as RepoMapData;
