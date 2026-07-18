@@ -15,6 +15,7 @@ export type ReaderStoryState = {
 
 export type ReaderStatePayload = {
   activeMapRepository: string;
+  continueBudgetMinutes: number;
   editionId: string;
   hideUnderstood: boolean;
   mapStates: Record<string, "introduced" | "revisit" | "skipped" | "understood" | "unexplored">;
@@ -74,6 +75,7 @@ export function parseReaderState(input: unknown): ReaderStatePayload {
 
   return {
     activeMapRepository: canonicalRepository(readString(input.activeMapRepository, 200)),
+    continueBudgetMinutes: readAttentionBudget(input.continueBudgetMinutes),
     editionId: readString(input.editionId, 100),
     hideUnderstood: readBoolean(input.hideUnderstood),
     mapStates: canonicalizeRepositoryStateRecord(parseEnumRecord<ReaderStatePayload["mapStates"][string]>(input.mapStates, MAP_STATES)),
@@ -84,6 +86,14 @@ export function parseReaderState(input: unknown): ReaderStatePayload {
     version: 1,
     view: view as ReaderStatePayload["view"],
   };
+}
+
+function readAttentionBudget(value: unknown) {
+  if (value === undefined) return 15;
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 5 || value > 60 || value % 5 !== 0) {
+    throw new Error("Invalid attention budget.");
+  }
+  return value;
 }
 
 export function parseReviewRequest(input: unknown) {

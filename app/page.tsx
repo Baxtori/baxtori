@@ -167,7 +167,7 @@ const STORAGE_KEY = "baxtori:backstory:v1";
 const LEGACY_STORAGE_KEY = "glimpse:rundown:v2";
 const LOCAL_QUESTION_STORAGE_KEY = "baxtori:evidence-questions:v1";
 const DEMO_STORAGE_SUFFIX = "published-demo";
-const CONTINUE_BUDGETS = [5, 15, 30] as const;
+const DEFAULT_CONTINUE_BUDGET = 15;
 const CONTINUE_KIND_LABELS: Record<ContinueItemKind, string> = {
   area: "Map frontier",
   question: "Open question",
@@ -309,7 +309,7 @@ export default function Home() {
   const [focusMode, setFocusMode] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [focusedStoryId, setFocusedStoryId] = useState<string | null>(null);
-  const [continueBudget, setContinueBudget] = useState<(typeof CONTINUE_BUDGETS)[number]>(15);
+  const [continueBudget, setContinueBudget] = useState(DEFAULT_CONTINUE_BUDGET);
   const [focusTarget, setFocusTarget] = useState<FocusTarget | null>(null);
   const [notice, setNotice] = useState("");
   const [hasHydrated, setHasHydrated] = useState(false);
@@ -371,6 +371,12 @@ export default function Home() {
         setActiveMapRepository(parsed.activeMapRepository);
       }
       if (typeof parsed.hideUnderstood === "boolean") setHideUnderstood(parsed.hideUnderstood);
+      if (
+        typeof parsed.continueBudgetMinutes === "number" &&
+        parsed.continueBudgetMinutes >= 5 &&
+        parsed.continueBudgetMinutes <= 60 &&
+        parsed.continueBudgetMinutes % 5 === 0
+      ) setContinueBudget(parsed.continueBudgetMinutes);
       if (parsed.view === "briefing" || parsed.view === "history" || parsed.view === "map" || parsed.view === "timeline" || parsed.view === "repositories") setView(parsed.view);
       const savedRepositories = parsed.selectedRepositories ?? parsed.selectedRepoIds ?? SCHEDULED_REPOSITORIES;
       legacySelectedRepositories.current = Array.isArray(savedRepositories) ? savedRepositories : SCHEDULED_REPOSITORIES;
@@ -456,6 +462,7 @@ export default function Home() {
     if (!hasHydrated || !accountStorageKey || !repositoryModesInitialized) return;
     const saved: SavedState = {
       activeMapRepository,
+      continueBudgetMinutes: continueBudget,
       editionId: EDITION.id,
       hideUnderstood,
       mapStates,
@@ -490,7 +497,7 @@ export default function Home() {
       window.clearTimeout(timeout);
       controller.abort();
     };
-  }, [accountStorageKey, activeMapRepository, feedbackConfigured, hasHydrated, hideUnderstood, mapStates, questionStates, repositoryModes, repositoryModesInitialized, selectedRepositories, states, view]);
+  }, [accountStorageKey, activeMapRepository, continueBudget, feedbackConfigured, hasHydrated, hideUnderstood, mapStates, questionStates, repositoryModes, repositoryModesInitialized, selectedRepositories, states, view]);
 
   useEffect(() => {
     if (!hasHydrated || !questionStorageKey) return;
@@ -646,7 +653,6 @@ export default function Home() {
     { ...storyState(story.id), watching: isStoryWatching(story) },
   ]));
   const understoodCount = STORIES.filter((story) => storyState(story.id).understood).length;
-  const reviewedRepositoryCount = new Set(STORIES.map((story) => story.repository ?? story.project)).size;
   const watchedStories = STORIES.filter(isStoryWatching);
   const queuedReviewRequests = reviewRequests.filter((request) => request.status === "queued");
   const openThreadQuestionCount = threadQuestions.filter((question) => question.status === "open").length;
@@ -1085,7 +1091,7 @@ export default function Home() {
         </div>
         <nav className="primary-nav" aria-label="Primary">
           <button aria-current={view === "briefing" ? "page" : undefined} className={view === "briefing" ? "is-active" : ""} onClick={() => setView("briefing")} type="button">
-            <span>Now</span><small>{continuePlan.items.length}</small>
+            <span>Now</span><small>{continueBudget}m</small>
           </button>
           <button aria-current={view === "map" ? "page" : undefined} className={view === "map" ? "is-active" : ""} onClick={() => setView("map")} type="button">
             <span>System</span><small>{REPOSITORY_MAPS.length}</small>
@@ -1141,7 +1147,7 @@ export default function Home() {
                   ? "Return to unresolved intent and reopen the exact evidence that shaped earlier understanding."
                   : view === "timeline"
                     ? "The selected changes, quiet repositories, and literal reasons behind this review."
-                    : `${continuePlan.items.length} ${continuePlan.items.length === 1 ? "thing fits" : "things fit"} this attention window across ${reviewedRepositoryCount} ${reviewedRepositoryCount === 1 ? "repository" : "repositories"}.`}
+                    : `${continuePlan.plannedMinutes} minutes planned from the attention window you chose.`}
           </p>
 
           {(view === "briefing" || view === "timeline") && (
@@ -1187,22 +1193,23 @@ export default function Home() {
                       <span>If you have more time</span>
                       <strong>{continuePlan.plannedMinutes} of {continueBudget} minutes planned</strong>
                     </div>
-                    <div className="continue-budgets" aria-label="Continue time budget">
-                      {CONTINUE_BUDGETS.map((minutes) => (
-                        <button
-                          aria-pressed={continueBudget === minutes}
-                          key={minutes}
-                          onClick={() => setContinueBudget(minutes)}
-                          type="button"
-                        >
-                          {minutes}m
-                        </button>
-                      ))}
-                    </div>
+                    <label className="continue-budget" htmlFor="continue-budget">
+                      <span>Your attention window</span>
+                      <input
+                        id="continue-budget"
+                        max="60"
+                        min="5"
+                        onChange={(event) => setContinueBudget(Number(event.target.value))}
+                        step="5"
+                        type="range"
+                        value={continueBudget}
+                      />
+                      <output htmlFor="continue-budget">{continueBudget} minutes</output>
+                    </label>
                   </div>
                   {continuePlan.items.length > 1 ? (
                     <ol>
-                      {continuePlan.items.slice(1, 4).map((item) => (
+                      {continuePlan.items.slice(1).map((item) => (
                         <li key={item.id}>
                           <button onClick={() => openContinueItem(item)} type="button">
                             <span>{CONTINUE_KIND_LABELS[item.kind]} · {item.minutes} min</span>
@@ -1432,10 +1439,12 @@ export default function Home() {
         {view === "map" && (
           <RepositoryMaps
             activeRepository={activeMapRepository}
+            attentionBudget={continueBudget}
             data={REPOSITORY_MAPS}
             onActiveRepositoryChange={setActiveMapRepository}
             onQuestionChange={updateQuestion}
             onStateChange={updateUnderstanding}
+            onAttentionBudgetChange={setContinueBudget}
             questionStates={questionStates}
             sources={REVIEW_SCOPE.repositories}
             states={mapStates}

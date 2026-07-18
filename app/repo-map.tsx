@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
+import { type CSSProperties } from "react";
 
 export type UnderstandingState = "unexplored" | "introduced" | "understood" | "revisit" | "skipped";
 export type QuestionDisposition = "open" | "resolved" | "irrelevant";
@@ -68,7 +68,9 @@ export type RepoMapData = {
 };
 
 type RepoMapProps = {
+  attentionBudget: number;
   data: RepoMapData;
+  onAttentionBudgetChange: (minutes: number) => void;
   questionStates: Record<string, QuestionDisposition>;
   states: Record<string, UnderstandingState>;
   onQuestionChange: (question: RepoQuestion, state: QuestionDisposition) => void;
@@ -90,8 +92,6 @@ const STATE_LABELS: Record<UnderstandingState, string> = {
   unexplored: "Unexplored",
 };
 
-const STUDY_BUDGETS = [5, 15, 30] as const;
-
 function formatReviewDate(value: string, compact = false) {
   return new Intl.DateTimeFormat("en-US", compact
     ? { day: "numeric", month: "short", timeZone: "UTC" }
@@ -112,8 +112,7 @@ function adjustedCoverage(area: RepoArea, state: UnderstandingState) {
   return Math.min(observed, 42);
 }
 
-export function RepoMap({ data, onQuestionChange, onStateChange, questionStates, states }: RepoMapProps) {
-  const [studyBudget, setStudyBudget] = useState<(typeof STUDY_BUDGETS)[number]>(15);
+export function RepoMap({ attentionBudget, data, onAttentionBudgetChange, onQuestionChange, onStateChange, questionStates, states }: RepoMapProps) {
   const acceptsLegacyState = data.repository === "teamleaderleo/glimpse";
   const stateFor = (area: RepoArea) => states[`${data.repository}:${area.id}`] ?? (acceptsLegacyState ? states[area.id] : undefined) ?? "unexplored";
   const questionStateFor = (question: RepoQuestion) => questionStates[`${data.repository}:${question.id}`] ?? (acceptsLegacyState ? questionStates[question.id] : undefined) ?? question.status;
@@ -159,7 +158,7 @@ export function RepoMap({ data, onQuestionChange, onStateChange, questionStates,
   ];
   let minutesPlanned = 0;
   const studyPlan = studyCandidates.filter((task) => {
-    if (minutesPlanned + task.minutes > studyBudget) return false;
+    if (minutesPlanned + task.minutes > attentionBudget) return false;
     minutesPlanned += task.minutes;
     return true;
   });
@@ -227,12 +226,22 @@ export function RepoMap({ data, onQuestionChange, onStateChange, questionStates,
         <div className="study-session-heading">
           <div>
             <span className="eyebrow">Low-effort study mode</span>
-            <h2 id="study-session-heading">Your next {studyBudget} minutes</h2>
+            <h2 id="study-session-heading">Your next {attentionBudget} minutes</h2>
             <p>{frontier ? `${frontier.name} is the current frontier. ` : "Your mapped areas are settled. "}The queue fits the time you actually have.</p>
           </div>
-          <div className="budget-picker" aria-label="Study time budget">
-            {STUDY_BUDGETS.map((minutes) => <button aria-pressed={studyBudget === minutes} key={minutes} onClick={() => setStudyBudget(minutes)} type="button">{minutes}m</button>)}
-          </div>
+          <label className="budget-picker" htmlFor="study-budget">
+            <span>Attention window</span>
+            <input
+              id="study-budget"
+              max="60"
+              min="5"
+              onChange={(event) => onAttentionBudgetChange(Number(event.target.value))}
+              step="5"
+              type="range"
+              value={attentionBudget}
+            />
+            <output htmlFor="study-budget">{attentionBudget} minutes</output>
+          </label>
         </div>
         {studyPlan.length ? (
           <ol className="study-plan">

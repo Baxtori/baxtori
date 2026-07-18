@@ -54,7 +54,7 @@ Add a compact validation report that confirms:
 **Implemented:** a deterministic cross-surface queue now ranks unread stories,
 watched follow-ups, map frontiers, revisit work, open questions, and re-review
 requests that still need reader context. The reader gets one primary action,
-an explicit reason, direct focus navigation, and 5, 15, or 30-minute plans.
+an explicit reason, direct focus navigation, and a persistent reader-chosen time window.
 
 Create one queue across:
 
@@ -71,7 +71,7 @@ The landing view should show:
 - why it was selected
 - estimated time
 - a compact next-up list
-- 5, 15, and 30-minute modes
+- a reader-chosen attention window
 
 The queue must be deterministic for the same state and jump directly to the relevant story, excerpt, walkthrough, or question.
 

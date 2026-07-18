@@ -31,6 +31,7 @@ export const storyStateValidator = v.object({
 
 export const readerStateValidator = v.object({
   activeMapRepository: v.string(),
+  continueBudgetMinutes: v.optional(v.number()),
   editionId: v.string(),
   hideUnderstood: v.boolean(),
   mapStates: v.record(v.string(), v.union(

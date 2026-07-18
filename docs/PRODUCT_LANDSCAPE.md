@@ -71,3 +71,18 @@ It should own:
 The admission test remains the north star: an integration belongs only if it
 directs attention, increases trustworthy understanding, preserves that
 understanding, or improves later agent work.
+
+## Why there is no magic item count
+
+There is no defensible universal optimum such as three, five, or seven findings.
+A [meta-analysis of 50 choice-overload experiments](https://doi.org/10.1086/651235)
+found an average effect near zero with substantial variation, while a later
+[meta-analysis](https://doi.org/10.1016/j.jcps.2014.08.002) found that complexity,
+task difficulty, preference uncertainty, and the reader's goal—not a fixed item
+count—moderate overload. Cross-national work also found that too little choice
+can be more common and more damaging than too much
+([Reutskaja et al., 2022](https://doi.org/10.1177/1069031X211073821)).
+
+Baxtori therefore ranks the full attributable queue, asks the reader how much
+time they have, and packs as much useful work as fits. The interface may recommend
+a default window, but it must not present the resulting item count as a law.

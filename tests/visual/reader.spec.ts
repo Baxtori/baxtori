@@ -31,6 +31,12 @@ test("the published demo exposes a calm briefing and exact evidence", async ({ p
 
   await expect(page.getByRole("heading", { name: "What deserves attention." })).toBeVisible();
   await expect(page.getByText("Published demo · 3 repositories.")).toBeVisible();
+  const attentionWindow = page.getByLabel("Your attention window");
+  await expect(attentionWindow).toHaveValue("15");
+  await attentionWindow.fill("30");
+  await expect(page.getByText("30 minutes", { exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByLabel("Your attention window")).toHaveValue("30");
   await capture(page, testInfo, "published-briefing");
 
   await page.getByRole("button", { name: "Open backstory" }).first().click();

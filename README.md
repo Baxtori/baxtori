@@ -21,7 +21,7 @@ The product started as **Glimpse** and is being rebranded around
 - A deliberately concise weekly briefing with details on demand
 - Separate signals for learning value, code quality, and deliberate tradeoffs
 - Mark-understood, watch, dismiss-project, focus, and keyboard-reading flows
-- A deterministic 5, 15, or 30-minute Continue queue across stories, watches, map frontiers, questions, and re-review context
+- A deterministic, reader-sized Continue queue across stories, watches, map frontiers, questions, and re-review context
 - A chronological activity view without notification or inbox behavior
 - Account-backed reading state with an instant device fallback
 - GitHub account sign-in with an encrypted, HttpOnly server session
@@ -33,7 +33,7 @@ The product started as **Glimpse** and is being rebranded around
 - Guided execution-path walkthroughs with an invariant at every step
 - A durable question ledger that preserves uncertainty instead of guessing
 - An append-only map review history anchored to exact commits
-- A 5, 15, or 30-minute study queue assembled from walkthroughs, frontiers, and open questions
+- A reader-chosen study window assembled from walkthroughs, frontiers, and open questions
 - A review scope chosen in the app and consumed by the weekly compiler
 - Candidate-versus-no-new-commits signals measured from the last completed rundown cursor
 - Independent Repo Maps and learning state for every repository with enough reviewed evidence

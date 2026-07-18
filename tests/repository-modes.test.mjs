@@ -106,6 +106,12 @@ test("reader state preserves the edition history destination", () => {
   assert.equal(parseReaderState(readerState({ view: "history" })).view, "history");
 });
 
+test("reader chooses a persistent attention budget without breaking legacy state", () => {
+  assert.equal(parseReaderState(readerState()).continueBudgetMinutes, 15);
+  assert.equal(parseReaderState(readerState({ continueBudgetMinutes: 45 })).continueBudgetMinutes, 45);
+  assert.throws(() => parseReaderState(readerState({ continueBudgetMinutes: 17 })), /Invalid attention budget/);
+});
+
 test("version-one reader state remains valid before repository modes existed", () => {
   const legacy = readerState({ selectedRepositories: ["teamleaderleo/glimpse"] });
   delete legacy.repositoryModes;

@@ -11,8 +11,10 @@ type MapSource = {
 
 type RepositoryMapsProps = {
   activeRepository: string;
+  attentionBudget: number;
   data: RepoMapData[];
   onActiveRepositoryChange: (repository: string) => void;
+  onAttentionBudgetChange: (minutes: number) => void;
   onQuestionChange: (repository: string, question: RepoQuestion, state: QuestionDisposition) => void;
   onStateChange: (repository: string, area: RepoArea, state: UnderstandingState) => void;
   questionStates: Record<string, QuestionDisposition>;
@@ -22,8 +24,10 @@ type RepositoryMapsProps = {
 
 export function RepositoryMaps({
   activeRepository,
+  attentionBudget,
   data,
   onActiveRepositoryChange,
+  onAttentionBudgetChange,
   onQuestionChange,
   onStateChange,
   questionStates,
@@ -67,7 +71,9 @@ export function RepositoryMaps({
       <div aria-live="polite" role="tabpanel">
         {activeMap ? (
           <RepoMap
+            attentionBudget={attentionBudget}
             data={activeMap}
+            onAttentionBudgetChange={onAttentionBudgetChange}
             onQuestionChange={(question, state) => onQuestionChange(activeMap.repository, question, state)}
             onStateChange={(area, state) => onStateChange(activeMap.repository, area, state)}
             questionStates={normalizedQuestionStates}
