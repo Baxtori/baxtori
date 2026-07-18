@@ -108,6 +108,15 @@ Questions can remain private reading notes or become explicit input to the next 
 
 ## P2 — Edition archive and repository history
 
+**Implemented:** immutable editions are assembled into a newest-first reader
+history, deduplicated when the current edition is also in the archive, and
+filtered by canonical repository identity, durable topic, search text, watched
+threads, or unresolved questions. Archived stories reopen their exact published
+commit ranges in the authenticated diff reader while personal state remains
+separate from the evidence record. Showing mapped-area change across several
+reviews remains the next history refinement once the archive contains enough
+editions to make that comparison meaningful.
+
 Add a history view that can:
 
 - browse prior editions

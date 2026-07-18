@@ -9,6 +9,7 @@ import reviewPolicy from "@/data/review-policy.json";
 import reviewScope from "@/data/review-scope.json";
 import { mapWithConcurrency } from "@/lib/async-pool";
 import type { EditionSelectionRecord } from "@/lib/edition-ledger";
+import type { HistoricalEdition } from "@/lib/edition-history";
 import { buildContinueQueue, planContinueQueue, type ContinueItem, type ContinueItemKind } from "@/lib/continue-queue";
 import { focusTargetFor, planStoryOpening, shouldClearReviewMarker, type FocusTarget } from "@/lib/reader-navigation";
 import { parseStoredQuestionRecords, type ThreadQuestionRecord } from "@/lib/story-questions";
@@ -28,6 +29,7 @@ import {
 import { activeWatchThreadFor, storyWatchInput, topicThreadFor, type TopicThreadRecord } from "@/lib/story-topics";
 import type { ReaderStatePayload, ReaderStoryState, ReviewRequest } from "@/lib/feedback-contract";
 import { EditionSelectionLedger } from "./edition-selection-ledger";
+import { EditionHistory, type ArchiveEdition } from "./edition-history";
 import { RepositoryModeControl } from "./repository-mode-control";
 import repositoryModeStyles from "./repository-modes.module.css";
 import { RepositoryMaps } from "./repository-maps";
@@ -35,7 +37,7 @@ import { type QuestionDisposition, type RepoArea, type RepoMapData, type RepoQue
 import { type CodeEvidence, StoryCode } from "./story-code";
 
 type Tone = "blue" | "green" | "rust";
-type View = "briefing" | "map" | "timeline" | "repositories";
+type View = "briefing" | "history" | "map" | "timeline" | "repositories";
 
 type Story = {
   id: string;
@@ -241,6 +243,10 @@ const DEMO_STORIES: Story[] = [
 
 const EDITION = latestEdition as Edition;
 const STORIES: Story[] = EDITION.stories.length ? EDITION.stories : DEMO_STORIES;
+const ARCHIVED_EDITION_MODULES = import.meta.glob<{ default: ArchiveEdition }>("../data/editions/*.json", { eager: true });
+const ARCHIVED_EDITIONS = Object.values(ARCHIVED_EDITION_MODULES).map((module) => module.default);
+const HISTORY_EDITIONS = [EDITION, ...ARCHIVED_EDITIONS] as unknown as readonly ArchiveEdition[];
+const HISTORY_EDITION_COUNT = new Set((HISTORY_EDITIONS as readonly HistoricalEdition[]).map((edition) => edition.id)).size;
 const REPOSITORY_MAP = repositoryMap as RepoMapData;
 const REPOSITORY_MAPS = [REPOSITORY_MAP, ourchivalMap as RepoMapData, oneMoreLegendMap as RepoMapData];
 const REVIEW_POLICY = reviewPolicy as ReviewPolicy;
@@ -346,7 +352,7 @@ export default function Home() {
         setActiveMapRepository(parsed.activeMapRepository);
       }
       if (typeof parsed.hideUnderstood === "boolean") setHideUnderstood(parsed.hideUnderstood);
-      if (parsed.view === "briefing" || parsed.view === "map" || parsed.view === "timeline" || parsed.view === "repositories") setView(parsed.view);
+      if (parsed.view === "briefing" || parsed.view === "history" || parsed.view === "map" || parsed.view === "timeline" || parsed.view === "repositories") setView(parsed.view);
       const savedRepositories = parsed.selectedRepositories ?? parsed.selectedRepoIds ?? SCHEDULED_REPOSITORIES;
       legacySelectedRepositories.current = Array.isArray(savedRepositories) ? savedRepositories : SCHEDULED_REPOSITORIES;
       if (parsed.repositoryModes && Object.keys(parsed.repositoryModes).length) {
@@ -1040,6 +1046,9 @@ export default function Home() {
           <button aria-current={view === "timeline" ? "page" : undefined} className={view === "timeline" ? "is-active" : ""} onClick={() => setView("timeline")} type="button">
             <span>Timeline</span><small>7d</small>
           </button>
+          <button aria-current={view === "history" ? "page" : undefined} className={view === "history" ? "is-active" : ""} onClick={() => setView("history")} type="button">
+            <span>History</span><small>{HISTORY_EDITION_COUNT}</small>
+          </button>
           <button aria-current={view === "repositories" ? "page" : undefined} className={view === "repositories" ? "is-active" : ""} onClick={openRepositoryControls} type="button">
             <span>Repositories</span><small>{selectedRepositories.length}</small>
           </button>
@@ -1068,12 +1077,14 @@ export default function Home() {
               <button aria-expanded={showHelp} aria-label={showHelp ? "Hide keyboard shortcuts" : "Show keyboard shortcuts"} onClick={() => setShowHelp((current) => !current)} type="button">?</button>
             </div>
           </div>
-          <h1>{view === "repositories" ? "Repositories." : view === "map" ? "Repository map." : view === "timeline" ? "Edition timeline." : "Weekly review."}</h1>
+          <h1>{view === "repositories" ? "Repositories." : view === "map" ? "Repository map." : view === "history" ? "Edition history." : view === "timeline" ? "Edition timeline." : "Weekly review."}</h1>
           <p className="dek">
             {view === "repositories"
               ? "Choose what Monday reviews."
               : view === "map"
                 ? "Coverage, questions, and what to study next."
+                : view === "history"
+                  ? "Browse prior explanations and reopen their exact reviewed changes."
               : `${STORIES.length} ${STORIES.length === 1 ? "item" : "items"} from ${reviewedRepositoryCount} ${reviewedRepositoryCount === 1 ? "repository" : "repositories"}.`}
           </p>
 
@@ -1373,6 +1384,19 @@ export default function Home() {
               </li>
             </ol>
           </section>
+        )}
+
+        {view === "history" && (
+          <EditionHistory
+            defaultQuestionLens={REVIEW_POLICY.defaultLens}
+            editions={HISTORY_EDITIONS}
+            feedbackConfigured={feedbackConfigured}
+            onQuestionSaved={saveThreadQuestion}
+            onQuestionUpdated={updateThreadQuestion}
+            questionLenses={REVIEW_POLICY.lenses}
+            questions={threadQuestions}
+            topicThreads={topicThreads}
+          />
         )}
 
         {view === "repositories" && (

@@ -102,7 +102,11 @@ the visible scope and deterministic collector from drifting apart.
 `data/candidates.json` is ignored scratch evidence. The automation writes a
 concise, validated `data/latest.json` and archives the same edition under
 `data/editions/`. Committing that edition updates the deployed app without any
-separate model API billing.
+separate model API billing. The reader assembles those versioned files into a
+newest-first History view with repository, topic, question, watch, and text
+filters. Opening an archived story uses its retained base commit, head commit,
+path, and line range, so historical diffs remain inspectable even after the
+current briefing moves on.
 
 `data/review-policy.json` versions the available re-review lenses and rules that
 must survive prompt changes. Convex stores each GitHub account's reading state,

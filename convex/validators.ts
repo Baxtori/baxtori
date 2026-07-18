@@ -49,7 +49,7 @@ export const readerStateValidator = v.object({
   selectedRepositories: v.array(v.string()),
   states: v.record(v.string(), storyStateValidator),
   version: v.literal(1),
-  view: v.union(v.literal("briefing"), v.literal("map"), v.literal("repositories"), v.literal("timeline")),
+  view: v.union(v.literal("briefing"), v.literal("history"), v.literal("map"), v.literal("repositories"), v.literal("timeline")),
 });
 
 export const reviewStatusValidator = v.union(

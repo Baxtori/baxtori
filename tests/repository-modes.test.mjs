@@ -102,6 +102,10 @@ test("reader state accepts and canonicalizes repository modes", () => {
   assert.deepEqual(parsed.selectedRepositories, ["teamleaderleo/baxtori"]);
 });
 
+test("reader state preserves the edition history destination", () => {
+  assert.equal(parseReaderState(readerState({ view: "history" })).view, "history");
+});
+
 test("version-one reader state remains valid before repository modes existed", () => {
   const legacy = readerState({ selectedRepositories: ["teamleaderleo/glimpse"] });
   delete legacy.repositoryModes;

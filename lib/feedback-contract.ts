@@ -23,7 +23,7 @@ export type ReaderStatePayload = {
   selectedRepositories: string[];
   states: Record<string, ReaderStoryState>;
   version: 1;
-  view: "briefing" | "map" | "repositories" | "timeline";
+  view: "briefing" | "history" | "map" | "repositories" | "timeline";
 };
 
 export type ReviewRequest = {
@@ -47,7 +47,7 @@ const MAX_REPOSITORY_STATE_ENTRIES = 5_000;
 const MAP_STATES = new Set(["introduced", "revisit", "skipped", "understood", "unexplored"]);
 const QUESTION_STATES = new Set(["irrelevant", "open", "resolved"]);
 const REPOSITORY_MODES = new Set(["automatic", "muted", "pinned"]);
-const VIEWS = new Set(["briefing", "map", "repositories", "timeline"]);
+const VIEWS = new Set(["briefing", "history", "map", "repositories", "timeline"]);
 
 export function parseReaderState(input: unknown): ReaderStatePayload {
   if (!isRecord(input) || input.version !== 1) throw new Error("Invalid reader state version.");
