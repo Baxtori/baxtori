@@ -1,0 +1,62 @@
+name: Apply prerender fix
+
+on:
+  push:
+    branches:
+      - fix/next-prerender-glob
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.0
+          cache: npm
+
+      - name: Replace Vite-only archive glob
+        run: |
+          node <<'NODE'
+          import { readFileSync, writeFileSync } from "node:fs";
+
+          const path = "app/page.tsx";
+          let source = readFileSync(path, "utf8");
+          const importLine = 'import latestEdition from "@/data/latest.json";';
+          const importReplacement = [
+            'import archivedEdition20260713 from "@/data/editions/2026-07-13.json";',
+            importLine,
+          ].join("\n");
+          const globBlock = [
+            'const ARCHIVED_EDITION_MODULES = import.meta.glob<{ default: ArchiveEdition }>("../data/editions/*.json", { eager: true });',
+            'const ARCHIVED_EDITIONS = Object.values(ARCHIVED_EDITION_MODULES).map((module) => module.default);',
+          ].join("\n");
+          const staticArchive = "const ARCHIVED_EDITIONS = [archivedEdition20260713 as ArchiveEdition];";
+
+          if (!source.includes(importLine)) throw new Error("latest edition import was not found");
+          if (!source.includes(globBlock)) throw new Error("archive glob block was not found");
+
+          source = source.replace(importLine, importReplacement).replace(globBlock, staticArchive);
+          writeFileSync(path, source);
+          NODE
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Commit verified fix
+        run: |
+          rm .github/workflows/apply-prerender-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/page.tsx .github/workflows/apply-prerender-fix.yml
+          git commit -m "Fix archived edition loading during prerender"
+          git push origin HEAD
