@@ -1,10 +1,9 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element -- Vinext's next/image shim loads a duplicate React path and its optimizer cannot resolve the worker asset binding; these local decorative images are explicitly dimensioned. */
-
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type { ContinueItem } from "@/lib/continue-queue";
 import type { ReaderTrail, TrailStory } from "@/lib/reader-trail";
+import { BotanicalProgress } from "./botanical-progress";
 import styles from "./trail-reader.module.css";
 
 type StoryDecisionState = {
@@ -50,6 +49,21 @@ function evidenceBearing(story: TrailStory) {
   const evidence = story.codeEvidence?.[0];
   if (!evidence) return null;
   return `${evidence.path}:${evidence.startLine}–${evidence.endLine}`;
+}
+
+function SpecimenMark({ stage }: { stage: number }) {
+  const leafCount = Math.min(4, Math.max(1, stage));
+  return (
+    <svg aria-hidden="true" className={styles.specimenMark} role="presentation" viewBox="0 0 92 52">
+      <path d="M12 45 C 28 39 34 29 42 8" />
+      {leafCount >= 1 && <path d="M28 35 C 16 31 11 24 10 18 C 21 18 29 23 28 35 Z" />}
+      {leafCount >= 2 && <path d="M33 29 C 45 25 51 17 51 11 C 41 12 34 18 33 29 Z" />}
+      {leafCount >= 3 && <path d="M37 21 C 28 17 25 11 26 6 C 34 8 39 13 37 21 Z" />}
+      {leafCount >= 4 && <circle cx="44" cy="6" r="3" />}
+      <text x="58" y="25">SP.{String(stage).padStart(2, "0")}</text>
+      <text x="58" y="35">OBS.</text>
+    </svg>
+  );
 }
 
 export function TrailReader({
@@ -157,12 +171,7 @@ export function TrailReader({
   return (
     <div className={styles.trailShell}>
       <a className={styles.skipLink} href="#trail-reading">Skip to the journal</a>
-      <div aria-hidden="true" className={`${styles.fern} ${styles.fernLeft}`}>
-        <img alt="" height="1536" src="/art/fern-margin.png" width="1024" />
-      </div>
-      <div aria-hidden="true" className={`${styles.fern} ${styles.fernRight}`}>
-        <img alt="" height="1536" src="/art/fern-margin.png" width="1024" />
-      </div>
+      <BotanicalProgress />
 
       <header className={styles.trailHeader}>
         <button className={styles.brand} onClick={() => moveTo(0)} type="button">
@@ -245,7 +254,10 @@ export function TrailReader({
                   <span>{scene.item.minutes} min</span>
                   <span>{scene.story.timing}</span>
                 </div>
-                <p>{scene.story.repository ?? scene.item.repository}</p>
+                <div className={styles.specimenBearing}>
+                  <p>{scene.story.repository ?? scene.item.repository}</p>
+                  <SpecimenMark stage={index} />
+                </div>
               </header>
               <h2>{scene.story.title}</h2>
               <p className={styles.storyBrief}>{scene.story.brief}</p>

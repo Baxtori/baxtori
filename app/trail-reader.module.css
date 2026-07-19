@@ -9,6 +9,7 @@
   min-height: 100vh;
   color: var(--trail-ink);
   background:
+    repeating-linear-gradient(0deg, transparent 0 22px, rgb(54 73 59 / 1.6%) 23px),
     radial-gradient(circle at 12% 18%, rgb(76 116 84 / 8%), transparent 28rem),
     radial-gradient(circle at 88% 72%, rgb(122 83 55 / 5%), transparent 24rem),
     linear-gradient(90deg, #eee7da, var(--trail-paper) 14%, var(--trail-paper) 86%, #eee7da);
@@ -82,39 +83,114 @@
 .headerProgress progress::-webkit-progress-value { background: var(--trail-green); }
 .headerProgress progress::-moz-progress-bar { background: var(--trail-green); }
 
-.fern {
+.botanicalProgress {
   position: fixed;
   z-index: 1;
-  bottom: -16vh;
-  width: clamp(11rem, 24vw, 24rem);
-  height: min(86vh, 58rem);
+  bottom: 0;
+  left: max(-5rem, calc((100vw - 76rem) / 2 - 14rem));
+  width: clamp(25rem, 35vw, 38rem);
+  height: calc(100svh - 3.7rem);
+  min-height: 38rem;
   pointer-events: none;
-  opacity: 0.13;
-  filter: saturate(0.65) contrast(0.92);
   mix-blend-mode: multiply;
-  transform-origin: bottom center;
+  overflow: hidden;
 }
 
-.fern img { width: 100%; height: 100%; object-fit: contain; }
-.fernLeft { left: max(-8rem, -8vw); transform: rotate(-8deg); }
-.fernRight { right: max(-9rem, -9vw); opacity: 0.08; transform: scaleX(-1) rotate(-13deg); }
+.botanicalProgress svg { width: 100%; height: 100%; overflow: visible; }
+
+.botanicalGround {
+  fill: rgb(49 95 70 / 14%);
+  stroke: rgb(49 95 70 / 22%);
+  stroke-linecap: round;
+  stroke-width: 1.2;
+}
+
+.botanicalRachisGhost,
+.botanicalCurlGhost {
+  fill: none;
+  stroke: rgb(49 95 70 / 3.5%);
+  stroke-linecap: round;
+  stroke-width: 3;
+}
+
+.botanicalRachis,
+.botanicalCurl {
+  fill: none;
+  stroke: rgb(38 87 59 / 72%);
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  stroke-linecap: round;
+  stroke-width: 3.2;
+}
+
+.botanicalFrond {
+  fill: rgb(49 95 70 / 25%);
+  stroke: rgb(38 87 59 / 52%);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 0.8;
+  transform-box: fill-box;
+  transform-origin: left center;
+}
+
+.frondStem { fill: none; stroke-width: 1.25; }
+
+.botanicalSpores {
+  fill: rgb(116 79 47 / 38%);
+  opacity: 0.55;
+}
+
+.botanicalCaption {
+  fill: rgb(49 95 70 / 48%);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 7px;
+  font-weight: 720;
+  letter-spacing: 1.4px;
+}
+
+.botanicalCaption text + text { font-size: 5.5px; letter-spacing: 1px; }
 
 @supports (animation-timeline: scroll()) {
-  .fernLeft { animation: fern-left-drift linear both; animation-timeline: scroll(root block); }
-  .fernRight { animation: fern-right-drift linear both; animation-timeline: scroll(root block); }
+  .botanicalRachis {
+    stroke-dashoffset: 1;
+    animation: botanical-draw 1ms linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 2% 86%;
+  }
+
+  .botanicalCurl {
+    stroke-dashoffset: 1;
+    animation: botanical-draw 1ms linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 72% 96%;
+  }
+
+  .botanicalFrond {
+    opacity: 0;
+    transform: scaleX(0.04) rotate(-18deg);
+    animation: botanical-unfurl 1ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+    animation-timeline: scroll(root block);
+    animation-range: var(--frond-start) var(--frond-end);
+  }
+
+  .botanicalSpores {
+    opacity: 0;
+    animation: botanical-spores 1ms linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 82% 98%;
+  }
 }
 
-@keyframes fern-left-drift {
-  from { opacity: 0.08; transform: translateY(12vh) rotate(-11deg) scale(0.94); }
-  45% { opacity: 0.16; }
-  to { opacity: 0.1; transform: translateY(-10vh) rotate(-3deg) scale(1.05); }
+@supports not (animation-timeline: scroll()) {
+  .botanicalRachis,
+  .botanicalCurl { stroke-dashoffset: 1; }
+  .botanicalFrond { opacity: 0; transform: scaleX(0.04) rotate(-18deg); }
+  .botanicalSpores { opacity: 0; }
 }
 
-@keyframes fern-right-drift {
-  from { opacity: 0.04; transform: translateY(18vh) scaleX(-1) rotate(-16deg) scale(0.9); }
-  55% { opacity: 0.1; }
-  to { opacity: 0.06; transform: translateY(-14vh) scaleX(-1) rotate(-8deg) scale(1.02); }
-}
+@keyframes botanical-draw { to { stroke-dashoffset: 0; } }
+@keyframes botanical-unfurl { to { opacity: 1; transform: scaleX(1) rotate(0deg); } }
+@keyframes botanical-spores { to { opacity: 0.55; } }
 
 .journal {
   position: relative;
@@ -227,7 +303,12 @@
 }
 
 .storyHeader { align-items: flex-start; margin-bottom: clamp(2rem, 5vh, 3.8rem); }
-.storyHeader > p { margin: 0; color: var(--trail-muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.58rem; }
+.specimenBearing { display: flex; align-items: flex-start; gap: 0.9rem; }
+.specimenBearing > p { max-width: 14rem; margin: 0; color: var(--trail-muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.58rem; text-align: right; }
+.specimenMark { width: 5.3rem; height: 3rem; overflow: visible; }
+.specimenMark path { fill: rgb(49 95 70 / 9%); stroke: rgb(49 95 70 / 45%); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1; }
+.specimenMark circle { fill: rgb(116 79 47 / 45%); }
+.specimenMark text { fill: rgb(49 95 70 / 48%); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 5.5px; font-weight: 740; letter-spacing: 0.8px; }
 .storyMeta { justify-content: flex-start; color: var(--trail-green); font-size: 0.6rem; font-weight: 820; letter-spacing: 0.09em; text-transform: uppercase; }
 .storyMeta span + span::before { margin-right: 1rem; color: rgb(49 95 70 / 35%); content: "·"; }
 
@@ -413,7 +494,10 @@
   .openingScene h1 { font-size: clamp(3.15rem, 14vw, 4.35rem); }
   .storyScene h2,
   .studyScene h2 { font-size: clamp(2.65rem, 12vw, 4rem); }
-  .storyHeader { flex-direction: column; gap: 0.45rem; }
+  .storyHeader { flex-direction: column; gap: 0.65rem; }
+  .specimenBearing { width: 100%; justify-content: space-between; }
+  .specimenBearing > p { max-width: 12rem; text-align: left; }
+  .specimenMark { width: 4.5rem; }
   .storyMeta { flex-wrap: wrap; }
   .whyNow,
   .meaning { grid-template-columns: 1fr; gap: 0.4rem; }
@@ -425,9 +509,15 @@
   .evidenceLayer { width: calc(100% + 2.3rem); margin-inline: -1.15rem; }
   .sceneNumber { top: 1rem; left: 0; font-size: 1rem; }
   .sceneNav { display: none; }
-  .fern { bottom: -8vh; width: 11rem; height: 58vh; opacity: 0.07; }
-  .fernLeft { left: -6.8rem; }
-  .fernRight { right: -7.5rem; opacity: 0.045; }
+  .botanicalProgress {
+    left: -9.5rem;
+    width: 17rem;
+    height: calc(100svh - 3.7rem);
+    min-height: 32rem;
+    opacity: 0.44;
+    mask-image: linear-gradient(90deg, #000 0 52%, transparent 92%);
+  }
+  .botanicalCaption { display: none; }
   .endSummary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .endSummary > div { border-bottom: 1px solid var(--trail-line); }
   .endSummary > div:nth-child(2) { border-right: 0; }
@@ -438,15 +528,17 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .fernLeft,
-  .fernRight { animation: none !important; }
+  .botanicalRachis,
+  .botanicalCurl { stroke-dashoffset: 0 !important; animation: none !important; }
+  .botanicalFrond { opacity: 0.78 !important; transform: none !important; animation: none !important; }
+  .botanicalSpores { opacity: 0.45 !important; animation: none !important; }
   .evidenceLayer,
   .notice:not(:empty) { animation: none; }
   .sceneNav button span { transition: none; }
 }
 
 @media (forced-colors: active) {
-  .fern { display: none; }
+  .botanicalProgress { display: none; }
   .trailHeader { background: Canvas; }
   .storyActions .primaryAction,
   .endActions .primaryAction,
