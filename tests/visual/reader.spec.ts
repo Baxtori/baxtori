@@ -55,18 +55,20 @@ test("the trail turns the same review into a finite field journal", async ({ pag
   const errors = collectBrowserErrors(page);
   await page.goto("/?demo=1&reader=trail");
 
-  const rachis = page.locator("[data-botanical-rachis]");
-  const firstFrond = page.locator("[data-botanical-frond]").first();
+  const reveal = page.locator("[data-botanical-reveal]");
+  const revealInset = () => reveal.evaluate((element) => {
+    const match = getComputedStyle(element).clipPath.match(/inset\(([-\d.]+)/);
+    return Number.parseFloat(match?.[1] ?? "0");
+  });
   await expect(page.locator("[data-botanical-progress]")).toBeVisible();
-  const openingRachisOffset = await rachis.evaluate((element) => Number.parseFloat(getComputedStyle(element).strokeDashoffset));
-  const openingFrondOpacity = await firstFrond.evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity));
+  await expect(page.locator("[data-botanical-plate]")).toHaveAttribute("src", "/art/male-fern-nature-print.png");
+  const openingRevealInset = await revealInset();
   await expect(page.getByRole("heading", { name: "Stay close to the code without living inside it." })).toBeVisible();
   await expect(page.getByRole("button", { name: /First on the trail/ })).toBeVisible();
   await page.getByRole("button", { name: /First on the trail/ }).click();
 
   await expect(page.getByRole("heading", { name: "Reader choices now constrain the next review." })).toBeVisible();
-  await expect.poll(() => rachis.evaluate((element) => Number.parseFloat(getComputedStyle(element).strokeDashoffset))).toBeLessThan(openingRachisOffset);
-  await expect.poll(() => firstFrond.evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity))).toBeGreaterThan(openingFrondOpacity);
+  await expect.poll(revealInset).toBeLessThan(openingRevealInset);
   await page.getByRole("button", { name: "Evidence", exact: true }).first().click();
   await expect(page.getByText("Code evidence 1/3")).toBeVisible();
   await expect(page.locator(".diff-line.is-addition").first()).toBeVisible();
@@ -84,11 +86,10 @@ test("the botanical trail becomes a complete static specimen with reduced motion
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?demo=1&reader=trail");
 
-  const rachis = page.locator("[data-botanical-rachis]");
-  const frond = page.locator("[data-botanical-frond]").first();
-  await expect(rachis).toBeVisible();
-  expect(await rachis.evaluate((element) => Number.parseFloat(getComputedStyle(element).strokeDashoffset))).toBe(0);
-  expect(await frond.evaluate((element) => Number.parseFloat(getComputedStyle(element).opacity))).toBeGreaterThan(0.7);
+  const reveal = page.locator("[data-botanical-reveal]");
+  await expect(page.locator("[data-botanical-progress]")).toBeVisible();
+  expect(await reveal.evaluate((element) => getComputedStyle(element).clipPath)).toMatch(/^inset\(0(px|%|\b)/);
+  expect(await page.locator("[data-botanical-plate]").evaluate((element) => getComputedStyle(element).transform)).toBe("none");
 });
 
 test("memory makes a concern legible across real editions", async ({ page }, testInfo) => {

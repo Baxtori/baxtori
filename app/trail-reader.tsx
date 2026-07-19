@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type { ContinueItem } from "@/lib/continue-queue";
 import type { ReaderTrail, TrailStory } from "@/lib/reader-trail";
-import { BotanicalProgress } from "./botanical-progress";
+import { BotanicalDetail, BotanicalProgress } from "./botanical-progress";
 import styles from "./trail-reader.module.css";
 
 type StoryDecisionState = {
@@ -49,21 +49,6 @@ function evidenceBearing(story: TrailStory) {
   const evidence = story.codeEvidence?.[0];
   if (!evidence) return null;
   return `${evidence.path}:${evidence.startLine}–${evidence.endLine}`;
-}
-
-function SpecimenMark({ stage }: { stage: number }) {
-  const leafCount = Math.min(4, Math.max(1, stage));
-  return (
-    <svg aria-hidden="true" className={styles.specimenMark} role="presentation" viewBox="0 0 92 52">
-      <path d="M12 45 C 28 39 34 29 42 8" />
-      {leafCount >= 1 && <path d="M28 35 C 16 31 11 24 10 18 C 21 18 29 23 28 35 Z" />}
-      {leafCount >= 2 && <path d="M33 29 C 45 25 51 17 51 11 C 41 12 34 18 33 29 Z" />}
-      {leafCount >= 3 && <path d="M37 21 C 28 17 25 11 26 6 C 34 8 39 13 37 21 Z" />}
-      {leafCount >= 4 && <circle cx="44" cy="6" r="3" />}
-      <text x="58" y="25">SP.{String(stage).padStart(2, "0")}</text>
-      <text x="58" y="35">OBS.</text>
-    </svg>
-  );
 }
 
 export function TrailReader({
@@ -256,7 +241,7 @@ export function TrailReader({
                 </div>
                 <div className={styles.specimenBearing}>
                   <p>{scene.story.repository ?? scene.item.repository}</p>
-                  <SpecimenMark stage={index} />
+                  <BotanicalDetail stage={index} />
                 </div>
               </header>
               <h2>{scene.story.title}</h2>

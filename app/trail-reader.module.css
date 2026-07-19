@@ -87,117 +87,117 @@
   position: fixed;
   z-index: 1;
   bottom: 0;
-  left: max(-5rem, calc((100vw - 76rem) / 2 - 14rem));
-  width: clamp(25rem, 35vw, 38rem);
+  left: max(-7rem, calc((100vw - 76rem) / 2 - 11rem));
+  width: clamp(28rem, 38vw, 42rem);
   height: calc(100svh - 3.7rem);
   min-height: 38rem;
+  margin: 0;
+  overflow: hidden;
   pointer-events: none;
   mix-blend-mode: multiply;
+  mask-image: linear-gradient(90deg, #000 0 72%, rgb(0 0 0 / 88%) 82%, transparent 99%);
+}
+
+.botanicalPlateGhost,
+.botanicalPlateReveal,
+.botanicalPlate {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.botanicalPlateGhost,
+.botanicalPlate {
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.botanicalPlateGhost {
+  opacity: 0.035;
+  filter: grayscale(1) sepia(0.15) contrast(0.85);
+}
+
+.botanicalPlateReveal {
   overflow: hidden;
+  clip-path: inset(0);
 }
 
-.botanicalProgress svg { width: 100%; height: 100%; overflow: visible; }
-
-.botanicalGround {
-  fill: rgb(49 95 70 / 14%);
-  stroke: rgb(49 95 70 / 22%);
-  stroke-linecap: round;
-  stroke-width: 1.2;
-}
-
-.botanicalRachisGhost,
-.botanicalCurlGhost {
-  fill: none;
-  stroke: rgb(49 95 70 / 3.5%);
-  stroke-linecap: round;
-  stroke-width: 3;
-}
-
-.botanicalRachis,
-.botanicalCurl {
-  fill: none;
-  stroke: rgb(38 87 59 / 72%);
-  stroke-dasharray: 1;
-  stroke-dashoffset: 0;
-  stroke-linecap: round;
-  stroke-width: 3.2;
-}
-
-.botanicalFrond {
-  fill: rgb(49 95 70 / 25%);
-  stroke: rgb(38 87 59 / 52%);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 0.8;
-  transform-box: fill-box;
-  transform-origin: left center;
-}
-
-.frondStem { fill: none; stroke-width: 1.25; }
-
-.botanicalSpores {
-  fill: rgb(116 79 47 / 38%);
-  opacity: 0.55;
+.botanicalPlate {
+  opacity: 0.52;
+  filter: sepia(0.2) saturate(0.66) contrast(0.92);
+  transform-origin: center bottom;
 }
 
 .botanicalCaption {
-  fill: rgb(49 95 70 / 48%);
+  position: absolute;
+  right: 3.8rem;
+  bottom: 1rem;
+  display: grid;
+  gap: 0.18rem;
+  color: rgb(49 95 70 / 54%);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 7px;
-  font-weight: 720;
-  letter-spacing: 1.4px;
+  font-size: 0.52rem;
+  font-weight: 740;
+  letter-spacing: 0.12em;
+  line-height: 1.35;
+  text-align: right;
+  text-transform: uppercase;
 }
 
-.botanicalCaption text + text { font-size: 5.5px; letter-spacing: 1px; }
+.botanicalCaption em {
+  font-family: var(--serif);
+  font-size: 0.72rem;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.botanicalCaption small { color: rgb(79 92 82 / 42%); font-size: 0.44rem; }
 
 @supports (animation-timeline: scroll()) {
-  .botanicalRachis {
-    stroke-dashoffset: 1;
-    animation: botanical-draw 1ms linear both;
+  .botanicalPlateReveal {
+    clip-path: inset(100% 0 0);
+    animation: botanical-plate-reveal 1ms linear both;
     animation-timeline: scroll(root block);
-    animation-range: 2% 86%;
+    animation-range: 2% 94%;
   }
 
-  .botanicalCurl {
-    stroke-dashoffset: 1;
-    animation: botanical-draw 1ms linear both;
+  .botanicalPlate {
+    animation: botanical-plate-ink 1ms linear both;
     animation-timeline: scroll(root block);
-    animation-range: 72% 96%;
-  }
-
-  .botanicalFrond {
-    opacity: 0;
-    transform: scaleX(0.04) rotate(-18deg);
-    animation: botanical-unfurl 1ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
-    animation-timeline: scroll(root block);
-    animation-range: var(--frond-start) var(--frond-end);
-  }
-
-  .botanicalSpores {
-    opacity: 0;
-    animation: botanical-spores 1ms linear both;
-    animation-timeline: scroll(root block);
-    animation-range: 82% 98%;
+    animation-range: 2% 94%;
   }
 }
 
 @supports not (animation-timeline: scroll()) {
-  .botanicalRachis,
-  .botanicalCurl { stroke-dashoffset: 1; }
-  .botanicalFrond { opacity: 0; transform: scaleX(0.04) rotate(-18deg); }
-  .botanicalSpores { opacity: 0; }
+  .botanicalPlateReveal { clip-path: inset(100% 0 0); }
+  .botanicalPlate { transform: translateY(7%) scale(0.94); }
 }
 
-@keyframes botanical-draw { to { stroke-dashoffset: 0; } }
-@keyframes botanical-unfurl { to { opacity: 1; transform: scaleX(1) rotate(0deg); } }
-@keyframes botanical-spores { to { opacity: 0.55; } }
+@keyframes botanical-plate-reveal { to { clip-path: inset(0); } }
+@keyframes botanical-plate-ink {
+  from { filter: sepia(0.32) saturate(0.5) contrast(0.86); transform: translateY(7%) scale(0.94); }
+  to { filter: sepia(0.14) saturate(0.74) contrast(0.94); transform: translateY(0) scale(1); }
+}
 
 .journal {
   position: relative;
   z-index: 2;
-  width: min(100%, 54rem);
+  width: min(100%, 72rem);
   margin: 0 auto;
-  padding: 4.2rem clamp(1.1rem, 4vw, 3rem) 18vh;
+  padding: 4.2rem clamp(1.1rem, 3vw, 2.5rem) 18vh clamp(18rem, 25vw, 22rem);
+}
+
+.journal::before {
+  position: absolute;
+  top: 6rem;
+  bottom: 8rem;
+  left: calc(clamp(18rem, 25vw, 22rem) - 2.2rem);
+  width: 1px;
+  background: linear-gradient(transparent, rgb(49 95 70 / 13%) 8rem, rgb(49 95 70 / 13%) calc(100% - 8rem), transparent);
+  content: "";
 }
 
 .scene {
@@ -305,10 +305,29 @@
 .storyHeader { align-items: flex-start; margin-bottom: clamp(2rem, 5vh, 3.8rem); }
 .specimenBearing { display: flex; align-items: flex-start; gap: 0.9rem; }
 .specimenBearing > p { max-width: 14rem; margin: 0; color: var(--trail-muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.58rem; text-align: right; }
-.specimenMark { width: 5.3rem; height: 3rem; overflow: visible; }
-.specimenMark path { fill: rgb(49 95 70 / 9%); stroke: rgb(49 95 70 / 45%); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1; }
-.specimenMark circle { fill: rgb(116 79 47 / 45%); }
-.specimenMark text { fill: rgb(49 95 70 / 48%); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 5.5px; font-weight: 740; letter-spacing: 0.8px; }
+.botanicalDetail { width: 6.6rem; margin: 0; mix-blend-mode: multiply; }
+.botanicalDetail > div { height: 3.5rem; overflow: hidden; border-bottom: 1px solid rgb(49 95 70 / 28%); }
+.botanicalDetail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.54;
+  filter: sepia(0.12) saturate(0.72) contrast(0.92);
+}
+.botanicalDetail figcaption {
+  display: grid;
+  gap: 0.1rem;
+  padding-top: 0.35rem;
+  color: rgb(49 95 70 / 52%);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.44rem;
+  font-weight: 760;
+  letter-spacing: 0.1em;
+  line-height: 1.25;
+  text-align: right;
+  text-transform: uppercase;
+}
+.botanicalDetail figcaption em { font-family: var(--serif); font-size: 0.58rem; font-style: italic; font-weight: 500; letter-spacing: 0; text-transform: none; }
 .storyMeta { justify-content: flex-start; color: var(--trail-green); font-size: 0.6rem; font-weight: 820; letter-spacing: 0.09em; text-transform: uppercase; }
 .storyMeta span + span::before { margin-right: 1rem; color: rgb(49 95 70 / 35%); content: "·"; }
 
@@ -482,6 +501,16 @@
 .notice:not(:empty) { animation: notice-show 3.4s both; }
 @keyframes notice-show { 0%, 100% { opacity: 0; transform: translateY(0.5rem); } 12%, 82% { opacity: 1; transform: translateY(0); } }
 
+@media (max-width: 1080px) {
+  .journal { width: min(100%, 54rem); padding-left: clamp(1.1rem, 4vw, 3rem); }
+  .journal::before { display: none; }
+  .botanicalProgress {
+    left: max(-12rem, calc((100vw - 54rem) / 2 - 12rem));
+    width: clamp(24rem, 36vw, 31rem);
+    opacity: 0.72;
+  }
+}
+
 @media (max-width: 760px) {
   :global(html:has(.trailShell)) { scroll-padding-top: 3.7rem; }
   .trailHeader { grid-template-columns: 1fr auto; min-height: 3.7rem; padding-inline: 0.9rem; }
@@ -497,7 +526,7 @@
   .storyHeader { flex-direction: column; gap: 0.65rem; }
   .specimenBearing { width: 100%; justify-content: space-between; }
   .specimenBearing > p { max-width: 12rem; text-align: left; }
-  .specimenMark { width: 4.5rem; }
+  .botanicalDetail { width: 5.3rem; }
   .storyMeta { flex-wrap: wrap; }
   .whyNow,
   .meaning { grid-template-columns: 1fr; gap: 0.4rem; }
@@ -510,12 +539,12 @@
   .sceneNumber { top: 1rem; left: 0; font-size: 1rem; }
   .sceneNav { display: none; }
   .botanicalProgress {
-    left: -9.5rem;
-    width: 17rem;
+    left: -12.5rem;
+    width: 24rem;
     height: calc(100svh - 3.7rem);
     min-height: 32rem;
-    opacity: 0.44;
-    mask-image: linear-gradient(90deg, #000 0 52%, transparent 92%);
+    opacity: 0.42;
+    mask-image: linear-gradient(90deg, #000 0 48%, transparent 90%);
   }
   .botanicalCaption { display: none; }
   .endSummary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -528,10 +557,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .botanicalRachis,
-  .botanicalCurl { stroke-dashoffset: 0 !important; animation: none !important; }
-  .botanicalFrond { opacity: 0.78 !important; transform: none !important; animation: none !important; }
-  .botanicalSpores { opacity: 0.45 !important; animation: none !important; }
+  .botanicalPlateReveal { clip-path: inset(0) !important; animation: none !important; }
+  .botanicalPlate { filter: sepia(0.14) saturate(0.74) contrast(0.94) !important; transform: none !important; animation: none !important; }
   .evidenceLayer,
   .notice:not(:empty) { animation: none; }
   .sceneNav button span { transition: none; }
