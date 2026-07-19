@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import archivedEdition20260710 from "@/data/editions/2026-07-10.json";
+import archivedEdition20260712 from "@/data/editions/2026-07-12.json";
 import archivedEdition20260713 from "@/data/editions/2026-07-13.json";
 import latestEdition from "@/data/latest.json";
 import ourchivalMap from "@/data/maps/ourchival.json";
@@ -12,6 +14,7 @@ import { mapWithConcurrency } from "@/lib/async-pool";
 import type { EditionSelectionRecord } from "@/lib/edition-ledger";
 import type { HistoricalEdition } from "@/lib/edition-history";
 import { buildContinueQueue, planContinueQueue, type ContinueItem, type ContinueItemKind } from "@/lib/continue-queue";
+import { buildReaderTrail, type TrailStory } from "@/lib/reader-trail";
 import { focusTargetFor, planStoryOpening, shouldClearReviewMarker, type FocusTarget } from "@/lib/reader-navigation";
 import { parseStoredQuestionRecords, type ThreadQuestionRecord } from "@/lib/story-questions";
 import {
@@ -36,9 +39,11 @@ import repositoryModeStyles from "./repository-modes.module.css";
 import { RepositoryMaps } from "./repository-maps";
 import { type QuestionDisposition, type RepoArea, type RepoMapData, type RepoQuestion, type UnderstandingState } from "./repo-map";
 import { type CodeEvidence, StoryCode } from "./story-code";
+import { TrailReader } from "./trail-reader";
 
 type Tone = "blue" | "green" | "rust";
 type View = "briefing" | "history" | "map" | "timeline" | "repositories";
+type ReaderMode = "classic" | "trail";
 
 type Story = {
   id: string;
@@ -245,7 +250,11 @@ const DEMO_STORIES: Story[] = [
 
 const EDITION = latestEdition as Edition;
 const STORIES: Story[] = EDITION.stories.length ? EDITION.stories : DEMO_STORIES;
-const ARCHIVED_EDITIONS = [archivedEdition20260713 as ArchiveEdition];
+const ARCHIVED_EDITIONS = [
+  archivedEdition20260713,
+  archivedEdition20260712,
+  archivedEdition20260710,
+] as ArchiveEdition[];
 const HISTORY_EDITIONS = [EDITION, ...ARCHIVED_EDITIONS] as unknown as readonly ArchiveEdition[];
 const HISTORY_EDITION_COUNT = new Set((HISTORY_EDITIONS as readonly HistoricalEdition[]).map((edition) => edition.id)).size;
 const REPOSITORY_MAP = repositoryMap as RepoMapData;
@@ -301,6 +310,7 @@ export default function Home() {
   const [demoMode, setDemoMode] = useState(false);
   const [authMessage, setAuthMessage] = useState("");
   const [view, setView] = useState<View>("briefing");
+  const [readerMode, setReaderMode] = useState<ReaderMode>("classic");
   const [states, setStates] = useState<Record<string, StoryState>>({});
   const [hideUnderstood, setHideUnderstood] = useState(false);
   const [mapStates, setMapStates] = useState<Record<string, UnderstandingState>>({});
@@ -345,6 +355,7 @@ export default function Home() {
     const result = search.get("github");
     queueMicrotask(() => {
       if (search.get("demo") === "1") setDemoMode(true);
+      if (search.get("reader") === "trail") setReaderMode("trail");
       if (result === "connected") setAuthMessage("GitHub connected. Now choose the repositories that matter.");
       else if (result) setAuthMessage("GitHub sign-in could not be completed. Please try again.");
     });
@@ -670,6 +681,15 @@ export default function Home() {
   });
   const continuePlan = planContinueQueue(continueQueue, continueBudget);
   const nextContinueItem = continuePlan.items[0];
+  const trailSession = buildReaderTrail({
+    budgetMinutes: continueBudget,
+    editionId: EDITION.id,
+    items: continuePlan.items,
+    plannedMinutes: continuePlan.plannedMinutes,
+    quietRepositories: EDITION.quietRepositories,
+    stories: STORIES,
+    totalItemCount: continueQueue.length,
+  });
 
   const selectedRepositoryData = sortRepositoriesByMode(repositories.filter((repository) =>
     selectedRepositories.includes(repository.fullName),
@@ -971,7 +991,17 @@ export default function Home() {
     setActivity({});
   };
 
+  const setReaderExperience = (mode: ReaderMode) => {
+    setReaderMode(mode);
+    const url = new URL(window.location.href);
+    if (mode === "trail") url.searchParams.set("reader", "trail");
+    else url.searchParams.delete("reader");
+    url.searchParams.delete("item");
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  };
+
   useEffect(() => {
+    if (readerMode === "trail") return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setShowHelp(false);
@@ -1009,7 +1039,7 @@ export default function Home() {
     return () => window.removeEventListener("keydown", onKeyDown);
     // The handler intentionally rebinds when the reading queue or story state changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusedStoryId, states, visibleStories]);
+  }, [focusedStoryId, readerMode, states, visibleStories]);
 
   const renderSourceBanner = () => {
     if (demoMode) {
@@ -1077,6 +1107,65 @@ export default function Home() {
     );
   }
 
+  if (hasHydrated && readerMode === "trail" && view === "briefing") {
+    const actualStory = (trailStory: TrailStory) => STORIES.find((story) => story.id === trailStory.id);
+    const renderTrailEvidence = (trailStory: TrailStory) => {
+      const story = actualStory(trailStory);
+      if (!story?.repository || !story.codeEvidence?.length) {
+        return <div className="code-state">This published note does not include an exact excerpt.</div>;
+      }
+      if (demoMode && story.repository !== "teamleaderleo/baxtori") {
+        return <div className="code-state">Sign in to inspect this repository&apos;s exact comparison. The published summary remains available in the trail.</div>;
+      }
+      return (
+        <StoryCode
+          demoMode={demoMode}
+          defaultQuestionLens={REVIEW_POLICY.defaultLens}
+          editionId={EDITION.id}
+          evidence={story.codeEvidence}
+          feedbackConfigured={feedbackConfigured}
+          onQuestionSaved={saveThreadQuestion}
+          onQuestionUpdated={updateThreadQuestion}
+          questionLenses={REVIEW_POLICY.lenses}
+          questions={threadQuestions}
+          repository={story.repository}
+          storyId={story.id}
+          storyTitle={story.title}
+          topicId={story.topicId}
+          topicThread={topicThreadFor(topicThreads, story)}
+        />
+      );
+    };
+
+    return (
+      <TrailReader
+        edition={EDITION}
+        notice={notice}
+        onExit={() => setReaderExperience("classic")}
+        onOpenContinueItem={openContinueItem}
+        onOpenMemory={() => setView("history")}
+        onOpenSystem={() => setView("map")}
+        onUnderstand={(trailStory) => {
+          const story = actualStory(trailStory);
+          if (story) markUnderstood(story);
+        }}
+        onWatch={(trailStory) => {
+          const story = actualStory(trailStory);
+          if (story) void toggleWatch(story);
+        }}
+        renderEvidence={renderTrailEvidence}
+        session={trailSession}
+        sourceLabel={demoMode ? "published demo" : `${selectedRepositories.length} ${selectedRepositories.length === 1 ? "repository" : "repositories"}`}
+        storyState={(trailStory) => {
+          const story = actualStory(trailStory);
+          return story
+            ? { understood: storyState(story.id).understood, watching: isStoryWatching(story) }
+            : { understood: false, watching: false };
+        }}
+      />
+    );
+  }
+
   return (
     <div className={`app-shell ${focusMode ? "is-focus-mode" : ""}`}>
       <a className="skip-link" href="#content">Skip to the backstory</a>
@@ -1130,6 +1219,7 @@ export default function Home() {
                     : `Current edition · ${formatEditionDate(EDITION.periodStart)}–${formatEditionDate(EDITION.periodEnd)}`}
             </span>
             <div>
+              {view === "briefing" && <button onClick={() => setReaderExperience("trail")} type="button">Trail reader</button>}
               <button aria-pressed={focusMode} onClick={() => setFocusMode((current) => !current)} type="button">
                 {focusMode ? "Exit focus" : "Focus"}
               </button>

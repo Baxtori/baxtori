@@ -9,9 +9,9 @@ function collectBrowserErrors(page: Page) {
   return errors;
 }
 
-async function capture(page: Page, testInfo: TestInfo, name: string) {
+async function capture(page: Page, testInfo: TestInfo, name: string, fullPage = true) {
   const path = testInfo.outputPath(`${name}.png`);
-  await page.screenshot({ animations: "disabled", fullPage: true, path });
+  await page.screenshot({ animations: "disabled", fullPage, path });
   await testInfo.attach(name, { contentType: "image/png", path });
 }
 
@@ -42,6 +42,27 @@ test("the published demo exposes a calm briefing and exact evidence", async ({ p
   await page.getByRole("button", { name: "Open backstory" }).first().click();
   await expect(page.getByText("Code evidence 1/3")).toBeVisible();
   await expect(page.locator(".diff-line.is-addition").first()).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("the trail turns the same review into a finite field journal", async ({ page }, testInfo) => {
+  const errors = collectBrowserErrors(page);
+  await page.goto("/?demo=1&reader=trail");
+
+  await expect(page.getByRole("heading", { name: "Stay close to the code without living inside it." })).toBeVisible();
+  await expect(page.getByRole("button", { name: /First on the trail/ })).toBeVisible();
+  await page.getByRole("button", { name: /First on the trail/ }).click();
+
+  await expect(page.getByRole("heading", { name: "Reader choices now constrain the next review." })).toBeVisible();
+  await page.getByRole("button", { name: "Evidence", exact: true }).first().click();
+  await expect(page.getByText("Code evidence 1/3")).toBeVisible();
+  await expect(page.locator(".diff-line.is-addition").first()).toBeVisible();
+  await capture(page, testInfo, "field-journal-trail");
+
+  await page.locator("#trail-end").scrollIntoViewIfNeeded();
+  await expect(page.getByRole("heading", { name: "You reached the end of this walk." })).toBeVisible();
+  await expect(page.getByText("Quiet repositories")).toBeVisible();
+  await capture(page, testInfo, "field-journal-clearing", false);
   expect(errors).toEqual([]);
 });
 
