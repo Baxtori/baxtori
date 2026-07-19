@@ -43,16 +43,33 @@ export async function PUT(request: Request) {
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to save your reading state." }, { status: 401 }), setCookie);
   if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ configured: false }, { status: 503 }), setCookie);
 
+  let payload;
+  let baseRevision: number | undefined;
   try {
     const raw = await request.text();
     if (raw.length > 200_000) throw new Error("Reader state is too large.");
-    const payload = parseReaderState(JSON.parse(raw));
-    const saved = await saveReaderFeedback(String(session.user.id), session.user.login, payload);
-    return withSessionCookie(Response.json({ configured: true, ...saved }, { headers: { "Cache-Control": "private, no-store" } }), setCookie);
+    const body = JSON.parse(raw) as { baseRevision?: unknown };
+    payload = parseReaderState(body);
+    baseRevision = typeof body.baseRevision === "number" && Number.isSafeInteger(body.baseRevision) && body.baseRevision >= 0
+      ? body.baseRevision
+      : undefined;
   } catch (error) {
     return withSessionCookie(Response.json(
       { error: error instanceof Error ? error.message : "Invalid reader state." },
       { status: 400 },
     ), setCookie);
+  }
+
+  try {
+    const saved = await saveReaderFeedback(String(session.user.id), session.user.login, payload, baseRevision);
+    if (saved.conflict) {
+      return withSessionCookie(Response.json(
+        { conflict: true, revision: saved.revision, updatedAt: saved.updatedAt },
+        { headers: { "Cache-Control": "private, no-store" }, status: 409 },
+      ), setCookie);
+    }
+    return withSessionCookie(Response.json({ configured: true, ...saved }, { headers: { "Cache-Control": "private, no-store" } }), setCookie);
+  } catch {
+    return withSessionCookie(Response.json({ error: "Your reading state could not be saved." }, { status: 502 }), setCookie);
   }
 }

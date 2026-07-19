@@ -8,15 +8,8 @@ import {
   parseCookies,
   sealSession,
   STATE_COOKIE,
+  type TokenResponse,
 } from "@/lib/github-auth";
-
-type TokenResponse = {
-  access_token?: string;
-  error?: string;
-  expires_in?: number;
-  refresh_token?: string;
-  refresh_token_expires_in?: number;
-};
 
 type GitHubProfile = {
   avatar_url: string;

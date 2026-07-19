@@ -14,11 +14,16 @@ import {
 export default defineSchema({
   readerStates: defineTable({
     githubLogin: v.string(),
+    // Lowercased login for indexed case-insensitive lookups. Optional because
+    // rows written before the index existed lack it; saveReaderState backfills.
+    githubLoginLower: v.optional(v.string()),
     payload: readerStateValidator,
     revision: v.number(),
     updatedAt: v.number(),
     userId: v.string(),
-  }).index("by_user", ["userId"]),
+  })
+    .index("by_user", ["userId"])
+    .index("by_login_lower", ["githubLoginLower"]),
   repositoryInventoryChunks: defineTable({
     chunkIndex: v.number(),
     githubLogin: v.string(),
@@ -33,6 +38,7 @@ export default defineSchema({
   repositoryInventorySyncs: defineTable({
     completedRevision: v.number(),
     githubLogin: v.string(),
+    githubLoginLower: v.optional(v.string()),
     pendingRevision: v.union(v.number(), v.null()),
     repositoryCount: v.number(),
     truncated: v.boolean(),
@@ -40,7 +46,8 @@ export default defineSchema({
     userId: v.string(),
   })
     .index("by_user", ["userId"])
-    .index("by_login", ["githubLogin"]),
+    .index("by_login", ["githubLogin"])
+    .index("by_login_lower", ["githubLoginLower"]),
   topicThreads: defineTable({
     areaId: v.optional(v.string()),
     createdAt: v.number(),

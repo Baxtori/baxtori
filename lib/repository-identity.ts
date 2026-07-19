@@ -5,8 +5,17 @@ const REPOSITORY_ALIASES: Readonly<Record<string, string>> = {
   [LEGACY_BAXTORI_REPOSITORY]: BAXTORI_REPOSITORY,
 };
 
+const REPOSITORY_NAME_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+
 export function canonicalRepository(repository: string) {
   return REPOSITORY_ALIASES[repository] ?? repository;
+}
+
+export function isValidRepositoryName(repository: string) {
+  if (!REPOSITORY_NAME_PATTERN.test(repository)) return false;
+  // "." and ".." pass the character class but would let a crafted repository
+  // name traverse out of /repos/{owner}/{name} when spliced into an API URL.
+  return repository.split("/").every((segment) => segment !== "." && segment !== "..");
 }
 
 export function canonicalRepositoryStateKey(key: string) {

@@ -7,17 +7,23 @@ export async function POST(request: Request) {
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to save a question." }, { status: 401 }), setCookie);
   if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ error: "Account questions are not configured." }, { status: 503 }), setCookie);
 
+  let question;
   try {
     const raw = await request.text();
     if (raw.length > 12_000) throw new Error("Question data is too large.");
-    const question = parseThreadQuestion(JSON.parse(raw));
-    const saved = await createQuestionFeedback(String(session.user.id), question);
-    return withSessionCookie(Response.json({ question: saved }, { status: 201 }), setCookie);
+    question = parseThreadQuestion(JSON.parse(raw));
   } catch (error) {
     return withSessionCookie(Response.json(
       { error: error instanceof Error ? error.message : "Invalid question." },
       { status: 400 },
     ), setCookie);
+  }
+
+  try {
+    const saved = await createQuestionFeedback(String(session.user.id), question);
+    return withSessionCookie(Response.json({ question: saved }, { status: 201 }), setCookie);
+  } catch {
+    return withSessionCookie(Response.json({ error: "The question could not be saved." }, { status: 502 }), setCookie);
   }
 }
 
@@ -26,16 +32,22 @@ export async function PATCH(request: Request) {
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to update a question." }, { status: 401 }), setCookie);
   if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ error: "Account questions are not configured." }, { status: 503 }), setCookie);
 
+  let update;
   try {
     const raw = await request.text();
     if (raw.length > 6_000) throw new Error("Question update is too large.");
-    const update = parseThreadQuestionUpdate(JSON.parse(raw));
-    const saved = await updateQuestionFeedback(String(session.user.id), update);
-    return withSessionCookie(Response.json({ question: saved }), setCookie);
+    update = parseThreadQuestionUpdate(JSON.parse(raw));
   } catch (error) {
     return withSessionCookie(Response.json(
       { error: error instanceof Error ? error.message : "Invalid question update." },
       { status: 400 },
     ), setCookie);
+  }
+
+  try {
+    const saved = await updateQuestionFeedback(String(session.user.id), update);
+    return withSessionCookie(Response.json({ question: saved }), setCookie);
+  } catch {
+    return withSessionCookie(Response.json({ error: "The question could not be updated." }, { status: 502 }), setCookie);
   }
 }
