@@ -5,6 +5,7 @@ import {
   questionReviewStateValidator,
   questionStatusValidator,
   readerStateValidator,
+  repositoryActivityRecordValidator,
   repositoryInventoryEntryValidator,
   reviewStatusValidator,
   topicOriginValidator,
@@ -19,6 +20,36 @@ export default defineSchema({
     updatedAt: v.number(),
     userId: v.string(),
   }).index("by_user", ["userId"]),
+  repositoryActivityChunks: defineTable({
+    chunkIndex: v.number(),
+    githubLogin: v.string(),
+    records: v.array(repositoryActivityRecordValidator),
+    revision: v.number(),
+    updatedAt: v.number(),
+    userId: v.string(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_revision", ["userId", "revision"])
+    .index("by_user_revision_chunk", ["userId", "revision", "chunkIndex"]),
+  repositoryActivitySyncs: defineTable({
+    completedRevision: v.number(),
+    deferredCount: v.number(),
+    githubLogin: v.string(),
+    halted: v.boolean(),
+    pendingRevision: v.union(v.number(), v.null()),
+    rateLimitReason: v.union(v.string(), v.null()),
+    rateLimitRemaining: v.union(v.number(), v.null()),
+    rateLimitResetAt: v.union(v.string(), v.null()),
+    rateLimitRetryAt: v.union(v.string(), v.null()),
+    repositoryCount: v.number(),
+    requestBudget: v.number(),
+    requestCount: v.number(),
+    since: v.string(),
+    updatedAt: v.number(),
+    userId: v.string(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_login", ["githubLogin"]),
   repositoryInventoryChunks: defineTable({
     chunkIndex: v.number(),
     githubLogin: v.string(),

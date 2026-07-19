@@ -17,6 +17,32 @@ export const repositoryInventoryEntryValidator = v.object({
   updatedAt: v.string(),
 });
 
+export const repositoryActivityCommitValidator = v.object({
+  author: v.string(),
+  date: v.union(v.string(), v.null()),
+  message: v.string(),
+  sha: v.string(),
+  url: v.string(),
+});
+
+export const repositoryActivityRecordValidator = v.object({
+  commits: v.array(repositoryActivityCommitValidator),
+  defaultBranch: v.string(),
+  error: v.union(v.string(), v.null()),
+  mode: repositoryModeValidator,
+  reason: v.string(),
+  repository: v.string(),
+  status: v.union(
+    v.literal("active"),
+    v.literal("deferred"),
+    v.literal("inaccessible"),
+    v.literal("quiet"),
+    v.literal("rate-limited"),
+    v.literal("unavailable"),
+  ),
+  truncated: v.boolean(),
+});
+
 export const storyStateValidator = v.object({
   expanded: v.boolean(),
   locked: v.boolean(),

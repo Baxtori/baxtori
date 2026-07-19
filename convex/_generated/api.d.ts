@@ -9,6 +9,7 @@
  */
 
 import type * as feedback from "../feedback.js";
+import type * as repositoryActivity from "../repositoryActivity.js";
 import type * as repositoryInventory from "../repositoryInventory.js";
 import type * as validators from "../validators.js";
 
@@ -20,6 +21,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   feedback: typeof feedback;
+  repositoryActivity: typeof repositoryActivity;
   repositoryInventory: typeof repositoryInventory;
   validators: typeof validators;
 }>;

@@ -18,17 +18,39 @@ function normalizedMode(repositoryModes, repository, archived = false) {
   return archived ? "muted" : "automatic";
 }
 
+function activityFields(activity) {
+  if (!activity) {
+    return {
+      activityCandidate: false,
+      activityCommitCount: 0,
+      activityReason: "No completed activity snapshot is available for this repository.",
+      activityStatus: "unknown",
+      activityTruncated: false,
+    };
+  }
+  return {
+    activityCandidate: activity.status === "active",
+    activityCommitCount: activity.commits?.length ?? 0,
+    activityReason: activity.reason,
+    activityStatus: activity.status,
+    activityTruncated: Boolean(activity.truncated),
+  };
+}
+
 export function buildAuthorizedSourcePlan({
   configuredSources,
-  repositoryInventory = [],
   inventoryAvailable = repositoryInventory.length > 0,
+  repositoryActivity = [],
+  repositoryInventory = [],
   repositoryModes = {},
   selectedRepositories = null,
 }) {
   if (!Array.isArray(configuredSources)) throw new Error("configuredSources must be an array.");
+  if (!Array.isArray(repositoryActivity)) throw new Error("repositoryActivity must be an array.");
   if (!Array.isArray(repositoryInventory)) throw new Error("repositoryInventory must be an array.");
 
   const configuredByRepository = new Map(configuredSources.map((source) => [canonicalRepository(source.fullName), source]));
+  const activityByRepository = new Map(repositoryActivity.map((entry) => [canonicalRepository(entry.repository), entry]));
   const inventoryByRepository = new Map(repositoryInventory.map((entry) => {
     const fullName = canonicalRepository(entry.fullName);
     return [fullName, { ...entry, fullName }];
@@ -47,9 +69,13 @@ export function buildAuthorizedSourcePlan({
   for (const entry of inventoryByRepository.values()) {
     const mode = normalizedMode(repositoryModes, entry.fullName, entry.archived);
     const configuredSource = configuredByRepository.get(entry.fullName) ?? null;
+    const activity = activityByRepository.get(entry.fullName) ?? null;
     const eligible = requestedSet.has(entry.fullName) && mode !== "muted";
+    const activitySummary = activityFields(activity);
     if (!eligible) {
       entries.push({
+        ...activitySummary,
+        activityCandidate: false,
         archived: entry.archived,
         collect: false,
         defaultBranch: entry.defaultBranch,
@@ -67,6 +93,7 @@ export function buildAuthorizedSourcePlan({
     }
     if (configuredSource) {
       entries.push({
+        ...activitySummary,
         archived: entry.archived,
         collect: true,
         defaultBranch: entry.defaultBranch,
@@ -81,6 +108,7 @@ export function buildAuthorizedSourcePlan({
       continue;
     }
     entries.push({
+      ...activitySummary,
       archived: entry.archived,
       collect: false,
       defaultBranch: entry.defaultBranch,
@@ -89,7 +117,9 @@ export function buildAuthorizedSourcePlan({
       mode,
       private: entry.private,
       pushedAt: entry.pushedAt,
-      reason: "Authorized metadata is available, but no source cache can yet provide exact code evidence.",
+      reason: activity?.status === "active"
+        ? "Recent commit metadata was detected, but no source cache can yet provide exact code evidence."
+        : "Authorized metadata is available, but no source cache can yet provide exact code evidence.",
       sourceStatus: "metadata-only",
     });
   }
@@ -98,8 +128,10 @@ export function buildAuthorizedSourcePlan({
     if (inventoryByRepository.has(repository)) continue;
     const configuredSource = configuredByRepository.get(repository) ?? null;
     const mode = normalizedMode(repositoryModes, repository);
+    const activitySummary = activityFields(activityByRepository.get(repository) ?? null);
     const canUseLegacyCache = !inventoryIsCurrent && configuredSource && mode !== "muted";
     entries.push({
+      ...activitySummary,
       archived: false,
       collect: Boolean(canUseLegacyCache),
       defaultBranch: configuredSource?.branch ?? null,
@@ -120,6 +152,7 @@ export function buildAuthorizedSourcePlan({
   const modeRank = { pinned: 0, automatic: 1, muted: 2 };
   entries.sort((left, right) =>
     modeRank[left.mode] - modeRank[right.mode]
+    || Number(right.activityCandidate) - Number(left.activityCandidate)
     || STATUS_ORDER.get(left.sourceStatus) - STATUS_ORDER.get(right.sourceStatus)
     || left.fullName.localeCompare(right.fullName));
 
@@ -130,8 +163,9 @@ export function buildAuthorizedSourcePlan({
     .map((entry) => entry.fullName);
   const counts = entries.reduce((result, entry) => {
     result[entry.sourceStatus] += 1;
+    if (entry.activityCandidate && entry.sourceStatus === "metadata-only") result["activity-candidate"] += 1;
     return result;
-  }, { "authorization-missing": 0, "configured-cache": 0, "metadata-only": 0, muted: 0 });
+  }, { "activity-candidate": 0, "authorization-missing": 0, "configured-cache": 0, "metadata-only": 0, muted: 0 });
 
   return {
     counts,

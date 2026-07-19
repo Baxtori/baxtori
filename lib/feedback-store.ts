@@ -2,9 +2,11 @@ import { ConvexHttpClient } from "convex/browser";
 import type { Id } from "@/convex/_generated/dataModel";
 import { api } from "@/convex/_generated/api";
 import type { ReaderStatePayload } from "@/lib/feedback-contract";
+import type { RepositoryActivitySnapshot } from "@/lib/repository-activity-snapshot";
 import { repositoryInventoryFromLibrary, type RepositoryInventorySource } from "@/lib/repository-inventory";
 import type { ThreadQuestionInput, ThreadQuestionUpdate, TopicThreadInput, TopicThreadUpdate } from "@/lib/topic-contract";
 
+const REPOSITORY_ACTIVITY_CHUNK_SIZE = 100;
 const REPOSITORY_INVENTORY_CHUNK_SIZE = 200;
 let feedbackClient: ConvexHttpClient | null = null;
 
@@ -28,6 +30,11 @@ export function feedbackIsConfigured() {
 export async function getReaderFeedback(userId: string) {
   const { client, secret } = getFeedbackClient();
   return client.query(api.feedback.getReaderState, { secret, userId });
+}
+
+export async function getAuthorizedRepositoryInventory(userId: string) {
+  const { client, secret } = getFeedbackClient();
+  return client.query(api.repositoryInventory.getReaderInventory, { secret, userId });
 }
 
 export async function saveReaderFeedback(userId: string, githubLogin: string, payload: ReaderStatePayload) {
@@ -59,6 +66,46 @@ export async function saveAuthorizedRepositoryInventory(userId: string, githubLo
     revision,
     secret,
     truncated,
+    userId,
+  });
+}
+
+export async function saveRepositoryActivitySnapshot(userId: string, githubLogin: string, snapshot: RepositoryActivitySnapshot) {
+  const { client, secret } = getFeedbackClient();
+  const { revision } = await client.mutation(api.repositoryActivity.beginActivitySync, {
+    githubLogin,
+    secret,
+    since: snapshot.since,
+    userId,
+  });
+  const chunks = Array.from(
+    { length: Math.ceil(snapshot.records.length / REPOSITORY_ACTIVITY_CHUNK_SIZE) },
+    (_, index) => snapshot.records.slice(index * REPOSITORY_ACTIVITY_CHUNK_SIZE, (index + 1) * REPOSITORY_ACTIVITY_CHUNK_SIZE),
+  );
+  for (const [chunkIndex, chunk] of chunks.entries()) {
+    await client.mutation(api.repositoryActivity.saveActivityChunk, {
+      chunkIndex,
+      githubLogin,
+      records: chunk,
+      revision,
+      secret,
+      userId,
+    });
+  }
+  return client.mutation(api.repositoryActivity.completeActivitySync, {
+    chunkCount: chunks.length,
+    deferredCount: snapshot.deferredCount,
+    halted: snapshot.halted,
+    rateLimitReason: snapshot.rateLimit?.reason ?? null,
+    rateLimitRemaining: snapshot.rateLimit?.remaining ?? null,
+    rateLimitResetAt: snapshot.rateLimit?.resetAt ?? null,
+    rateLimitRetryAt: snapshot.rateLimit?.retryAt ?? null,
+    repositoryCount: snapshot.records.length,
+    requestBudget: snapshot.requestBudget,
+    requestCount: snapshot.requestCount,
+    revision,
+    secret,
+    since: snapshot.since,
     userId,
   });
 }
