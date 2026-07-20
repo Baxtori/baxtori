@@ -1,4 +1,4 @@
-import { canonicalRepository, canonicalizeRepositoryList, canonicalizeRepositoryStateRecord } from "./repository-identity.ts";
+import { canonicalRepository, canonicalizeRepositoryList, canonicalizeRepositoryStateRecord, isValidRepositoryName } from "./repository-identity.ts";
 import type { RepositoryMode } from "./repository-modes.ts";
 
 export type ReaderStoryState = {
@@ -43,7 +43,6 @@ export type ReviewRequest = {
   userId: string;
 };
 
-const REPOSITORY_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const MAX_REPOSITORY_STATE_ENTRIES = 5_000;
 const MAP_STATES = new Set(["introduced", "revisit", "skipped", "understood", "unexplored"]);
 const QUESTION_STATES = new Set(["irrelevant", "open", "resolved"]);
@@ -67,9 +66,9 @@ export function parseReaderState(input: unknown): ReaderStatePayload {
     };
   });
   const repositoryModes = canonicalizeRepositoryStateRecord(parseEnumRecord<RepositoryMode>(input.repositoryModes ?? {}, REPOSITORY_MODES, MAX_REPOSITORY_STATE_ENTRIES));
-  if (!Object.keys(repositoryModes).every((repository) => REPOSITORY_PATTERN.test(repository))) throw new Error("Invalid repository mode target.");
+  if (!Object.keys(repositoryModes).every((repository) => isValidRepositoryName(repository))) throw new Error("Invalid repository mode target.");
   const selectedRepositories = canonicalizeRepositoryList(readStringArray(input.selectedRepositories, MAX_REPOSITORY_STATE_ENTRIES, 200));
-  if (!selectedRepositories.every((repository) => REPOSITORY_PATTERN.test(repository))) throw new Error("Invalid selected repository.");
+  if (!selectedRepositories.every((repository) => isValidRepositoryName(repository))) throw new Error("Invalid selected repository.");
   const view = readString(input.view, 20);
   if (!VIEWS.has(view)) throw new Error("Invalid reader view.");
 
@@ -99,7 +98,7 @@ function readAttentionBudget(value: unknown) {
 export function parseReviewRequest(input: unknown) {
   if (!isRecord(input)) throw new Error("Invalid review request.");
   const repository = canonicalRepository(readString(input.repository, 200));
-  if (!REPOSITORY_PATTERN.test(repository)) throw new Error("Invalid review repository.");
+  if (!isValidRepositoryName(repository)) throw new Error("Invalid review repository.");
   return {
     editionId: readString(input.editionId, 100),
     guidance: readString(input.guidance, 2_000),

@@ -1,5 +1,6 @@
 import { getGitHubSession, githubHeaders, withSessionCookie } from "@/lib/github-auth";
 import { resolveActivityWindow } from "@/lib/github-activity";
+import { isValidRepositoryName } from "@/lib/repository-identity";
 
 type GitHubCommit = {
   sha: string;
@@ -10,8 +11,6 @@ type GitHubCommit = {
     author: { name: string; date: string } | null;
   };
 };
-
-const REPOSITORY_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 
 export async function GET(request: Request) {
   const { session, setCookie } = await getGitHubSession(request);
@@ -26,8 +25,8 @@ export async function GET(request: Request) {
   const requestedDays = Number(requestUrl.searchParams.get("days") ?? "14");
   const requestedSince = requestUrl.searchParams.get("since")?.trim() ?? "";
 
-  if (!REPOSITORY_PATTERN.test(repository)) {
-    return Response.json({ error: "Invalid repository name." }, { status: 400 });
+  if (!isValidRepositoryName(repository)) {
+    return withSessionCookie(Response.json({ error: "Invalid repository name." }, { status: 400 }), setCookie);
   }
 
   const { days, since, window } = resolveActivityWindow({ requestedDays, requestedSince });

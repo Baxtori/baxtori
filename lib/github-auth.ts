@@ -13,7 +13,7 @@ export type GitHubSession = {
   user: GitHubUser;
 };
 
-type TokenResponse = {
+export type TokenResponse = {
   access_token?: string;
   error?: string;
   expires_in?: number;
@@ -37,9 +37,20 @@ export function parseCookies(request: Request) {
   for (const part of (request.headers.get("cookie") ?? "").split(";")) {
     const index = part.indexOf("=");
     if (index < 0) continue;
-    cookies.set(part.slice(0, index).trim(), decodeURIComponent(part.slice(index + 1).trim()));
+    const value = part.slice(index + 1).trim();
+    // A malformed percent-sequence in any cookie on the domain must not take
+    // down the request, so undecodable values are kept as-is.
+    cookies.set(part.slice(0, index).trim(), safeDecodeURIComponent(value));
   }
   return cookies;
+}
+
+function safeDecodeURIComponent(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
 }
 
 function bytesToBase64Url(bytes: Uint8Array) {
@@ -127,8 +138,16 @@ export async function getGitHubSession(request: Request) {
   if (!session) return { session: null, setCookie: clearCookieHeader(request, SESSION_COOKIE) };
 
   if (session.accessTokenExpiresAt && session.accessTokenExpiresAt <= Date.now() + 5 * 60 * 1000) {
-    session = await refreshSession(session);
-    if (!session) return { session: null, setCookie: clearCookieHeader(request, SESSION_COOKIE) };
+    const refreshed = await refreshSession(session);
+    if (!refreshed) {
+      // GitHub refresh tokens are single-use, so parallel requests near expiry
+      // race to rotate them and the losers fail. While the current access
+      // token is still valid the session must survive that race; only an
+      // actually-expired token warrants signing the reader out.
+      if (session.accessTokenExpiresAt > Date.now()) return { session, setCookie: null };
+      return { session: null, setCookie: clearCookieHeader(request, SESSION_COOKIE) };
+    }
+    session = refreshed;
     const maxAge = session.refreshTokenExpiresAt
       ? Math.max(0, Math.floor((session.refreshTokenExpiresAt - Date.now()) / 1000))
       : 60 * 60 * 24 * 30;

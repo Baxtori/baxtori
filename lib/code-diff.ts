@@ -1,6 +1,5 @@
-import { canonicalRepository } from "./repository-identity.ts";
+import { canonicalRepository, isValidRepositoryName } from "./repository-identity.ts";
 
-const REPOSITORY_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const COMMIT_PATTERN = /^[0-9a-f]{7,40}$/i;
 const SAFE_PATH_SEGMENT = /^[^\0/]+$/;
 
@@ -30,7 +29,7 @@ export function parseCodeDiffRequest(url: URL) {
   const startLine = Number(url.searchParams.get("start"));
   const endLine = Number(url.searchParams.get("end"));
 
-  if (!REPOSITORY_PATTERN.test(repository)) throw new Error("Invalid repository name.");
+  if (!isValidRepositoryName(repository)) throw new Error("Invalid repository name.");
   if (!COMMIT_PATTERN.test(base) || !COMMIT_PATTERN.test(head) || base === head) throw new Error("Invalid comparison.");
   if (!isSafeRepositoryPath(path)) throw new Error("Invalid file path.");
   if (!isValidCodeRange({ endLine, startLine })) throw new Error("Invalid line range.");

@@ -40,7 +40,8 @@ function normalizedCandidate(candidate, index) {
 }
 
 function publicCandidate(candidate, selectionReason) {
-  const { _index, ...value } = candidate;
+  const value = { ...candidate };
+  delete value._index;
   return selectionReason ? { ...value, selectionReason } : value;
 }
 

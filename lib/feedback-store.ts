@@ -30,9 +30,9 @@ export async function getReaderFeedback(userId: string) {
   return client.query(api.feedback.getReaderState, { secret, userId });
 }
 
-export async function saveReaderFeedback(userId: string, githubLogin: string, payload: ReaderStatePayload) {
+export async function saveReaderFeedback(userId: string, githubLogin: string, payload: ReaderStatePayload, baseRevision?: number) {
   const { client, secret } = getFeedbackClient();
-  return client.mutation(api.feedback.saveReaderState, { githubLogin, payload, secret, userId });
+  return client.mutation(api.feedback.saveReaderState, { baseRevision, githubLogin, payload, secret, userId });
 }
 
 export async function saveAuthorizedRepositoryInventory(userId: string, githubLogin: string, repositories: RepositoryInventorySource[], truncated: boolean) {
