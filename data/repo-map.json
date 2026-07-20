@@ -1,14 +1,57 @@
 {
-  "repository": "teamleaderleo/glimpse",
-  "generatedAt": "2026-07-13T09:19:11+08:00",
-  "summary": "Baxtori turns selected repository activity into evidence-backed code backstories.",
+  "repository": "teamleaderleo/baxtori",
+  "generatedAt": "2026-07-20T01:21:58.386Z",
+  "summary": "Baxtori turns authorized origin-backed repository activity into evidence-addressed stories, durable learning threads, and explicit attention decisions.",
   "reviews": [
+    {
+      "id": "review-2026-07-20-durable-attention-loop",
+      "reviewedAt": "2026-07-20T01:21:58.386Z",
+      "summary": "Baxtori now plans authorized source access and edition attention explicitly, while durable topics, exact evidence questions, history, and Continue preserve the reader's learning path across editions.",
+      "affectedAreaIds": [
+        "github-boundary",
+        "rundown-engine",
+        "evidence-model",
+        "reading-loop",
+        "repo-map-engine",
+        "feedback-loop"
+      ],
+      "newAreaIds": [],
+      "unmappedFilesReviewed": [
+        "app/edition-history.tsx",
+        "app/edition-selection-ledger.tsx",
+        "app/evidence-question.tsx",
+        "convex/repositoryInventory.ts",
+        "lib/continue-queue.ts",
+        "lib/edition-history.ts",
+        "lib/edition-ledger.ts",
+        "lib/github-repository-library.ts",
+        "lib/repository-inventory.ts",
+        "lib/topic-contract.ts",
+        "scripts/lib/authorized-source-plan.mjs",
+        "scripts/lib/edition-selection.mjs",
+        "scripts/lib/edition-selection-record.mjs",
+        "scripts/lib/follow-up-candidates.mjs"
+      ],
+      "throughCommit": {
+        "sha": "6c020bae10decef2fc8377ef3f65c40c3596fd6f",
+        "shortSha": "6c020ba",
+        "subject": "Propose the scroll-first Baxtori reader",
+        "url": "https://github.com/teamleaderleo/baxtori/commit/6c020bae10decef2fc8377ef3f65c40c3596fd6f"
+      }
+    },
     {
       "id": "review-2026-07-13-account-backed-review-loop",
       "reviewedAt": "2026-07-13T09:19:11+08:00",
       "summary": "Origin-backed collection now follows one account's configured repository choices, exact re-review requests, and diff-addressed evidence while keeping reader state in a separate feedback system.",
-      "affectedAreaIds": ["rundown-engine", "evidence-model", "reading-loop", "repo-map-engine"],
-      "newAreaIds": ["feedback-loop"],
+      "affectedAreaIds": [
+        "rundown-engine",
+        "evidence-model",
+        "reading-loop",
+        "repo-map-engine"
+      ],
+      "newAreaIds": [
+        "feedback-loop"
+      ],
       "unmappedFilesReviewed": [
         "app/api/feedback/reviews/route.ts",
         "app/api/feedback/state/route.ts",
@@ -32,8 +75,14 @@
       "id": "review-2026-07-12-map-learning-loop",
       "reviewedAt": "2026-07-11T17:50:30.000Z",
       "summary": "The Repo Map became an active learning loop: changed evidence reopens review, walkthroughs teach execution paths, and questions preserve uncertainty.",
-      "affectedAreaIds": ["rundown-engine", "reading-loop", "repo-map-engine"],
-      "newAreaIds": ["repo-map-engine"],
+      "affectedAreaIds": [
+        "rundown-engine",
+        "reading-loop",
+        "repo-map-engine"
+      ],
+      "newAreaIds": [
+        "repo-map-engine"
+      ],
       "unmappedFilesReviewed": [
         "app/repo-map.tsx",
         "data/repo-map.json",
@@ -57,7 +106,10 @@
       "question": "Should unattended reviews eventually use a GitHub App installation token instead of depending on the local checkout?",
       "whyItMatters": "The browser session is intentionally interactive, while the scheduled review currently gets repository access from the local machine.",
       "status": "open",
-      "evidence": ["lib/github-auth.ts", "scripts/collect-backstory.mjs"]
+      "evidence": [
+        "lib/github-auth.ts",
+        "scripts/collect-backstory.mjs"
+      ]
     },
     {
       "id": "map-source-of-truth",
@@ -65,7 +117,10 @@
       "question": "Which map changes are safe to make deterministically, and which should always require review judgment?",
       "whyItMatters": "Freshness can be derived from Git history, but concepts, decisions, and confidence should not be rewritten from filenames alone.",
       "status": "open",
-      "evidence": ["scripts/lib/map-impact.mjs", "data/repo-map.json"]
+      "evidence": [
+        "scripts/lib/map-impact.mjs",
+        "data/repo-map.json"
+      ]
     },
     {
       "id": "hosting-cutover",
@@ -73,7 +128,10 @@
       "question": "When can the legacy Sites build path be removed without losing a working fallback?",
       "whyItMatters": "Keeping two build paths is useful during migration but becomes maintenance debt after the Vercel deployment is proven.",
       "status": "open",
-      "evidence": ["vercel.json", ".openai/hosting.json"]
+      "evidence": [
+        "vercel.json",
+        ".openai/hosting.json"
+      ]
     },
     {
       "id": "portable-understanding-state",
@@ -81,7 +139,12 @@
       "question": "When should personal understanding move from device-local state to a private account-backed history?",
       "whyItMatters": "Resolved by persisting versioned reader state behind the signed-in GitHub identity while retaining local fallback behavior when account sync is unavailable.",
       "status": "resolved",
-      "evidence": ["app/page.tsx", "app/repo-map.tsx", "convex/feedback.ts", "app/api/feedback/state/route.ts"]
+      "evidence": [
+        "app/page.tsx",
+        "app/repo-map.tsx",
+        "convex/feedback.ts",
+        "app/api/feedback/state/route.ts"
+      ]
     },
     {
       "id": "feedback-compiler-identity",
@@ -89,7 +152,33 @@
       "question": "When should compiler input use a stable indexed account identifier instead of scanning reader states by GitHub login?",
       "whyItMatters": "The exported account boundary is explicit, but login-based collection is a personal-scale lookup and GitHub logins can change.",
       "status": "open",
-      "evidence": ["convex/feedback.ts", "scripts/export-feedback.mjs"]
+      "evidence": [
+        "convex/feedback.ts",
+        "scripts/export-feedback.mjs"
+      ]
+    },
+    {
+      "id": "inventory-export-deployment",
+      "areaId": "feedback-loop",
+      "question": "Should repository inventory export degrade independently when its Convex function has not reached the deployed backend?",
+      "whyItMatters": "The collector has a deliberate configured-cache fallback, but the current Promise.all exporter prevents reaching it when only inventory is unavailable.",
+      "status": "open",
+      "evidence": [
+        "scripts/export-feedback.mjs",
+        "scripts/lib/authorized-source-plan.mjs",
+        "convex/repositoryInventory.ts"
+      ]
+    },
+    {
+      "id": "attention-policy-calibration",
+      "areaId": "reading-loop",
+      "question": "How should Continue priorities and minute estimates be calibrated without making the queue opaque?",
+      "whyItMatters": "The current heuristic is inspectable and deterministic, but short attention windows may repeatedly hide lower-ranked work.",
+      "status": "open",
+      "evidence": [
+        "lib/continue-queue.ts",
+        "scripts/lib/edition-selection.mjs"
+      ]
     }
   ],
   "areas": [
@@ -97,18 +186,20 @@
       "id": "github-boundary",
       "name": "GitHub identity boundary",
       "kind": "System",
-      "purpose": "Signs the reader in, limits private-code access to explicit GitHub App grants, and keeps credentials server-side.",
+      "purpose": "Signs the reader in, limits private-code access to explicit GitHub grants, keeps credentials server-side, and snapshots the complete authorized repository library for scheduled scope decisions.",
       "importance": 5,
       "breadth": 78,
       "depth": 58,
-      "confidence": 92,
-      "freshness": 96,
-      "changed": "This week",
-      "verdict": "Strong boundary; worth understanding first",
+      "confidence": 94,
+      "freshness": 100,
+      "changed": "Reviewed today",
+      "verdict": "Strong interactive boundary; authorized inventory is explicit, while unattended token strategy remains open",
       "evidence": [
         "lib/github-auth.ts",
         "app/api/auth/github/callback/route.ts",
-        "app/api/github/repos/route.ts"
+        "app/api/github/repos/route.ts",
+        "lib/github-repository-library.ts",
+        "convex/repositoryInventory.ts"
       ],
       "walkthrough": {
         "title": "Follow a private repository request",
@@ -141,81 +232,150 @@
           }
         ]
       },
-      "concepts": ["OAuth callback integrity", "encrypted HttpOnly session", "least-privilege repository access"]
+      "concepts": [
+        "OAuth callback integrity",
+        "encrypted HttpOnly session",
+        "least-privilege repository access",
+        "authorized repository inventory"
+      ]
     },
     {
       "id": "rundown-engine",
       "name": "Weekly rundown engine",
       "kind": "Workflow",
-      "purpose": "Fetches configured origin branches, intersects them with one reader's selected repositories, and emits a versioned edition from exact commit evidence.",
+      "purpose": "Builds an authorized source plan, fetches only configured origin branches, applies repository-specific review intent, and records attention-budget selection decisions from exact commit evidence.",
       "importance": 5,
       "breadth": 64,
       "depth": 42,
-      "confidence": 91,
+      "confidence": 94,
       "freshness": 100,
       "changed": "Reviewed today",
-      "verdict": "Strong evidence boundary; publication judgment remains intentionally outside the deterministic collector",
+      "verdict": "Scope, evidence, and omission are explicit; publication judgment remains intentionally review-driven",
       "evidence": [
         "scripts/collect-backstory.mjs",
         "scripts/export-feedback.mjs",
         "scripts/validate-edition.mjs",
         "baxtori.sources.json",
-        "scripts/lib/source-ref.mjs"
+        "scripts/lib/source-ref.mjs",
+        "scripts/lib/authorized-source-plan.mjs",
+        "scripts/lib/edition-selection.mjs",
+        "scripts/lib/edition-selection-record.mjs"
       ],
-      "concepts": ["origin-backed deterministic prepass", "configured-and-selected scope intersection", "selection threshold", "human-sized reading budget"]
+      "concepts": [
+        "origin-backed deterministic prepass",
+        "authorized source plan",
+        "repository-specific review mode",
+        "selection threshold",
+        "human-sized reading budget"
+      ],
+      "walkthrough": {
+        "title": "Follow authorized scope into the edition ledger",
+        "outcome": "See how repository access, inspectable caches, and attention policy become explicit publication decisions.",
+        "estimatedMinutes": 5,
+        "steps": [
+          {
+            "label": "Export one account's intent and inventory",
+            "file": "scripts/export-feedback.mjs",
+            "explanation": "The exporter requests account-scoped topics, questions, repository choices, and the authorized repository inventory into ignored scratch input.",
+            "invariant": "Compiler intent belongs to the configured GitHub account and never replaces the cache manifest."
+          },
+          {
+            "label": "Classify requested repositories",
+            "file": "scripts/lib/authorized-source-plan.mjs",
+            "explanation": "Configured sources, authorization metadata, reader modes, and selections become collected, metadata-only, missing, or muted decisions.",
+            "invariant": "Only a configured origin-backed cache can supply code evidence."
+          },
+          {
+            "label": "Collect exact origin history",
+            "file": "scripts/collect-backstory.mjs",
+            "explanation": "The collector fetches the configured branch and indexes commits, file statistics, map impact, and targeted review requests.",
+            "invariant": "Local, staged, detached, and unpushed work cannot enter the evidence index."
+          },
+          {
+            "label": "Pack and record publication choices",
+            "file": "scripts/lib/edition-selection.mjs",
+            "explanation": "Qualifying findings are priority ordered and fitted to a reading budget, with deferred and excluded work retained as decisions.",
+            "invariant": "Every published story and every quiet or inaccessible repository remains accounted for."
+          }
+        ]
+      }
     },
     {
       "id": "evidence-model",
       "name": "Edition and evidence model",
       "kind": "Data model",
-      "purpose": "Stores each explanation beside repository, comparison commits, changed line ranges, tradeoff, and verification evidence so claims stay inspectable as diffs.",
+      "purpose": "Stores each explanation beside topic identity, repository, comparison commits, changed line ranges, tradeoff, verification evidence, and the edition's complete selection ledger.",
       "importance": 4,
       "breadth": 82,
       "depth": 68,
-      "confidence": 90,
+      "confidence": 94,
       "freshness": 100,
       "changed": "Reviewed today",
-      "verdict": "Diff-addressed and versioned; evidence now fails validation when it cannot name a real comparison range",
+      "verdict": "Diff-addressed, versioned, and selection-complete; evidence fails validation when it cannot name a real comparison range",
       "evidence": [
         "data/latest.json",
         "data/editions/",
-        "scripts/validate-edition.mjs"
+        "scripts/validate-edition.mjs",
+        "scripts/lib/edition-selection-record.mjs",
+        "lib/edition-ledger.ts"
       ],
-      "concepts": ["claim-to-commit traceability", "append-only backstory", "schema-level brevity", "base-to-head code excerpt"]
+      "concepts": [
+        "claim-to-commit traceability",
+        "durable topic identity",
+        "append-only backstory",
+        "selection decision ledger",
+        "base-to-head code excerpt"
+      ]
     },
     {
       "id": "reading-loop",
       "name": "Human reading loop",
       "kind": "Experience",
-      "purpose": "Turns a generated edition into a small reading queue whose progress, repository choices, map state, and re-review requests can follow the signed-in reader.",
+      "purpose": "Turns current and archived editions into a durable learning queue where watched topics, exact evidence questions, map work, review requests, and reading progress follow the signed-in reader.",
       "importance": 4,
       "breadth": 70,
       "depth": 38,
-      "confidence": 90,
+      "confidence": 94,
       "freshness": 100,
       "changed": "Reviewed today",
-      "verdict": "The comprehension loop is now durable; sync conflict behavior remains deliberately simple",
-      "evidence": ["app/page.tsx", "app/globals.css", "app/api/feedback/state/route.ts"],
-      "concepts": ["progressive disclosure", "account-backed reader state", "repository-specific re-review", "attention budget"]
+      "verdict": "The learning loop now survives editions; queue priority remains a deterministic product heuristic",
+      "evidence": [
+        "app/page.tsx",
+        "app/edition-history.tsx",
+        "lib/continue-queue.ts",
+        "lib/edition-history.ts",
+        "lib/topic-contract.ts",
+        "app/api/feedback/state/route.ts"
+      ],
+      "concepts": [
+        "progressive disclosure",
+        "durable topic thread",
+        "exact evidence question",
+        "unified Continue queue",
+        "filterable edition history",
+        "reader-chosen attention window"
+      ]
     },
     {
       "id": "repo-map-engine",
       "name": "Repository comprehension engine",
       "kind": "Learning system",
-      "purpose": "Connects exact Git changes to mapped systems, preserves review history, and turns repository knowledge into a time-boxed study path.",
+      "purpose": "Connects exact Git changes to canonical repository maps, preserves review history, proposes evidence-backed follow-ups, and merges map knowledge into a time-boxed study path.",
       "importance": 5,
       "breadth": 68,
       "depth": 52,
-      "confidence": 86,
-      "freshness": 98,
+      "confidence": 91,
+      "freshness": 100,
       "changed": "Reviewed today",
-      "verdict": "High-leverage multi-repository core; deterministic impact and judgment remain deliberately separate",
+      "verdict": "High-leverage multi-repository core; deterministic impact and human judgment remain deliberately separate",
       "evidence": [
         "scripts/lib/map-impact.mjs",
+        "scripts/lib/follow-up-candidates.mjs",
         "scripts/collect-backstory.mjs",
         "scripts/validate-repo-map.mjs",
         "data/repo-map.json",
-        "app/repo-map.tsx"
+        "app/repo-map.tsx",
+        "lib/continue-queue.ts"
       ],
       "walkthrough": {
         "title": "Follow a diff into the study queue",
@@ -248,67 +408,76 @@
           }
         ]
       },
-      "concepts": ["review cursor", "evidence-to-area impact", "repository map registry", "append-only map history", "time-boxed study queue"]
+      "concepts": [
+        "canonical repository identity",
+        "review cursor",
+        "evidence-to-area impact",
+        "follow-up preflight",
+        "append-only map history",
+        "time-boxed study queue"
+      ]
     },
     {
       "id": "feedback-loop",
       "name": "Account-backed review feedback loop",
       "kind": "Control plane",
-      "purpose": "Persists one reader's comprehension state and repository-specific re-review requests, then exports only that account's intent into the scheduled compiler.",
+      "purpose": "Persists one reader's topics, exact evidence questions, comprehension state, repository modes, inventory, and repository-specific re-review requests, then exports only that account's intent to the compiler.",
       "importance": 5,
       "breadth": 66,
       "depth": 52,
-      "confidence": 91,
+      "confidence": 93,
       "freshness": 100,
-      "changed": "Introduced today",
-      "verdict": "A coherent reader-to-compiler loop with an explicit shared-secret automation boundary",
+      "changed": "Reviewed today",
+      "verdict": "A coherent reader-to-compiler control plane; optional inventory deployment currently has an all-or-nothing export edge",
       "evidence": [
         "lib/feedback-contract.ts",
         "lib/feedback-store.ts",
+        "lib/topic-contract.ts",
         "convex/feedback.ts",
+        "convex/repositoryInventory.ts",
         "app/api/feedback/reviews/route.ts",
-        "app/api/feedback/state/route.ts",
         "scripts/export-feedback.mjs",
         "scripts/complete-feedback.mjs"
       ],
       "walkthrough": {
-        "title": "Follow one re-review request into the compiler",
-        "outcome": "See how reader intent remains account-scoped, repository-specific, and explicitly completed after inspection.",
+        "title": "Follow an evidence question into the next review",
+        "outcome": "See how a reader preserves one exact uncertainty without broadening it to another story or repository.",
         "estimatedMinutes": 5,
         "steps": [
           {
-            "label": "Validate the reader's request",
-            "file": "app/api/feedback/reviews/route.ts",
-            "explanation": "The signed-in route parses bounded guidance and binds the request to the reader's server-side GitHub identity.",
-            "invariant": "Anonymous or malformed requests never enter the review queue."
+            "label": "Validate the evidence address",
+            "file": "lib/topic-contract.ts",
+            "explanation": "Repository, comparison commits, safe path, and a bounded line range are parsed before the question is accepted.",
+            "invariant": "A durable question always points to a specific inspectable code range."
           },
           {
-            "label": "Persist an exact review target",
+            "label": "Persist the question under its topic",
             "file": "convex/feedback.ts",
-            "explanation": "Convex stores edition, story, repository, lens, and guidance together while superseding only an older request for that same story edition.",
-            "invariant": "One request cannot silently change the lens for another repository."
+            "explanation": "Convex binds the question to its reader, topic thread, edition, story, lens, guidance, and exact evidence.",
+            "invariant": "Question evidence cannot cross into another repository."
           },
           {
-            "label": "Export one account's intent",
-            "file": "scripts/export-feedback.mjs",
-            "explanation": "The automation queries compiler input for the configured GitHub login and writes ignored scratch input.",
-            "invariant": "Reader state is compiler input, not a replacement for the configured cache manifest."
+            "label": "Export only actionable threads",
+            "file": "convex/feedback.ts",
+            "explanation": "The compiler receives active watches and open queued questions, leaving snoozed, resolved, and merely historical state out.",
+            "invariant": "Only explicit current intent can influence the next review."
           },
           {
-            "label": "Constrain origin-backed collection",
-            "file": "scripts/collect-backstory.mjs",
-            "explanation": "Selected repositories are intersected with configured sources before each origin branch is fetched and inspected.",
-            "invariant": "An unconfigured selection cannot become invented code evidence."
-          },
-          {
-            "label": "Complete only inspected IDs",
+            "label": "Acknowledge inspected requests exactly",
             "file": "scripts/complete-feedback.mjs",
-            "explanation": "The completion script accepts IDs only when they exist in the exported queue and marks those exact requests processed.",
-            "invariant": "Failed, inaccessible, or unrelated requests remain queued."
+            "explanation": "Completion accepts only IDs present in the exported queue and marks those exact records processed.",
+            "invariant": "Failed, inaccessible, and unrelated requests remain queued."
           }
         ]
       },
-      "concepts": ["account-scoped reader state", "versioned review request", "configured scope intersection", "explicit completion acknowledgement"]
+      "concepts": [
+        "account-scoped reader state",
+        "durable topic thread",
+        "evidence-addressed question",
+        "repository review mode",
+        "authorized inventory",
+        "explicit completion acknowledgement"
+      ]
     },
     {
       "id": "hosting-transition",
@@ -322,8 +491,16 @@
       "freshness": 92,
       "changed": "This week",
       "verdict": "Deliberate transition, not yet operationally complete",
-      "evidence": ["vercel.json", ".openai/hosting.json", "README.md"],
-      "concepts": ["dual-build migration", "runtime-neutral application core", "deployment verification"]
+      "evidence": [
+        "vercel.json",
+        ".openai/hosting.json",
+        "README.md"
+      ],
+      "concepts": [
+        "dual-build migration",
+        "runtime-neutral application core",
+        "deployment verification"
+      ]
     },
     {
       "id": "agent-context",
@@ -337,8 +514,14 @@
       "freshness": 100,
       "changed": "Not built",
       "verdict": "Useful frontier, intentionally speculative",
-      "evidence": ["README.md"],
-      "concepts": ["reviewable context package", "uncertainty preservation", "skill update proposals"]
+      "evidence": [
+        "README.md"
+      ],
+      "concepts": [
+        "reviewable context package",
+        "uncertainty preservation",
+        "skill update proposals"
+      ]
     }
   ]
 }
