@@ -1,7 +1,9 @@
-export const BAXTORI_REPOSITORY = "teamleaderleo/baxtori";
+export const BAXTORI_REPOSITORY = "Baxtori/baxtori";
+export const PREVIOUS_BAXTORI_REPOSITORY = "teamleaderleo/baxtori";
 export const LEGACY_BAXTORI_REPOSITORY = "teamleaderleo/glimpse";
 
 const REPOSITORY_ALIASES: Readonly<Record<string, string>> = {
+  [PREVIOUS_BAXTORI_REPOSITORY]: BAXTORI_REPOSITORY,
   [LEGACY_BAXTORI_REPOSITORY]: BAXTORI_REPOSITORY,
 };
 
