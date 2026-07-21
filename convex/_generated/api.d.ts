@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as apiSecret from "../apiSecret.js";
 import type * as feedback from "../feedback.js";
 import type * as repositoryInventory from "../repositoryInventory.js";
 import type * as validators from "../validators.js";
@@ -19,6 +20,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  apiSecret: typeof apiSecret;
   feedback: typeof feedback;
   repositoryInventory: typeof repositoryInventory;
   validators: typeof validators;

@@ -1586,6 +1586,16 @@ kbd {
 
 .connection-actions span { color: var(--green); font-size: 0.72rem; font-weight: 760; }
 .connection-actions a { color: var(--blue); font-size: 0.68rem; }
+.connection-actions button {
+  padding: 0;
+  color: var(--rust);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 0.68rem;
+  text-decoration: underline;
+  text-underline-offset: 0.18rem;
+}
 
 .repo-empty {
   padding: 2.5rem 0;

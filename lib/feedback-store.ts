@@ -30,6 +30,16 @@ export async function getReaderFeedback(userId: string) {
   return client.query(api.feedback.getReaderState, { secret, userId });
 }
 
+export async function exportReaderAccount(userId: string) {
+  const { client, secret } = getFeedbackClient();
+  return client.query(api.feedback.getAccountExport, { secret, userId });
+}
+
+export async function deleteReaderAccount(userId: string) {
+  const { client, secret } = getFeedbackClient();
+  return client.mutation(api.feedback.deleteReaderAccount, { secret, userId });
+}
+
 export async function saveReaderFeedback(userId: string, githubLogin: string, payload: ReaderStatePayload, baseRevision?: number) {
   const { client, secret } = getFeedbackClient();
   return client.mutation(api.feedback.saveReaderState, { baseRevision, githubLogin, payload, secret, userId });

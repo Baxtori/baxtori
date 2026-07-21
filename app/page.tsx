@@ -20,5 +20,5 @@ export default async function Home({
   };
   const query = await searchParams;
 
-  return <BaxtoriApp initialAuth={initialAuth} initialDemoMode={query.demo === "1"} />;
+  return <BaxtoriApp initialAuth={initialAuth} initialDemoMode={query.demo === "1" || !initialAuth.authenticated} />;
 }

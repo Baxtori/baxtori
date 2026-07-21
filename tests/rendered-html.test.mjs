@@ -31,12 +31,12 @@ test("server-renders the Baxtori briefing", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>Baxtori — The backstory behind your code<\/title>/i);
-  assert.match(html, /A living memory for your code/);
+  assert.match(html, /Notes from the repositories/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
 test("keeps GitHub credentials and feedback storage behind the server session", async () => {
-  const [page, authLibrary, startRoute, callbackRoute, repositoriesRoute, activityRoute, diffRoute, feedbackStateRoute, feedbackReviewsRoute, feedbackTopicsRoute, feedbackQuestionsRoute, feedbackStore, envExample, hosting] = await Promise.all([
+  const [page, authLibrary, startRoute, callbackRoute, repositoriesRoute, activityRoute, diffRoute, feedbackStateRoute, feedbackReviewsRoute, feedbackTopicsRoute, feedbackQuestionsRoute, feedbackAccountRoute, feedbackStore, envExample, hosting] = await Promise.all([
     readFile(new URL("../app/baxtori-app.tsx", import.meta.url), "utf8"),
     readFile(new URL("../lib/github-auth.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/auth/github/start/route.ts", import.meta.url), "utf8"),
@@ -48,6 +48,7 @@ test("keeps GitHub credentials and feedback storage behind the server session", 
     readFile(new URL("../app/api/feedback/reviews/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/feedback/topics/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/feedback/questions/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/feedback/account/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../lib/feedback-store.ts", import.meta.url), "utf8"),
     readFile(new URL("../.env.example", import.meta.url), "utf8"),
     readFile(new URL("../.openai/hosting.json", import.meta.url), "utf8"),
@@ -70,6 +71,7 @@ test("keeps GitHub credentials and feedback storage behind the server session", 
   assert.match(feedbackReviewsRoute, /getGitHubSession/);
   assert.match(feedbackTopicsRoute, /getGitHubSession/);
   assert.match(feedbackQuestionsRoute, /getGitHubSession/);
+  assert.match(feedbackAccountRoute, /getGitHubSession/);
   assert.match(feedbackStore, /FEEDBACK_API_SECRET/);
   assert.doesNotMatch(page, /FEEDBACK_API_SECRET|CONVEX_URL|ConvexHttpClient/);
   assert.match(envExample, /^GITHUB_CLIENT_ID=$/m);
@@ -102,6 +104,12 @@ test("requires GitHub authentication before repository access", async () => {
 
   const feedbackStateResponse = await render("/api/feedback/state");
   assert.equal(feedbackStateResponse.status, 401);
+
+  const accountExportResponse = await render("/api/feedback/account");
+  assert.equal(accountExportResponse.status, 401);
+
+  const accountDeleteResponse = await render("/api/feedback/account", { method: "DELETE" });
+  assert.equal(accountDeleteResponse.status, 401);
 
   const reviewQueueResponse = await render("/api/feedback/reviews", { method: "POST" });
   assert.equal(reviewQueueResponse.status, 401);

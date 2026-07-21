@@ -25,13 +25,13 @@ async function waitForReader(page: Page) {
   await expect(page.locator("[data-reader-ready='true']")).toBeVisible();
 }
 
-test("the public entrance explains the product before asking for trust", async ({ page }, testInfo) => {
+test("the public home opens the published journal before asking for trust", async ({ page }, testInfo) => {
   const errors = collectBrowserErrors(page);
   await page.goto("/");
 
-  await expect(page.getByRole("heading", { name: "Understand what you're becoming." })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Explore the published review/ })).toBeVisible();
-  await capture(page, testInfo, "public-entrance");
+  await expect(page.getByRole("heading", { name: "Notes from the repositories." })).toBeVisible();
+  await waitForReader(page);
+  await capture(page, testInfo, "public-journal");
   expect(errors).toEqual([]);
 });
 
@@ -144,9 +144,9 @@ test("repository modes persist and newly selected sources enter the system hones
 
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Notes from the repositories." })).toBeVisible();
-  const reviewSources = page.getByRole("button", { name: /Review sources/ });
-  if (await reviewSources.isVisible()) await reviewSources.click();
-  else await page.getByRole("button", { name: /Sources/ }).click();
+  const sourcesButton = page.locator("button:visible").filter({ hasText: "Sources" });
+  await expect(sourcesButton).toHaveCount(1);
+  await sourcesButton.click();
   const modeControl = page.getByRole("group", { name: `Review mode for ${repository.fullName}` }).first();
   await expect(modeControl).toBeVisible();
   await modeControl.getByRole("button", { name: "Pinned" }).click();

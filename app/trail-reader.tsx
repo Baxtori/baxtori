@@ -20,7 +20,9 @@ type TrailEdition = {
 };
 
 type TrailReaderProps = {
+  accountLabel?: string;
   activeView: "briefing" | "history" | "map";
+  connectHref?: string;
   edition: TrailEdition;
   notice: string;
   onOpenEditionRecord: () => void;
@@ -28,6 +30,7 @@ type TrailReaderProps = {
   onOpenMemory: () => void;
   onOpenNow: () => void;
   onOpenRepositories?: () => void;
+  onSignOut?: () => void;
   onOpenSystem: () => void;
   onUnderstand: (story: TrailStory) => void;
   onWatch: (story: TrailStory) => void;
@@ -58,7 +61,9 @@ function formatGenerated(value: string) {
 }
 
 export function TrailReader({
+  accountLabel,
   activeView,
+  connectHref,
   edition,
   notice,
   onOpenEditionRecord,
@@ -66,6 +71,7 @@ export function TrailReader({
   onOpenMemory,
   onOpenNow,
   onOpenRepositories,
+  onSignOut,
   onOpenSystem,
   onUnderstand,
   onWatch,
@@ -223,6 +229,7 @@ export function TrailReader({
         <nav className={styles.trailSecondaryNav} aria-label="Edition and source tools">
           <button onClick={onOpenEditionRecord} type="button">Edition record</button>
           {onOpenRepositories && <button onClick={onOpenRepositories} type="button">Review sources <small>{repositoryCount}</small></button>}
+          {connectHref && <a href={connectHref}>Connect GitHub</a>}
         </nav>
 
         {onOpenRepositories && (
@@ -231,7 +238,13 @@ export function TrailReader({
           </button>
         )}
 
-        <p className={styles.railEdition}>Current edition<br />{formatDay(edition.periodStart)}–{formatDay(edition.periodEnd)}<br />{sourceLabel}</p>
+        {connectHref && <a className={styles.mobileSources} href={connectHref}>Connect</a>}
+
+        <div className={styles.railAccount}>
+          <p>Current edition<br />{formatDay(edition.periodStart)}–{formatDay(edition.periodEnd)}<br />{sourceLabel}</p>
+          {accountLabel && <p>{accountLabel}</p>}
+          {onSignOut && <button onClick={onSignOut} type="button">Sign out</button>}
+        </div>
       </aside>
 
       {activeView !== "briefing" ? (
@@ -356,6 +369,7 @@ export function TrailReader({
             <div className={styles.endActions}>
               <button className={styles.primaryAction} onClick={onOpenMemory} type="button">Memory</button>
               <button onClick={onOpenSystem} type="button">System</button>
+              {connectHref && <a href={connectHref}>Connect your repositories</a>}
             </div>
           </section>
         )}

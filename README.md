@@ -66,10 +66,17 @@ access and refresh tokens are encrypted inside an HttpOnly cookie and never
 sent to browser JavaScript. Use a random value of at least 32 bytes for
 `GITHUB_SESSION_SECRET`.
 
-The deployed GitHub App is currently private, and the scheduled compiler is
-explicitly pinned to one `FEEDBACK_GITHUB_LOGIN`. Account records are isolated
-by numeric GitHub user ID, but public multi-user installation and per-account
-compilation remain deliberate roadmap work rather than implied capabilities.
+The signed-out home opens the published field journal immediately. Connecting
+GitHub adds read-only source controls and account-scoped memory in context; it
+does not imply that a personalized edition has already been compiled. Account
+records are isolated by numeric GitHub user ID, while the scheduled compiler is
+still explicitly pinned to one `FEEDBACK_GITHUB_LOGIN`.
+
+Connected readers can download or permanently delete Baxtori's account record
+from Sources. Deletion removes repository inventory, reader state, questions,
+watches, and review requests; GitHub App installation access remains separately
+controlled in GitHub. The complete hackathon narrative and demo script live in
+[`docs/HACKATHON_DEMO.md`](docs/HACKATHON_DEMO.md).
 
 ## Validate a production build
 
@@ -85,7 +92,7 @@ npm run test:visual
 ```
 
 The visual suite starts the real Vinext development server, exercises the
-public entrance and `?demo=1` reader at desktop and mobile sizes, fails on
+signed-out journal and connected reader at desktop and mobile sizes, fails on
 browser exceptions, and attaches full-page screenshots to the Playwright test
 artifacts. CI retains the screenshots, report, and failure traces for 14 days.
 
@@ -106,7 +113,8 @@ and publish nothing when a project has no meaningful new context.
 ## Weekly compiler
 
 Baxtori keeps model inference outside the hosted app. A local Codex automation
-uses the existing subscription to run the judgment-heavy review, while the
+uses the owner's plan-dependent Codex usage to run the judgment-heavy review,
+while the
 repository supplies a deterministic evidence pre-pass:
 
 ```bash

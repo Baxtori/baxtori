@@ -46,7 +46,9 @@ export const readerStateValidator = v.object({
     v.literal("open"),
     v.literal("resolved"),
   )),
-  repositoryModes: v.record(v.string(), repositoryModeValidator),
+  // Records written before repository modes existed remain valid and are
+  // upgraded by the application parser on the next save.
+  repositoryModes: v.optional(v.record(v.string(), repositoryModeValidator)),
   selectedRepositories: v.array(v.string()),
   states: v.record(v.string(), storyStateValidator),
   version: v.literal(1),

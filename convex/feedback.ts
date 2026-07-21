@@ -26,6 +26,39 @@ export const getReaderState = query({
   },
 });
 
+export const getAccountExport = query({
+  args: { secret: v.string(), userId: v.string() },
+  handler: async (ctx, args) => {
+    verifySecret(args.secret);
+    const [readerState, reviewRequests, topicThreads, threadQuestions, inventorySync, inventoryChunks] = await Promise.all([
+      ctx.db.query("readerStates").withIndex("by_user", (q) => q.eq("userId", args.userId)).unique(),
+      ctx.db.query("reviewRequests").withIndex("by_user", (q) => q.eq("userId", args.userId)).collect(),
+      ctx.db.query("topicThreads").withIndex("by_user", (q) => q.eq("userId", args.userId)).collect(),
+      ctx.db.query("threadQuestions").withIndex("by_user", (q) => q.eq("userId", args.userId)).collect(),
+      ctx.db.query("repositoryInventorySyncs").withIndex("by_user", (q) => q.eq("userId", args.userId)).unique(),
+      ctx.db.query("repositoryInventoryChunks").withIndex("by_user", (q) => q.eq("userId", args.userId)).collect(),
+    ]);
+    return { inventoryChunks, inventorySync, readerState, reviewRequests, threadQuestions, topicThreads };
+  },
+});
+
+export const deleteReaderAccount = mutation({
+  args: { secret: v.string(), userId: v.string() },
+  handler: async (ctx, args) => {
+    verifySecret(args.secret);
+    const tables = ["readerStates", "reviewRequests", "topicThreads", "threadQuestions", "repositoryInventorySyncs", "repositoryInventoryChunks"] as const;
+    let deleted = 0;
+    for (const table of tables) {
+      const records = await ctx.db.query(table).withIndex("by_user", (q) => q.eq("userId", args.userId)).collect();
+      for (const record of records) {
+        await ctx.db.delete(record._id);
+        deleted += 1;
+      }
+    }
+    return { deleted };
+  },
+});
+
 export const saveReaderState = mutation({
   args: {
     baseRevision: v.optional(v.number()),

@@ -39,7 +39,7 @@ import {
 import { EditionSelectionLedger } from "./edition-selection-ledger";
 import { EditionHistory } from "./edition-history";
 import { BrandMark } from "./brand-mark";
-import { LoadingShell, SignedOutShell } from "./entrance";
+import { LoadingShell } from "./entrance";
 import { formatEditionDate, formatGeneratedAt, formatRelativeDate, formatReviewCursor } from "./format";
 import { RepositoryModeControl } from "./repository-mode-control";
 import repositoryModeStyles from "./repository-modes.module.css";
@@ -188,6 +188,7 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
         const payload = (await response.json()) as AuthStatus;
         if (!response.ok) throw new Error("GitHub sign-in status is unavailable.");
         setAuth(payload);
+        if (payload.authenticated) setDemoMode(false);
       })
       .catch(() => setAuth({ appSlug: null, authenticated: false, configured: false, user: null }));
 
@@ -828,13 +829,11 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
 
   const signOut = async () => {
     if (demoMode) {
-      setDemoMode(false);
-      setHasHydrated(false);
-      window.history.replaceState({}, "", window.location.pathname);
       return;
     }
     await fetch("/api/auth/github/logout", { method: "POST" });
     setHasHydrated(false);
+    setDemoMode(true);
     setAuth((current) => current ? { ...current, authenticated: false, user: null } : current);
     setRepositories([]);
     setRepositoriesLoaded(false);
@@ -843,6 +842,28 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
     setThreadQuestions([]);
     setTopicThreads([]);
     setActivity({});
+  };
+
+  const deleteAccount = async () => {
+    if (!window.confirm("Permanently delete your Baxtori reading state, repository inventory, questions, watches, and review requests? This does not uninstall the GitHub App.")) return;
+    const response = await fetch("/api/feedback/account", { method: "DELETE" });
+    const payload = (await response.json()) as { error?: string };
+    if (!response.ok) {
+      setNotice(payload.error ?? "Your Baxtori data could not be deleted.");
+      return;
+    }
+    if (accountStorageKey) window.localStorage.removeItem(accountStorageKey);
+    setHasHydrated(false);
+    setDemoMode(true);
+    setAuth((current) => current ? { ...current, authenticated: false, user: null } : current);
+    setRepositories([]);
+    setRepositoriesLoaded(false);
+    setRepositoryModes({});
+    setRepositoryModesInitialized(false);
+    setThreadQuestions([]);
+    setTopicThreads([]);
+    setActivity({});
+    setNotice("Your Baxtori account data was deleted. GitHub installation access is managed on GitHub.");
   };
 
   useEffect(() => {
@@ -919,10 +940,6 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
 
   if (!auth) return <LoadingShell />;
 
-  if (!auth.authenticated && !demoMode) {
-    return <SignedOutShell authMessage={authMessage} configured={auth.configured} onExploreDemo={() => setDemoMode(true)} />;
-  }
-
   const actualStory = (trailStory: TrailStory) => STORIES.find((story) => story.id === trailStory.id);
   const renderTrailEvidence = (trailStory: TrailStory) => {
     const story = actualStory(trailStory);
@@ -982,14 +999,17 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
 
     return (
       <TrailReader
+        accountLabel={auth.authenticated ? `@${auth.user?.login}` : undefined}
         activeView={view as "briefing" | "history" | "map"}
+        connectHref={!auth.authenticated && auth.configured ? "/api/auth/github/start" : undefined}
         edition={EDITION}
-        notice={notice}
+        notice={notice || authMessage}
         onOpenEditionRecord={() => setView("timeline")}
         onOpenContinueItem={openContinueItem}
         onOpenMemory={() => setView("history")}
         onOpenNow={() => setView("briefing")}
         onOpenRepositories={demoMode ? undefined : openRepositoryControls}
+        onSignOut={auth.authenticated ? signOut : undefined}
         onOpenSystem={() => setView("map")}
         onUnderstand={(trailStory) => {
           const story = actualStory(trailStory);
@@ -1010,7 +1030,9 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
         renderEvidence={renderTrailEvidence}
         repositoryCount={selectedRepositories.length}
         session={trailSession}
-        sourceLabel={demoMode ? "published demo" : `${selectedRepositories.length} ${selectedRepositories.length === 1 ? "repository" : "repositories"}`}
+        sourceLabel={demoMode
+          ? "published example"
+          : `example edition · ${selectedRepositories.length} ${selectedRepositories.length === 1 ? "source" : "sources"}`}
         storyState={(trailStory) => {
           const story = actualStory(trailStory);
           return story
@@ -1458,6 +1480,9 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
                   <span>{repositoryCounts.muted} muted</span>
                 </div>
                 {auth.appSlug && <><a href={`https://github.com/apps/${auth.appSlug}/installations/new`} rel="noreferrer" target="_blank">Add repositories ↗</a><a href="https://github.com/settings/installations" rel="noreferrer" target="_blank">Manage installation ↗</a></>}
+                <a href="/api/feedback/account">Download my data</a>
+                <a href="/privacy">Privacy</a>
+                <button onClick={deleteAccount} type="button">Delete Baxtori data</button>
               </div>
             </div>
 
