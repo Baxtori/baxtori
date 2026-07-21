@@ -35,7 +35,6 @@
     "node_modules",
     "build",
     "examples",
-    "worker",
     "vite.config.ts"
   ]
 }

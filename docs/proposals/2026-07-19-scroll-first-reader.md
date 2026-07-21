@@ -118,14 +118,14 @@ Use that material structurally:
 
 - one large, complete specimen in a reserved folio margin;
 - a bottom-to-top reveal tied to reading progress, so the specimen appears to grow with the walk;
-- small, connected crops of a second plate as marginal bearings—not detached leaf icons;
+- large, inspectable crops of a second plate beside each synopsis—not detached leaf icons or thumbnail ornaments;
 - plate number, historical species name, printer, and date as real caption information;
 - serif editorial type, ruled paper, generous margins, and restrained accession-label typography;
 - still imagery for reduced-motion readers.
 
 Avoid synthetic sprigs assembled from repeated leaf shapes, arbitrary stock photography, decorative image cards, distressed scrapbook effects, and fake taxonomic labels. They imitate the category without carrying its authority. Keep code, evidence claims, and status language literal. A fern should never imply test success, risk, confidence, or code quality unless the interface also states that meaning in text. The visual language carries pace and atmosphere while the technical layer carries proof.
 
-The first implementation uses Henry Bradbury's public-domain nature prints from Thomas Moore's *The Ferns of Great Britain and Ireland*: the male fern plate supplies the full reading-progress specimen and its naturally curled juvenile frond; the bracken plate supplies marginal details. Preserve the original scan pixels locally, record the source and public-domain status beside the files, and do cropping, blending, and reveal in CSS. Remote hotlinks would add privacy, reliability, and visual-consistency problems.
+The first implementation uses Henry Bradbury's public-domain nature prints from Thomas Moore's *The Ferns of Great Britain and Ireland*: the male fern plate supplies the full reading-progress specimen and its naturally curled juvenile frond; the bracken plate supplies a substantial specimen study for each story. The reference is the scale of a botanical atlas or herbarium sheet: the plant occupies most of its allotted plate and metadata stays in a compact factual label. Preserve the original scan pixels locally, record the source and public-domain status beside the files, and do cropping, blending, and reveal in CSS. Remote hotlinks would add privacy, reliability, and visual-consistency problems.
 
 The motion is progressive disclosure rather than a literal biological simulation: CSS scroll-driven animation reveals the real plate from its base upward while subtly settling its scale and ink tone. A requestAnimationFrame fallback supports browsers without scroll timelines, and reduced-motion mode presents the complete static specimen. This keeps the morphology credible and makes the animation subordinate to scrolling.
 
@@ -267,7 +267,7 @@ app/trail-reader.module.css
 Start with:
 
 - one viewport-scale specimen that grows with the whole reading trail;
-- one secondary plate for restrained marginal details;
+- one secondary plate for large, scene-level specimen studies;
 - factual captions and provenance recorded in the repository;
 - native scroll-timeline animation, a small JavaScript fallback, and a complete reduced-motion state.
 

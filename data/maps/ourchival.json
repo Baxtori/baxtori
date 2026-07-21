@@ -1,14 +1,76 @@
 {
   "repository": "teamleaderleo/ourchival",
-  "generatedAt": "2026-07-09T19:02:26.000Z",
-  "summary": "Ourchival is a private visual-reference archive whose browser clipper and Reliquary web app share a Convex catalog while Google Drive remains the preferred home for original files.",
+  "generatedAt": "2026-07-20T01:21:58.386Z",
+  "summary": "Ourchival is a private visual-reference system whose paired browser Clipper feeds reviewable capture sessions into a Convex catalog, while Google Drive remains the preferred original-file home and derived media, organization, search, and enrichment support retrieval.",
   "reviews": [
+    {
+      "id": "review-2026-07-20-origin-main",
+      "reviewedAt": "2026-07-20T09:11:24+08:00",
+      "summary": "Reviewed the origin-backed expansion from a basic capture vault into an authenticated, session-aware archive with reusable organization, explainable enrichment, and asynchronous media derivatives.",
+      "affectedAreaIds": [
+        "capture-pipeline",
+        "convex-catalog",
+        "drive-storage",
+        "reliquary-ui",
+        "shared-contracts",
+        "privacy-boundary"
+      ],
+      "newAreaIds": [
+        "organization-retrieval",
+        "enrichment-similarity",
+        "media-derivatives"
+      ],
+      "unmappedFilesReviewed": [
+        "apps/extension/src/imports.ts",
+        "packages/parsers/src/x.ts",
+        "apps/web/app/CaptureSessionPanel.tsx",
+        "apps/web/app/useCaptureSessions.ts",
+        "convex/captureSessions.ts",
+        "apps/web/app/VaultAccessGate.tsx",
+        "apps/web/app/privateAccess.ts",
+        "apps/web/app/usePrivateImageUrl.ts",
+        "convex/lib/privateAccess.ts",
+        "apps/web/app/BatchOrganizationBar.tsx",
+        "apps/web/app/ProjectPanel.tsx",
+        "convex/projects.ts",
+        "convex/savedSearches.ts",
+        "convex/lib/searchMatches.ts",
+        "apps/web/app/EnrichmentQueuePanel.tsx",
+        "convex/enrichmentJobs.ts",
+        "convex/suggestedTags.ts",
+        "convex/lib/suggestedTags.ts",
+        "convex/relatedReferences.ts",
+        "convex/lib/relatedReferences.ts",
+        "convex/mediaDerivatives.ts",
+        "convex/mediaDerivativesNode.ts"
+      ],
+      "throughCommit": {
+        "sha": "93229ca619fcbffbe53bc8b7e23e7edc2e56eb29",
+        "shortSha": "93229ca",
+        "subject": "Add first-class capture session bundles and import review (#41)",
+        "url": "https://github.com/teamleaderleo/ourchival/commit/93229ca619fcbffbe53bc8b7e23e7edc2e56eb29"
+      }
+    },
     {
       "id": "review-2026-07-12-initial-map",
       "reviewedAt": "2026-07-12T20:10:00.000+08:00",
       "summary": "Initial map established the browser-to-vault capture path, Convex catalog, portable Drive storage, Reliquary experience, shared contracts, and unresolved privacy boundary.",
-      "affectedAreaIds": ["capture-pipeline", "convex-catalog", "drive-storage", "reliquary-ui", "shared-contracts", "privacy-boundary"],
-      "newAreaIds": ["capture-pipeline", "convex-catalog", "drive-storage", "reliquary-ui", "shared-contracts", "privacy-boundary"],
+      "affectedAreaIds": [
+        "capture-pipeline",
+        "convex-catalog",
+        "drive-storage",
+        "reliquary-ui",
+        "shared-contracts",
+        "privacy-boundary"
+      ],
+      "newAreaIds": [
+        "capture-pipeline",
+        "convex-catalog",
+        "drive-storage",
+        "reliquary-ui",
+        "shared-contracts",
+        "privacy-boundary"
+      ],
       "unmappedFilesReviewed": [],
       "throughCommit": {
         "sha": "b068ba43f9ca25b573f4bd48a35e04d132ce45c9",
@@ -22,26 +84,87 @@
     {
       "id": "private-http-boundary",
       "areaId": "privacy-boundary",
-      "question": "What should authenticate the public Convex HTTP capture and vault endpoints before Ourchival is deployed beyond personal development?",
-      "whyItMatters": "The archive is intended to be private, while the committed HTTP actions currently allow broad cross-origin access without an identity gate.",
-      "status": "open",
-      "evidence": ["convex/http.ts", "docs/ROADMAP.md", "docs/DOMAIN.md"]
+      "question": "What authenticates the private vault and capture endpoints?",
+      "whyItMatters": "Resolved at this scale: owner routes require a deployment key, capture accepts that key or a revocable paired-device token, and CORS no longer grants every origin.",
+      "status": "resolved",
+      "evidence": [
+        "convex/lib/privateAccess.ts",
+        "convex/http.ts",
+        "apps/web/app/VaultAccessGate.tsx",
+        "docs/PRIVATE_ACCESS.md"
+      ]
     },
     {
       "id": "capture-deduplication",
       "areaId": "capture-pipeline",
-      "question": "Which canonical identity should prevent the same source asset from producing duplicate references?",
-      "whyItMatters": "The intended model is one image with many meanings, but reliable capture needs to distinguish reuse from accidental duplication.",
-      "status": "open",
-      "evidence": ["convex/http.ts", "convex/schema.ts", "docs/ROADMAP.md"]
+      "question": "Which canonical identity prevents the same source asset from producing duplicate references?",
+      "whyItMatters": "Resolved in the committed capture path with an explicit precedence: exact original asset URL, normalized canonical URL, then source URL, while an existing record can receive missing context.",
+      "status": "resolved",
+      "evidence": [
+        "convex/http.ts",
+        "convex/lib/urls.ts",
+        "convex/schema.ts"
+      ]
     },
     {
       "id": "drive-fallback-visibility",
       "areaId": "drive-storage",
-      "question": "How prominently should Reliquary distinguish Drive originals, Convex fallbacks, linked assets, and metadata-only captures?",
-      "whyItMatters": "Storage fallback is useful only when the user can tell what was preserved and what may require recovery.",
+      "question": "Can the owner distinguish Drive originals, Convex fallbacks, and linked assets?",
+      "whyItMatters": "Resolved in Reliquary's inspector: the asset label names the provider while cards and details prefer private derivatives before falling back to the stored or linked original.",
+      "status": "resolved",
+      "evidence": [
+        "apps/web/app/referenceVaultModel.ts",
+        "apps/web/app/SelectedReference.tsx",
+        "apps/web/app/ReferenceCards.tsx"
+      ]
+    },
+    {
+      "id": "capture-session-accounting",
+      "areaId": "capture-pipeline",
+      "question": "When should capture sessions be written directly instead of reconstructed from recent successful references?",
+      "whyItMatters": "The current reconstruction creates a useful review group but cannot recover expected, duplicate, skipped, or failed counts from the extension checkpoint and is bounded to recent references.",
       "status": "open",
-      "evidence": ["convex/lib/drive.ts", "convex/http.ts", "apps/web/app/ReferenceVault.tsx"]
+      "evidence": [
+        "apps/extension/src/background.ts",
+        "convex/captureSessions.ts",
+        "convex/schema.ts"
+      ]
+    },
+    {
+      "id": "rich-search-scale",
+      "areaId": "organization-retrieval",
+      "question": "Which indexed representation should replace bounded relationship hydration when rare searches must cover the full archive?",
+      "whyItMatters": "Field-level explanations are useful, but the current newest-first application scan intentionally stops after a bounded number of candidates per response.",
+      "status": "open",
+      "evidence": [
+        "convex/lib/referenceCatalog.ts",
+        "convex/lib/searchMatches.ts",
+        "convex/schema.ts"
+      ]
+    },
+    {
+      "id": "enrichment-provenance",
+      "areaId": "enrichment-similarity",
+      "question": "How should heuristic version and threshold provenance remain visible after suggestions or relatedness rules change?",
+      "whyItMatters": "Current jobs preserve outcomes and reasons, but not the rule-set version that produced them, which limits reproducibility across future tuning.",
+      "status": "open",
+      "evidence": [
+        "convex/lib/suggestedTags.ts",
+        "convex/lib/relatedReferences.ts",
+        "convex/schema.ts"
+      ]
+    },
+    {
+      "id": "derivative-retry-cleanup",
+      "areaId": "media-derivatives",
+      "question": "What should retry failed derivative jobs and reclaim blobs written before an interrupted completion mutation?",
+      "whyItMatters": "Failures are observable and force-retryable, but automatic retry policy and orphaned storage cleanup are not part of the committed worker boundary.",
+      "status": "open",
+      "evidence": [
+        "convex/mediaDerivatives.ts",
+        "convex/mediaDerivativesNode.ts",
+        "convex/crons.ts"
+      ]
     }
   ],
   "areas": [
@@ -49,122 +172,347 @@
       "id": "capture-pipeline",
       "name": "Browser-to-vault capture pipeline",
       "kind": "Core workflow",
-      "purpose": "Turns an image, link, page, or selected context from the browser extension into a source-aware reference and optional stored asset.",
+      "purpose": "Turns single items, tabs, pasted URLs, bookmarks, and rich multi-image posts into duplicate-safe, source-aware references with recoverable batch and session identity.",
       "importance": 5,
-      "breadth": 76,
-      "depth": 48,
-      "confidence": 90,
-      "freshness": 94,
-      "changed": "Reviewed from origin/main",
-      "verdict": "The essential loop is present; deduplication and richer platform parsing are the next reliability boundaries",
-      "evidence": ["apps/extension/src/background.ts", "apps/extension/src/storage.ts", "convex/http.ts"],
+      "breadth": 94,
+      "depth": 76,
+      "confidence": 96,
+      "freshness": 100,
+      "changed": "Expanded through origin/main at 93229ca",
+      "verdict": "The core loop is now resilient and attributable; direct session accounting is the next integrity boundary",
+      "evidence": [
+        "apps/extension/src/content.ts",
+        "apps/extension/src/background.ts",
+        "apps/extension/src/imports.ts",
+        "convex/http.ts",
+        "convex/captureSessions.ts"
+      ],
       "walkthrough": {
-        "title": "Follow one clipped image into Reliquary",
-        "outcome": "See where browser context becomes portable source metadata, a Convex record, and—when configured—a private Drive original.",
-        "estimatedMinutes": 5,
+        "title": "Follow one interrupted multi-image capture into review",
+        "outcome": "See how rich browser context becomes checkpointed requests, duplicate-safe records, and a reviewable capture group.",
+        "estimatedMinutes": 7,
         "steps": [
           {
-            "label": "Capture the browser context",
+            "label": "Parse the source context",
+            "file": "apps/extension/src/content.ts",
+            "explanation": "The content script snapshots page metadata and delegates X article normalization to the shared parser.",
+            "invariant": "Every parsed media item points back to one canonical source post and retains creator or alt context when available."
+          },
+          {
+            "label": "Checkpoint each attempted item",
             "file": "apps/extension/src/background.ts",
-            "explanation": "The extension converts the clicked image, link, page, and selection into a shared capture payload.",
-            "invariant": "Every save retains a source URL even when no file can be stored."
+            "explanation": "The batch runner stamps one session ID, records successes and failures, advances the index, and persists state after each attempt.",
+            "invariant": "An interruption resumes after the last persisted item instead of replaying the whole batch."
           },
           {
-            "label": "Send to the configured vault endpoint",
-            "file": "apps/extension/src/storage.ts",
-            "explanation": "The popup-owned endpoint is normalized and the last capture/result are persisted for visible recovery feedback.",
-            "invariant": "A missing or malformed endpoint fails visibly rather than silently losing the capture."
-          },
-          {
-            "label": "Store the asset or preserve the link",
+            "label": "Authenticate and deduplicate capture",
             "file": "convex/http.ts",
-            "explanation": "The capture action fetches remote bytes when applicable, prefers Drive, falls back when possible, and creates catalog records.",
-            "invariant": "Reference metadata survives even when remote file retrieval is unavailable."
+            "explanation": "The capture route authorizes the paired device, normalizes identity, enriches an existing match or inserts one new reference, and retains session identity.",
+            "invariant": "The same active asset or canonical source is not represented by a second reference."
           },
           {
-            "label": "Render the saved reference",
-            "file": "apps/web/app/ReferenceVault.tsx",
-            "explanation": "Reliquary polls the Convex site endpoint, renders the appropriate lane, and exposes source and storage context in the inspector.",
-            "invariant": "The source remains inspectable independently of the stored or proxied image."
+            "label": "Reconstruct the review group",
+            "file": "convex/captureSessions.ts",
+            "explanation": "Recent references are grouped by captureSessionId and upserted into an owner-only review ledger.",
+            "invariant": "A session's owner review state survives later synchronization."
           }
         ]
       },
-      "concepts": ["context-menu capture", "source-aware reference", "graceful asset fallback", "visible capture result"]
+      "concepts": [
+        "context-aware capture",
+        "checkpointed bulk intake",
+        "canonical deduplication",
+        "capture session identity",
+        "visible partial failure"
+      ]
     },
     {
       "id": "convex-catalog",
       "name": "Convex catalog and relationships",
       "kind": "Data system",
-      "purpose": "Stores references, assets, source snapshots, boards, tags, projects, reuse relationships, and export history as the searchable archive catalog.",
+      "purpose": "Stores references, assets, snapshots, capture sessions, boards, tags, projects, saved searches, enrichment work, suggestions, and aggregate archive counts.",
       "importance": 5,
-      "breadth": 82,
-      "depth": 54,
-      "confidence": 93,
-      "freshness": 92,
-      "changed": "Reviewed from origin/main",
-      "verdict": "A strong domain model that already separates one asset from its many project and board meanings",
-      "evidence": ["convex/schema.ts", "convex/references.ts", "convex/boards.ts", "convex/tags.ts", "docs/DATA_MODEL.md"],
-      "concepts": ["reference versus asset", "many-context reuse", "indexed source identity", "soft deletion"]
+      "breadth": 96,
+      "depth": 78,
+      "confidence": 95,
+      "freshness": 100,
+      "changed": "Expanded through origin/main at 93229ca",
+      "verdict": "The catalog now represents capture, reuse, retrieval, enrichment, and review explicitly; several relationship operations still favor personal-scale scans over stronger indexed uniqueness",
+      "evidence": [
+        "convex/schema.ts",
+        "convex/lib/referenceCatalog.ts",
+        "convex/references.ts",
+        "convex/projects.ts",
+        "convex/enrichmentJobs.ts",
+        "convex/captureSessions.ts"
+      ],
+      "concepts": [
+        "reference versus asset",
+        "source snapshot provenance",
+        "many-context reuse",
+        "observable job state",
+        "soft deletion",
+        "materialized archive counts"
+      ]
     },
     {
       "id": "drive-storage",
       "name": "Portable original-file storage",
       "kind": "Storage boundary",
-      "purpose": "Keeps originals in private Google Drive when configured while recording Drive identifiers and supporting Convex or linked fallbacks.",
+      "purpose": "Keeps originals in private Google Drive when configured, records provider provenance, supports Convex or linked fallbacks, and supplies private originals to the derivative worker.",
       "importance": 4,
-      "breadth": 68,
-      "depth": 46,
-      "confidence": 88,
-      "freshness": 91,
-      "changed": "Reviewed from origin/main",
-      "verdict": "The portability decision is sound; operational status and fallback visibility need to become first-class UI",
-      "evidence": ["convex/lib/drive.ts", "scripts/google-drive-auth.mjs", "docs/GOOGLE_DRIVE.md", "convex/http.ts"],
-      "concepts": ["private file proxy", "portable file home", "storage-provider fallback", "metadata sidecar direction"]
+      "breadth": 78,
+      "depth": 66,
+      "confidence": 94,
+      "freshness": 100,
+      "changed": "Secured and connected to derived media through origin/main",
+      "verdict": "Original portability and browsing performance are now separate concerns, at the cost of operating a second derived-file plane in Convex Storage",
+      "evidence": [
+        "convex/lib/drive.ts",
+        "convex/http.ts",
+        "convex/mediaDerivativesNode.ts",
+        "apps/web/app/referenceVaultModel.ts",
+        "docs/GOOGLE_DRIVE.md"
+      ],
+      "concepts": [
+        "private file proxy",
+        "portable original home",
+        "storage-provider fallback",
+        "provider-visible UI",
+        "derived browsing plane"
+      ]
     },
     {
       "id": "reliquary-ui",
       "name": "Reliquary vault experience",
       "kind": "Experience",
-      "purpose": "Provides dense browsing, lanes, search, favorites, manual capture, editing, source inspection, and the beginnings of boards and project reuse.",
-      "importance": 4,
-      "breadth": 72,
-      "depth": 44,
-      "confidence": 89,
-      "freshness": 93,
-      "changed": "Reviewed from origin/main",
-      "verdict": "The daily-vault center is visible; boards, projects, and upload remain intentionally incomplete",
-      "evidence": ["apps/web/app/ReferenceVault.tsx", "apps/web/app/referenceVaultModel.ts", "apps/web/app/styles.css", "docs/PRODUCT_DIRECTION.md"],
-      "concepts": ["dense visual archive", "source inspector", "reference lanes", "local-first feeling"]
+      "purpose": "Provides owner-gated inbox review, archive navigation, paging, filters, tags, boards, projects, saved searches, batch organization, enrichment review, related browsing, and capture-session review.",
+      "importance": 5,
+      "breadth": 95,
+      "depth": 72,
+      "confidence": 94,
+      "freshness": 100,
+      "changed": "Recomposed into focused panels and hooks through origin/main",
+      "verdict": "Reliquary has become an operational archive rather than a gallery; its next UX risk is feature density across many adjacent panels",
+      "evidence": [
+        "apps/web/app/ReferenceVault.tsx",
+        "apps/web/app/useReferenceVault.ts",
+        "apps/web/app/SelectedReference.tsx",
+        "apps/web/app/CaptureSessionPanel.tsx",
+        "apps/web/app/BatchOrganizationBar.tsx"
+      ],
+      "concepts": [
+        "inbox triage",
+        "bounded mounted references",
+        "source and storage inspector",
+        "relationship-aware retrieval",
+        "human-reviewed enrichment",
+        "session review"
+      ]
     },
     {
       "id": "shared-contracts",
       "name": "Shared capture and parsing contracts",
       "kind": "Boundary",
-      "purpose": "Keeps payload types and platform detection reusable between extension, backend, and future site-specific parsers.",
-      "importance": 3,
-      "breadth": 58,
-      "depth": 32,
-      "confidence": 85,
-      "freshness": 90,
-      "changed": "Reviewed from origin/main",
-      "verdict": "Useful seam with the X/Twitter-specific parser still deliberately ahead",
-      "evidence": ["packages/shared/src/index.ts", "packages/parsers/src/index.ts", "convex/lib/platform.ts", "apps/extension/src/content.ts"],
-      "concepts": ["capture payload contract", "platform detection", "page-context parser", "graceful degradation"]
+      "purpose": "Keeps the capture payload, page snapshot, platform detection, and site-specific parsing reusable between extension, backend, and tests.",
+      "importance": 4,
+      "breadth": 76,
+      "depth": 58,
+      "confidence": 94,
+      "freshness": 100,
+      "changed": "Rich metadata and the X parser landed through origin/main",
+      "verdict": "The intended parser seam is now proven for X; other platforms still degrade through the generic snapshot contract",
+      "evidence": [
+        "packages/shared/src/index.ts",
+        "packages/parsers/src/index.ts",
+        "packages/parsers/src/x.ts",
+        "packages/parsers/src/x.test.ts",
+        "apps/extension/src/content.ts"
+      ],
+      "concepts": [
+        "capture payload contract",
+        "canonical source identity",
+        "DOM snapshot parser",
+        "multi-image post context",
+        "generic metadata fallback"
+      ]
     },
     {
       "id": "privacy-boundary",
-      "name": "Private deployment boundary",
-      "kind": "Security frontier",
-      "purpose": "Must eventually gate the vault UI and capture endpoints while keeping Drive files private and development setup usable.",
+      "name": "Private owner and Clipper boundary",
+      "kind": "Security boundary",
+      "purpose": "Gates owner reads and mutations behind a deployment secret while granting capture-only browser access through expiring one-use pairing codes and revocable device tokens.",
       "importance": 5,
-      "breadth": 18,
-      "depth": 10,
-      "confidence": 96,
+      "breadth": 82,
+      "depth": 70,
+      "confidence": 94,
       "freshness": 100,
-      "changed": "Explicitly not implemented",
-      "verdict": "High-priority missing boundary; the roadmap correctly refuses to imply that the current HTTP surface is private",
-      "evidence": ["convex/http.ts", "docs/ROADMAP.md", "docs/DOMAIN.md", ".env.example"],
-      "concepts": ["private-by-default vault", "HTTP action authentication", "origin policy", "development bypass"]
+      "changed": "Implemented and reviewed through origin/main at 93229ca",
+      "verdict": "The personal single-owner threat model is now enforced; identity, rotation, and finer device scopes remain deliberately outside it",
+      "evidence": [
+        "convex/lib/privateAccess.ts",
+        "convex/http.ts",
+        "apps/web/app/VaultAccessGate.tsx",
+        "apps/web/app/privateAccess.ts",
+        "apps/extension/src/background.ts",
+        "docs/PRIVATE_ACCESS.md"
+      ],
+      "walkthrough": {
+        "title": "Pair and revoke one Clipper",
+        "outcome": "Understand how the owner key delegates capture without being copied into the extension.",
+        "estimatedMinutes": 5,
+        "steps": [
+          {
+            "label": "Unlock as owner",
+            "file": "apps/web/app/VaultAccessGate.tsx",
+            "explanation": "The web gate validates the owner key and attaches it to owner HTTP and Convex calls for the session.",
+            "invariant": "Owner-only routes never accept an unauthenticated request."
+          },
+          {
+            "label": "Issue a short-lived grant",
+            "file": "convex/http.ts",
+            "explanation": "An authenticated owner creates a hashed pairing grant with a ten-minute expiry.",
+            "invariant": "The displayed pairing secret is short-lived and usable at most once."
+          },
+          {
+            "label": "Exchange for device authority",
+            "file": "convex/lib/privateAccess.ts",
+            "explanation": "The Clipper receives a random device token while Convex stores only its hash and device metadata.",
+            "invariant": "The extension never receives or persists the owner master key."
+          },
+          {
+            "label": "Reject revoked capture",
+            "file": "apps/extension/src/background.ts",
+            "explanation": "Each capture supplies the device bearer token and surfaces a failed authorization in the persisted batch result.",
+            "invariant": "Revocation takes effect at the next server authorization check."
+          }
+        ]
+      },
+      "concepts": [
+        "single-owner access key",
+        "one-use pairing grant",
+        "hashed device credential",
+        "device revocation",
+        "origin allowlist"
+      ]
+    },
+    {
+      "id": "organization-retrieval",
+      "name": "Reusable organization and explainable retrieval",
+      "kind": "Knowledge system",
+      "purpose": "Organizes one reference across tags, boards, and projects, preserves project-specific reuse context, supports bounded batch operations, and returns labeled reasons for search matches.",
+      "importance": 5,
+      "breadth": 88,
+      "depth": 68,
+      "confidence": 92,
+      "freshness": 100,
+      "changed": "New durable area reviewed through origin/main at 93229ca",
+      "verdict": "The reuse model is coherent and retrieval is unusually transparent; full-archive search scalability remains intentionally unresolved",
+      "evidence": [
+        "convex/projects.ts",
+        "convex/boards.ts",
+        "convex/tags.ts",
+        "convex/savedSearches.ts",
+        "convex/lib/searchMatches.ts",
+        "convex/lib/referenceCatalog.ts",
+        "apps/web/app/BatchOrganizationBar.tsx"
+      ],
+      "concepts": [
+        "reference reuse",
+        "relationship-specific reason",
+        "bounded batch mutation",
+        "saved query grammar",
+        "field-level match explanation"
+      ]
+    },
+    {
+      "id": "enrichment-similarity",
+      "name": "Reviewable enrichment and similarity",
+      "kind": "Derived knowledge",
+      "purpose": "Tracks enrichment as observable jobs, proposes rather than silently applies taxonomy, and ranks related references with explicit structural, source, textual, and visual reasons.",
+      "importance": 4,
+      "breadth": 86,
+      "depth": 72,
+      "confidence": 90,
+      "freshness": 100,
+      "changed": "New durable area reviewed through origin/main at 93229ca",
+      "verdict": "The human-review boundary is strong; heuristic versioning and scan limits should stay visible as the archive grows",
+      "evidence": [
+        "convex/enrichmentJobs.ts",
+        "convex/lib/suggestedTags.ts",
+        "convex/suggestedTags.ts",
+        "convex/lib/relatedReferences.ts",
+        "convex/relatedReferences.ts",
+        "convex/visualEnrichment.ts",
+        "apps/web/app/EnrichmentQueuePanel.tsx"
+      ],
+      "concepts": [
+        "observable enrichment job",
+        "pending suggestion",
+        "human acceptance boundary",
+        "reason-bearing relatedness",
+        "perceptual similarity"
+      ]
+    },
+    {
+      "id": "media-derivatives",
+      "name": "Asynchronous media derivative pipeline",
+      "kind": "Processing system",
+      "purpose": "Claims stored originals for bounded Node processing into private WebP previews, thumbnails, dimensions, hashes, and dominant colors without replacing original-provider provenance.",
+      "importance": 4,
+      "breadth": 74,
+      "depth": 78,
+      "confidence": 93,
+      "freshness": 100,
+      "changed": "New durable area reviewed through origin/main at 93229ca",
+      "verdict": "The worker cleanly separates archival storage from browsing assets; retry policy and orphan cleanup are the remaining operational boundaries",
+      "evidence": [
+        "convex/mediaDerivatives.ts",
+        "convex/mediaDerivativesNode.ts",
+        "convex/lib/imageAnalysis.ts",
+        "convex/crons.ts",
+        "convex/schema.ts",
+        "docs/MEDIA_PIPELINE.md"
+      ],
+      "walkthrough": {
+        "title": "Turn one private original into browsing assets",
+        "outcome": "Trace queue idempotency, worker ownership, bounded image processing, and the final asset transition.",
+        "estimatedMinutes": 5,
+        "steps": [
+          {
+            "label": "Queue only eligible work",
+            "file": "convex/mediaDerivatives.ts",
+            "explanation": "The mutation requires a Drive or Convex original, reuses active work, and schedules a new internal job only when needed.",
+            "invariant": "One asset has at most one queued or running media-derivative job."
+          },
+          {
+            "label": "Claim before decoding",
+            "file": "convex/mediaDerivativesNode.ts",
+            "explanation": "The Node action loads job context and atomically claims queued work before fetching the original.",
+            "invariant": "A worker that cannot claim the job performs no transformation."
+          },
+          {
+            "label": "Bound and derive",
+            "file": "convex/mediaDerivativesNode.ts",
+            "explanation": "Sharp enforces input limits, orients the image, emits two WebPs, and derives hashes, dimensions, and colors.",
+            "invariant": "The archival original is read but never overwritten."
+          },
+          {
+            "label": "Commit asset and job state",
+            "file": "convex/mediaDerivatives.ts",
+            "explanation": "The completion mutation validates the job-asset relationship, stores derivative metadata, and marks both asset and job ready.",
+            "invariant": "A ready asset points to both stored derivatives and a succeeded job record."
+          }
+        ]
+      },
+      "concepts": [
+        "idempotent queueing",
+        "claimed background work",
+        "bounded image decode",
+        "private derived assets",
+        "content and perceptual hashes",
+        "observable failure state"
+      ]
     }
   ]
 }

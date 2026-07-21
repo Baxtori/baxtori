@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type { ContinueItem } from "@/lib/continue-queue";
 import type { ReaderTrail, TrailStory } from "@/lib/reader-trail";
-import { BotanicalDetail, BotanicalProgress } from "./botanical-progress";
+import { BotanicalDetail } from "./botanical-detail";
+import { BotanicalProgress } from "./botanical-progress";
 import styles from "./trail-reader.module.css";
 
 type StoryDecisionState = {
@@ -234,18 +235,20 @@ export function TrailReader({
             <article className={`${styles.scene} ${styles.storyScene} ${state.understood ? styles.understood : ""}`} data-trail-scene id={scene.id} key={scene.id} tabIndex={-1}>
               <div className={styles.sceneNumber} aria-hidden="true">{String(index).padStart(2, "0")}</div>
               <header className={styles.storyHeader}>
-                <div className={styles.storyMeta}>
-                  <span>{scene.story.project}</span>
-                  <span>{scene.item.minutes} min</span>
-                  <span>{scene.story.timing}</span>
+                <div className={styles.storyLead}>
+                  <div className={styles.storyMeta}>
+                    <span>{scene.story.project}</span>
+                    <span>{scene.item.minutes} min</span>
+                    <span>{scene.story.timing}</span>
+                  </div>
+                  <h2>{scene.story.title}</h2>
+                  <p className={styles.storyBrief}>{scene.story.brief}</p>
                 </div>
                 <div className={styles.specimenBearing}>
-                  <p>{scene.story.repository ?? scene.item.repository}</p>
                   <BotanicalDetail stage={index} />
+                  <p>{scene.story.repository ?? scene.item.repository}</p>
                 </div>
               </header>
-              <h2>{scene.story.title}</h2>
-              <p className={styles.storyBrief}>{scene.story.brief}</p>
 
               <div className={styles.whyNow}>
                 <span>Why now</span>

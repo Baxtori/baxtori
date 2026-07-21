@@ -11,6 +11,15 @@ const published = {
   startLine: 44,
 };
 
+const currentPublished = {
+  base: "a15093e0159044bf4fcb41b3a6519f35facdf0d1",
+  endLine: 143,
+  head: "6c020bae10decef2fc8377ef3f65c40c3596fd6f",
+  path: "scripts/lib/authorized-source-plan.mjs",
+  repository: "teamleaderleo/baxtori",
+  startLine: 21,
+};
+
 test("published demo evidence resolves only its exact allowlisted address", () => {
   const code = demoCodeEvidence({ ...published, commit: published.head });
   const diff = demoDiffEvidence(published);
@@ -18,6 +27,15 @@ test("published demo evidence resolves only its exact allowlisted address", () =
   assert.equal(code?.lines[0].number, 44);
   assert.equal(code?.lines.at(-1).number, 81);
   assert.equal(diff?.lines[0].kind, "hunk");
+  assert.ok(diff?.lines.some((line) => line.kind === "addition"));
+});
+
+test("the current published edition keeps its first exact excerpt available in the demo", () => {
+  const code = demoCodeEvidence({ ...currentPublished, commit: currentPublished.head });
+  const diff = demoDiffEvidence(currentPublished);
+
+  assert.equal(code?.lines[0].number, 21);
+  assert.equal(code?.lines.at(-1).number, 143);
   assert.ok(diff?.lines.some((line) => line.kind === "addition"));
 });
 

@@ -6,7 +6,6 @@ import { useEffect, useRef } from "react";
 import styles from "./trail-reader.module.css";
 
 const MALE_FERN = "/art/male-fern-nature-print.png";
-const BRACKEN = "/art/bracken-nature-print.png";
 
 function progressBetween(progress: number, start: number, end: number) {
   return Math.max(0, Math.min(1, (progress - start) / (end - start)));
@@ -53,27 +52,15 @@ export function BotanicalProgress() {
 
   return (
     <figure aria-hidden="true" className={styles.botanicalProgress} data-botanical-progress ref={rootRef}>
-      <img alt="" className={styles.botanicalPlateGhost} height="2296" src={MALE_FERN} width="1384" />
+      <img alt="" className={styles.botanicalPlateGhost} decoding="async" fetchPriority="high" height="2296" src={MALE_FERN} width="1384" />
       <div className={styles.botanicalPlateReveal} data-botanical-reveal>
-        <img alt="" className={styles.botanicalPlate} data-botanical-plate height="2296" src={MALE_FERN} width="1384" />
+        <img alt="" className={styles.botanicalPlate} data-botanical-plate decoding="async" fetchPriority="high" height="2296" src={MALE_FERN} width="1384" />
       </div>
       <figcaption className={styles.botanicalCaption}>
         <span>Plate XIV</span>
         <em>Lastrea filix-mas</em>
         <small>Nature-printed · H. Bradbury · 1855</small>
       </figcaption>
-    </figure>
-  );
-}
-
-export function BotanicalDetail({ stage }: { stage: number }) {
-  const position = ["50% 19%", "38% 42%", "66% 31%", "23% 68%"][stage % 4];
-  return (
-    <figure aria-hidden="true" className={styles.botanicalDetail}>
-      <div>
-        <img alt="" height="2448" src={BRACKEN} style={{ objectPosition: position }} width="1589" />
-      </div>
-      <figcaption><span>Plate XLIV</span><em>Pteridium aquilinum</em></figcaption>
     </figure>
   );
 }

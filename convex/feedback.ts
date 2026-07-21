@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { verifySecret as verifySharedSecret } from "./apiSecret";
 import {
   evidenceAddressValidator,
   questionReviewStateValidator,
@@ -10,8 +11,7 @@ import {
 } from "./validators";
 
 function verifySecret(secret: string) {
-  const expected = process.env.FEEDBACK_API_SECRET;
-  if (!expected || secret !== expected) throw new Error("Unauthorized feedback request.");
+  verifySharedSecret(secret, "Unauthorized feedback request.");
 }
 
 export const getReaderState = query({
@@ -28,6 +28,7 @@ export const getReaderState = query({
 
 export const saveReaderState = mutation({
   args: {
+    baseRevision: v.optional(v.number()),
     githubLogin: v.string(),
     payload: readerStateValidator,
     secret: v.string(),
@@ -36,9 +37,15 @@ export const saveReaderState = mutation({
   handler: async (ctx, args) => {
     verifySecret(args.secret);
     const current = await ctx.db.query("readerStates").withIndex("by_user", (q) => q.eq("userId", args.userId)).unique();
+    if (current && args.baseRevision !== undefined && args.baseRevision !== current.revision) {
+      // Another device saved after this client last loaded; refuse the write
+      // instead of silently clobbering the newer state.
+      return { conflict: true as const, revision: current.revision, updatedAt: current.updatedAt };
+    }
     const revision = (current?.revision ?? 0) + 1;
     const value = {
       githubLogin: args.githubLogin,
+      githubLoginLower: args.githubLogin.toLowerCase(),
       payload: args.payload,
       revision,
       updatedAt: Date.now(),
@@ -46,7 +53,7 @@ export const saveReaderState = mutation({
     };
     if (current) await ctx.db.patch(current._id, value);
     else await ctx.db.insert("readerStates", value);
-    return { revision, updatedAt: value.updatedAt };
+    return { conflict: false as const, revision, updatedAt: value.updatedAt };
   },
 });
 
@@ -262,8 +269,15 @@ export const getCompilerInput = query({
   args: { githubLogin: v.string(), secret: v.string() },
   handler: async (ctx, args) => {
     verifySecret(args.secret);
-    const matchingStates = (await ctx.db.query("readerStates").collect())
-      .filter((state) => state.githubLogin.toLowerCase() === args.githubLogin.toLowerCase())
+    const loginLower = args.githubLogin.toLowerCase();
+    const indexedStates = await ctx.db.query("readerStates")
+      .withIndex("by_login_lower", (q) => q.eq("githubLoginLower", loginLower))
+      .collect();
+    // Rows saved before githubLoginLower existed are invisible to the index,
+    // so fall back to a scan only when the indexed lookup finds nothing.
+    const matchingStates = (indexedStates.length
+      ? indexedStates
+      : (await ctx.db.query("readerStates").collect()).filter((state) => state.githubLogin.toLowerCase() === loginLower))
       .sort((a, b) => b.updatedAt - a.updatedAt);
     const readerState = matchingStates[0] ?? null;
     const reviewRequests = readerState

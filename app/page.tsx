@@ -1,20 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import archivedEdition20260710 from "@/data/editions/2026-07-10.json";
-import archivedEdition20260712 from "@/data/editions/2026-07-12.json";
-import archivedEdition20260713 from "@/data/editions/2026-07-13.json";
-import latestEdition from "@/data/latest.json";
-import ourchivalMap from "@/data/maps/ourchival.json";
-import oneMoreLegendMap from "@/data/maps/one-more-legend.json";
-import repositoryMap from "@/data/repo-map.json";
-import reviewPolicy from "@/data/review-policy.json";
-import reviewScope from "@/data/review-scope.json";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { mapWithConcurrency } from "@/lib/async-pool";
-import type { EditionSelectionRecord } from "@/lib/edition-ledger";
-import type { HistoricalEdition } from "@/lib/edition-history";
 import { buildContinueQueue, planContinueQueue, type ContinueItem, type ContinueItemKind } from "@/lib/continue-queue";
 import { buildReaderTrail, type TrailStory } from "@/lib/reader-trail";
+import type { GitHubUser } from "@/lib/github-auth";
+import type { RepositoryLibraryEntry } from "@/lib/github-repository-library";
 import { focusTargetFor, planStoryOpening, shouldClearReviewMarker, type FocusTarget } from "@/lib/reader-navigation";
 import { parseStoredQuestionRecords, type ThreadQuestionRecord } from "@/lib/story-questions";
 import {
@@ -32,86 +23,40 @@ import {
 } from "@/lib/repository-modes";
 import { activeWatchThreadFor, storyWatchInput, topicThreadFor, type TopicThreadRecord } from "@/lib/story-topics";
 import type { ReaderStatePayload, ReaderStoryState, ReviewRequest } from "@/lib/feedback-contract";
+import {
+  DEMO_TOPIC_THREAD,
+  EDITION,
+  HISTORY_EDITIONS,
+  HISTORY_EDITION_COUNT,
+  REPOSITORY_MAP,
+  REPOSITORY_MAPS,
+  REVIEW_POLICY,
+  REVIEW_SCOPE,
+  SCHEDULED_REPOSITORIES,
+  STORIES,
+  type Story,
+} from "./edition-data";
 import { EditionSelectionLedger } from "./edition-selection-ledger";
-import { EditionHistory, type ArchiveEdition } from "./edition-history";
+import { EditionHistory } from "./edition-history";
+import { LoadingShell, SignedOutShell } from "./entrance";
+import { formatEditionDate, formatGeneratedAt, formatRelativeDate, formatReviewCursor } from "./format";
 import { RepositoryModeControl } from "./repository-mode-control";
 import repositoryModeStyles from "./repository-modes.module.css";
 import { RepositoryMaps } from "./repository-maps";
-import { type QuestionDisposition, type RepoArea, type RepoMapData, type RepoQuestion, type UnderstandingState } from "./repo-map";
-import { type CodeEvidence, StoryCode } from "./story-code";
+import { type QuestionDisposition, type RepoArea, type RepoQuestion, type UnderstandingState } from "./repo-map";
+import { StoryCode } from "./story-code";
 import { TrailReader } from "./trail-reader";
 
-type Tone = "blue" | "green" | "rust";
 type View = "briefing" | "history" | "map" | "timeline" | "repositories";
 type ReaderMode = "classic" | "trail";
 
-type Story = {
-  id: string;
-  topicId: string;
-  project: string;
-  tone: Tone;
-  timing: string;
-  title: string;
-  brief: string;
-  learningValue: number;
-  verdict: string;
-  whatChanged: string;
-  whyItMatters: string;
-  verify: string;
-  tradeoff: string;
-  evidence: string;
-  files: string[];
-  codeEvidence?: CodeEvidence[];
-  repository?: string;
-  commits?: { sha: string; url: string }[];
-};
-
-type Edition = {
-  generatedAt: string;
-  id: string;
-  periodEnd: string;
-  periodStart: string;
-  quietRepositories: string[];
-  selection?: EditionSelectionRecord;
-  stories: Story[];
-};
-
 type StoryState = ReaderStoryState;
 
-type ReviewPolicy = {
-  version: number;
-  updatedAt: string;
-  defaultLens: string;
-  lenses: { id: string; label: string; instruction: string }[];
-  preservedRules: string[];
-};
-
-type Repository = {
-  archived: boolean;
-  defaultBranch: string;
-  description: string | null;
-  fork: boolean;
-  fullName: string;
-  id: number;
-  language: string | null;
-  name: string;
-  openIssues: number;
-  private: boolean;
-  pushedAt: string | null;
-  updatedAt: string;
-  url: string;
-};
+type Repository = RepositoryLibraryEntry;
 
 type RepositoryResponse = {
   error?: string;
   repositories: Repository[];
-};
-
-type GitHubUser = {
-  avatarUrl: string;
-  id: number;
-  login: string;
-  name: string | null;
 };
 
 type AuthStatus = {
@@ -137,21 +82,6 @@ type ActivityResponse = {
   since?: string;
   truncated?: boolean;
   window?: "rolling" | "since-review";
-};
-
-type ScopedRepository = {
-  fullName: string;
-  name: string;
-  priority: "core" | "normal" | "low";
-  mapStatus: "mapped" | "unmapped" | "empty";
-};
-
-type ReviewScope = {
-  updatedAt: string;
-  lastReviewedAt: string;
-  schedule: string;
-  windowDays: number;
-  repositories: ScopedRepository[];
 };
 
 type SavedState = ReaderStatePayload;
@@ -187,123 +117,12 @@ const EMPTY_STORY_STATE: StoryState = {
   locked: false,
   muted: false,
   reviewGuidance: "",
-  reviewLens: reviewPolicy.defaultLens,
+  reviewLens: REVIEW_POLICY.defaultLens,
   reviewRequestedAt: null,
   revising: false,
   understood: false,
   watching: false,
 };
-
-const DEMO_STORIES: Story[] = [
-  {
-    id: "checkout",
-    topicId: "payment-retry-policy",
-    project: "Checkout",
-    tone: "blue",
-    timing: "Tue, 11:40",
-    title: "Payment retries now explain themselves.",
-    brief: "Retry decisions are recorded beside each attempt, so support no longer has to reconstruct the story from logs.",
-    learningValue: 5,
-    verdict: "A clean boundary worth studying",
-    whatChanged: "Processor failures, customer-action requirements, and exhausted retries now move through named states instead of one opaque queue path.",
-    whyItMatters: "The system exposes policy as data. Support can explain an outcome, and product can measure where recovery actually stops.",
-    verify: "Follow one already-queued job through the fallback path and confirm its reason stays stable across another attempt.",
-    tradeoff: "The explicit state model adds a small migration and a temporary fallback for jobs already in flight.",
-    evidence: "4 commits · 9 files · 18 tests",
-    files: ["src/retries/classify.ts", "src/retries/record-decision.ts", "tests/retries/attempts.test.ts"],
-  },
-  {
-    id: "studio",
-    topicId: "workspace-membership-boundary",
-    project: "Studio",
-    tone: "green",
-    timing: "Wed, 15:20",
-    title: "Workspace permissions have a clearer edge.",
-    brief: "Membership is resolved once at the route boundary instead of being rediscovered inside every mutation.",
-    learningValue: 4,
-    verdict: "Good direction, one edge to watch",
-    whatChanged: "Mutations now receive an already-resolved membership context from a shared route guard.",
-    whyItMatters: "Authorization becomes easier to audit because the decision is visible in one place rather than scattered across handlers.",
-    verify: "Compare direct membership, inherited admin access, and revoked membership across read and write routes.",
-    tradeoff: "A bug in the shared guard would reach more routes, so inherited-role behavior deserves a compact test matrix.",
-    evidence: "3 commits · 7 files · 12 permission cases",
-    files: ["app/api/workspaces/[slug]/guard.ts", "lib/permissions/resolve-role.ts", "tests/permissions/inherited-role.test.ts"],
-  },
-  {
-    id: "canvas",
-    topicId: "animation-timing-compatibility",
-    project: "Canvas",
-    tone: "rust",
-    timing: "Thu, 09:05",
-    title: "The animation layer lost some old assumptions.",
-    brief: "Three almost-identical timing helpers now route through one primitive while a compatibility switch protects this release.",
-    learningValue: 3,
-    verdict: "Useful cleanup with deliberate debt",
-    whatChanged: "Shared timing behavior moved into one primitive and the three older helpers were retired.",
-    whyItMatters: "The animation surface is smaller and easier to reason about without changing what users see during the current release window.",
-    verify: "Remove the compatibility flag in a test branch and compare interrupted drag and resize transitions.",
-    tradeoff: "Two paths remain until the next release, but keeping the switch avoids an unnecessary visual regression risk today.",
-    evidence: "4 commits · 6 files · 3 helpers retired",
-    files: ["lib/motion/timing.ts", "components/canvas/use-transition.ts", "components/canvas/motion-compat.ts"],
-  },
-];
-
-const EDITION = latestEdition as Edition;
-const STORIES: Story[] = EDITION.stories.length ? EDITION.stories : DEMO_STORIES;
-const ARCHIVED_EDITIONS = [
-  archivedEdition20260713,
-  archivedEdition20260712,
-  archivedEdition20260710,
-] as ArchiveEdition[];
-const HISTORY_EDITIONS = [EDITION, ...ARCHIVED_EDITIONS] as unknown as readonly ArchiveEdition[];
-const HISTORY_EDITION_COUNT = new Set((HISTORY_EDITIONS as readonly HistoricalEdition[]).map((edition) => edition.id)).size;
-const REPOSITORY_MAP = repositoryMap as RepoMapData;
-const REPOSITORY_MAPS = [REPOSITORY_MAP, ourchivalMap as RepoMapData, oneMoreLegendMap as RepoMapData];
-const REVIEW_POLICY = reviewPolicy as ReviewPolicy;
-const REVIEW_SCOPE = reviewScope as ReviewScope;
-const SCHEDULED_REPOSITORIES = REVIEW_SCOPE.repositories.map((repository) => repository.fullName);
-const DEMO_TOPIC_THREAD: TopicThreadRecord = {
-  _id: "demo:reader-review-loop",
-  evidence: {
-    baseCommit: "cbd7740699209218ceef0a27223d9239f4c99bc5",
-    endLine: 81,
-    headCommit: "36379892e85bd1e3512663bcc7632a1c6a9a1be5",
-    path: "convex/feedback.ts",
-    repository: "teamleaderleo/baxtori",
-    startLine: 44,
-  },
-  origin: "watch",
-  sourceKey: "watch:teamleaderleo/baxtori:reader-review-loop",
-  status: "active",
-};
-
-function formatEditionDate(value: string) {
-  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
-}
-
-function formatGeneratedAt(value: string) {
-  return new Intl.DateTimeFormat("en", {
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    month: "short",
-    timeZoneName: "short",
-  }).format(new Date(value));
-}
-
-function formatReviewCursor(value: string) {
-  return new Intl.DateTimeFormat("en", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(value));
-}
-
-function formatRelativeDate(value: string | null) {
-  if (!value) return "No recent push";
-  const days = Math.max(0, Math.floor((Date.now() - Date.parse(value)) / 86_400_000));
-  if (days === 0) return "Pushed today";
-  if (days === 1) return "Pushed yesterday";
-  if (days < 14) return `Pushed ${days} days ago`;
-  if (days < 60) return `Pushed ${Math.round(days / 7)} weeks ago`;
-  return `Pushed ${Math.round(days / 30)} months ago`;
-}
 
 export default function Home() {
   const [auth, setAuth] = useState<AuthStatus | null>(null);
@@ -329,6 +148,9 @@ export default function Home() {
   const [threadQuestions, setThreadQuestions] = useState<ThreadQuestionRecord[]>([]);
   const [topicThreads, setTopicThreads] = useState<TopicThreadRecord[]>([]);
   const watchMigrationAttempted = useRef(false);
+  // Last account revision this client loaded or saved; sent with every save so
+  // the server can refuse writes that would clobber a newer device's state.
+  const stateRevision = useRef(0);
 
   const [repositories, setRepositories] = useState<Repository[]>([]);
   const [repositoryLoading, setRepositoryLoading] = useState(false);
@@ -344,7 +166,7 @@ export default function Home() {
   const [activity, setActivity] = useState<Record<string, ActivityResponse>>({});
   const [activityLoading, setActivityLoading] = useState(false);
 
-  const storyState = (id: string): StoryState => ({ ...EMPTY_STORY_STATE, ...states[id] });
+  const storyState = useCallback((id: string): StoryState => ({ ...EMPTY_STORY_STATE, ...states[id] }), [states]);
   const selectedRepositories = useMemo(() => reviewRepositoriesFromModes(repositoryModes), [repositoryModes]);
   const readerAuthenticated = Boolean(auth?.authenticated || demoMode);
   const accountStorageKey = demoMode ? `${STORAGE_KEY}:${DEMO_STORAGE_SUFFIX}` : auth?.user ? `${STORAGE_KEY}:${auth.user.id}` : null;
@@ -371,10 +193,7 @@ export default function Home() {
     if (result) window.history.replaceState({}, "", window.location.pathname);
   }, []);
 
-  useEffect(() => {
-    if (!accountStorageKey || !readerAuthenticated) return;
-    const controller = new AbortController();
-    const applySavedState = (parsed: Partial<SavedState> & { selectedRepoIds?: string[] }) => {
+  const applySavedState = useCallback((parsed: Partial<SavedState> & { selectedRepoIds?: string[] }) => {
       if (parsed.states) setStates(parsed.states);
       if (parsed.mapStates) setMapStates(parsed.mapStates);
       if (parsed.questionStates) setQuestionStates(parsed.questionStates);
@@ -398,7 +217,11 @@ export default function Home() {
         setRepositoryModes({});
         repositoryPreferenceSource.current = "legacy";
       }
-    };
+  }, []);
+
+  useEffect(() => {
+    if (!accountStorageKey || !readerAuthenticated) return;
+    const controller = new AbortController();
 
     const hydrate = async () => {
       setStates({});
@@ -415,6 +238,7 @@ export default function Home() {
       setThreadQuestions([]);
       setTopicThreads([]);
       watchMigrationAttempted.current = false;
+      stateRevision.current = 0;
       setFeedbackStatus("loading");
 
       let localState: (Partial<SavedState> & { selectedRepoIds?: string[] }) | null = null;
@@ -450,6 +274,7 @@ export default function Home() {
         if (!response.ok) throw new Error(remote.error ?? "Account state is unavailable.");
         if (controller.signal.aborted) return;
         setFeedbackConfigured(remote.configured);
+        stateRevision.current = remote.revision ?? 0;
         setReviewRequests(remote.reviewRequests ?? []);
         setThreadQuestions([...(remote.threadQuestions ?? []), ...localQuestions]);
         setTopicThreads(remote.topicThreads ?? []);
@@ -467,7 +292,7 @@ export default function Home() {
 
     void hydrate();
     return () => controller.abort();
-  }, [accountStorageKey, demoMode, questionStorageKey, readerAuthenticated]);
+  }, [accountStorageKey, applySavedState, demoMode, questionStorageKey, readerAuthenticated]);
 
   useEffect(() => {
     if (!hasHydrated || !accountStorageKey || !repositoryModesInitialized) return;
@@ -491,13 +316,30 @@ export default function Home() {
     const timeout = window.setTimeout(() => {
       setFeedbackStatus("saving");
       fetch("/api/feedback/state", {
-        body: JSON.stringify(saved),
+        body: JSON.stringify({ ...saved, baseRevision: stateRevision.current }),
         headers: { "Content-Type": "application/json" },
         method: "PUT",
         signal: controller.signal,
       })
-        .then((response) => {
+        .then(async (response) => {
+          if (response.status === 409) {
+            // Another device saved a newer revision; reload it so this client
+            // continues from the newest state instead of overwriting it.
+            const refreshed = await fetch("/api/feedback/state", { signal: controller.signal });
+            const remote = (await refreshed.json()) as FeedbackStateResponse;
+            if (!refreshed.ok) throw new Error("Account state could not be reloaded.");
+            if (controller.signal.aborted) return;
+            stateRevision.current = remote.revision ?? 0;
+            if (remote.state) applySavedState(remote.state);
+            setReviewRequests(remote.reviewRequests ?? []);
+            setTopicThreads(remote.topicThreads ?? []);
+            setFeedbackStatus("saved");
+            setNotice("Your reading state changed on another device, so the newer version was loaded.");
+            return;
+          }
           if (!response.ok) throw new Error("Account state could not be saved.");
+          const payload = (await response.json()) as { revision?: number };
+          if (typeof payload.revision === "number") stateRevision.current = payload.revision;
           setFeedbackStatus("saved");
         })
         .catch((error: Error) => {
@@ -508,7 +350,7 @@ export default function Home() {
       window.clearTimeout(timeout);
       controller.abort();
     };
-  }, [accountStorageKey, activeMapRepository, continueBudget, feedbackConfigured, hasHydrated, hideUnderstood, mapStates, questionStates, repositoryModes, repositoryModesInitialized, selectedRepositories, states, view]);
+  }, [accountStorageKey, activeMapRepository, applySavedState, continueBudget, feedbackConfigured, hasHydrated, hideUnderstood, mapStates, questionStates, repositoryModes, repositoryModesInitialized, selectedRepositories, states, view]);
 
   useEffect(() => {
     if (!hasHydrated || !questionStorageKey) return;
@@ -658,30 +500,33 @@ export default function Home() {
     setThreadQuestions((current) => current.map((item) => item._id === question._id ? question : item));
   };
 
-  const isStoryWatching = (story: Story) => Boolean(activeWatchThreadFor(topicThreads, story) || storyState(story.id).watching);
-  const effectiveStoryStates = Object.fromEntries(STORIES.map((story) => [
+  const isStoryWatching = useCallback(
+    (story: Story) => Boolean(activeWatchThreadFor(topicThreads, story) || storyState(story.id).watching),
+    [storyState, topicThreads],
+  );
+  const effectiveStoryStates = useMemo(() => Object.fromEntries(STORIES.map((story) => [
     story.id,
     { ...storyState(story.id), watching: isStoryWatching(story) },
-  ]));
+  ])), [isStoryWatching, storyState]);
   const understoodCount = STORIES.filter((story) => storyState(story.id).understood).length;
   const watchedStories = STORIES.filter(isStoryWatching);
   const queuedReviewRequests = reviewRequests.filter((request) => request.status === "queued");
   const openThreadQuestionCount = threadQuestions.filter((question) => question.status === "open").length;
   const memoryAttentionCount = watchedStories.length + openThreadQuestionCount;
-  const visibleStories = STORIES.filter(
+  const visibleStories = useMemo(() => STORIES.filter(
     (story) => storyState(story.id).locked || (!storyState(story.id).muted && (!hideUnderstood || !storyState(story.id).understood)),
-  );
-  const continueQueue = buildContinueQueue({
+  ), [hideUnderstood, storyState]);
+  const continueQueue = useMemo(() => buildContinueQueue({
     mapStates,
     questionStates,
     repositoryMaps: REPOSITORY_MAPS,
     reviewRequests,
     stories: STORIES,
     storyStates: effectiveStoryStates,
-  });
-  const continuePlan = planContinueQueue(continueQueue, continueBudget);
+  }), [effectiveStoryStates, mapStates, questionStates, reviewRequests]);
+  const continuePlan = useMemo(() => planContinueQueue(continueQueue, continueBudget), [continueBudget, continueQueue]);
   const nextContinueItem = continuePlan.items[0];
-  const trailSession = buildReaderTrail({
+  const trailSession = useMemo(() => buildReaderTrail({
     budgetMinutes: continueBudget,
     editionId: EDITION.id,
     items: continuePlan.items,
@@ -689,7 +534,7 @@ export default function Home() {
     quietRepositories: EDITION.quietRepositories,
     stories: STORIES,
     totalItemCount: continueQueue.length,
-  });
+  }), [continueBudget, continuePlan, continueQueue.length]);
 
   const selectedRepositoryData = sortRepositoriesByMode(repositories.filter((repository) =>
     selectedRepositories.includes(repository.fullName),
@@ -1072,39 +917,10 @@ export default function Home() {
     );
   };
 
-  if (!auth) {
-    return (
-      <main className="auth-shell" aria-busy="true">
-        <div className="auth-brand"><span className="brand-mark" aria-hidden="true">B</span><strong>Baxtori</strong></div>
-        <p>Opening your code backstory…</p>
-      </main>
-    );
-  }
+  if (!auth) return <LoadingShell />;
 
   if (!auth.authenticated && !demoMode) {
-    return (
-      <main className="auth-shell">
-        <section className="auth-card" aria-labelledby="auth-heading">
-          <div className="auth-brand"><span className="brand-mark" aria-hidden="true">B</span><strong>Baxtori</strong></div>
-          <span className="auth-kicker">A living memory for your code</span>
-          <h1 id="auth-heading">Understand what you&apos;re becoming.</h1>
-          <p>Baxtori turns repository activity into a calm, evidence-backed practice: what deserves attention now, how the system fits together, and which questions should survive the week.</p>
-          {auth.configured && (
-            <a className="github-button" href="/api/auth/github/start">
-              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.11.79-.25.79-.56v-2.24c-3.22.7-3.9-1.37-3.9-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.16.08 1.78 1.2 1.78 1.2 1.03 1.77 2.71 1.26 3.37.96.1-.75.4-1.26.73-1.55-2.57-.29-5.27-1.29-5.27-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.47.11-3.05 0 0 .97-.31 3.16 1.18A11 11 0 0 1 12 6.11c.98 0 1.95.13 2.87.39 2.2-1.49 3.16-1.18 3.16-1.18.63 1.58.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.4-2.71 5.38-5.29 5.67.42.36.79 1.07.79 2.15v3.27c0 .31.21.68.8.56A11.5 11.5 0 0 0 12 .7Z" /></svg>
-              Continue with GitHub
-            </a>
-          )}
-          <button className="demo-button" onClick={() => setDemoMode(true)} type="button">
-            Explore the published review <span aria-hidden="true">→</span>
-          </button>
-          <p className="demo-note">No account required. The demo uses real Baxtori editions and a read-only evidence allowlist.</p>
-          {!auth.configured && <p className="connection-caption">Connect your own repositories when GitHub App credentials are configured for this deployment.</p>}
-          {authMessage && <p className="auth-message" role="status">{authMessage}</p>}
-          <div className="auth-assurances"><span>Read-only repository access</span><span>You choose the repositories</span><span>No email or notification feed</span></div>
-        </section>
-      </main>
-    );
+    return <SignedOutShell authMessage={authMessage} configured={auth.configured} onExploreDemo={() => setDemoMode(true)} />;
   }
 
   if (hasHydrated && readerMode === "trail" && view === "briefing") {

@@ -16,32 +16,37 @@ type GitHubCompareResponse = {
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const isDemo = url.searchParams.get("demo") === "1";
-  const auth = isDemo ? null : await getGitHubSession(request);
-  if (auth && !auth.session) {
-    return withSessionCookie(Response.json({ error: "Sign in with GitHub to read this diff." }, { status: 401 }), auth.setCookie);
-  }
 
-  let evidence;
-  try {
-    evidence = parseCodeDiffRequest(url);
-  } catch (error) {
-    const response = Response.json(
-      { error: error instanceof Error ? error.message : "Invalid diff request." },
-      { status: 400 },
-    );
-    return auth ? withSessionCookie(response, auth.setCookie) : response;
-  }
-
-  if (isDemo) {
+  if (url.searchParams.get("demo") === "1") {
+    let evidence;
+    try {
+      evidence = parseCodeDiffRequest(url);
+    } catch (error) {
+      return Response.json(
+        { error: error instanceof Error ? error.message : "Invalid diff request." },
+        { status: 400 },
+      );
+    }
     const published = demoDiffEvidence(evidence);
     return published
       ? Response.json(published, { headers: { "Cache-Control": "public, max-age=3600" } })
       : Response.json({ error: "This comparison is not part of the published demo." }, { status: 404 });
   }
 
-  const { session, setCookie } = auth!;
-  if (!session) throw new Error("Authenticated diff evidence lost its session.");
+  const { session, setCookie } = await getGitHubSession(request);
+  if (!session) {
+    return withSessionCookie(Response.json({ error: "Sign in with GitHub to read this diff." }, { status: 401 }), setCookie);
+  }
+
+  let evidence;
+  try {
+    evidence = parseCodeDiffRequest(url);
+  } catch (error) {
+    return withSessionCookie(Response.json(
+      { error: error instanceof Error ? error.message : "Invalid diff request." },
+      { status: 400 },
+    ), setCookie);
+  }
 
   const response = await fetch(buildGitHubCompareUrl(evidence.repository, evidence.base, evidence.head), {
     headers: githubHeaders(session.accessToken),

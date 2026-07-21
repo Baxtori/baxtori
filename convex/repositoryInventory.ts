@@ -1,10 +1,10 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { verifySecret as verifySharedSecret } from "./apiSecret";
 import { repositoryInventoryEntryValidator } from "./validators";
 
 function verifySecret(secret: string) {
-  const expected = process.env.FEEDBACK_API_SECRET;
-  if (!expected || secret !== expected) throw new Error("Unauthorized repository inventory request.");
+  verifySharedSecret(secret, "Unauthorized repository inventory request.");
 }
 
 export const beginInventorySync = mutation({
@@ -21,6 +21,7 @@ export const beginInventorySync = mutation({
     const revision = Math.max(current?.completedRevision ?? 0, current?.pendingRevision ?? 0) + 1;
     const value = {
       githubLogin: args.githubLogin,
+      githubLoginLower: args.githubLogin.toLowerCase(),
       pendingRevision: revision,
       updatedAt: Date.now(),
       userId: args.userId,
@@ -126,8 +127,15 @@ export const getCompilerInventory = query({
   args: { githubLogin: v.string(), secret: v.string() },
   handler: async (ctx, args) => {
     verifySecret(args.secret);
-    const syncs = (await ctx.db.query("repositoryInventorySyncs").collect())
-      .filter((sync) => sync.githubLogin.toLowerCase() === args.githubLogin.toLowerCase())
+    const loginLower = args.githubLogin.toLowerCase();
+    const indexedSyncs = await ctx.db.query("repositoryInventorySyncs")
+      .withIndex("by_login_lower", (q) => q.eq("githubLoginLower", loginLower))
+      .collect();
+    // Rows from before githubLoginLower existed are invisible to the index,
+    // so fall back to a scan only when the indexed lookup finds nothing.
+    const syncs = (indexedSyncs.length
+      ? indexedSyncs
+      : (await ctx.db.query("repositoryInventorySyncs").collect()).filter((sync) => sync.githubLogin.toLowerCase() === loginLower))
       .sort((left, right) => right.updatedAt - left.updatedAt);
     const sync = syncs[0] ?? null;
     if (!sync || sync.completedRevision < 1) return null;
