@@ -46,3 +46,4 @@ tsconfig.tsbuildinfo
 /work/
 /data/candidates.json
 /data/feedback-input.json
+/data/review-run.json
