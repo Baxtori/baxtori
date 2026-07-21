@@ -1,5 +1,6 @@
 import { clearCookieHeader, getGitHubIdentitySession, SESSION_COOKIE, STATE_COOKIE, withSessionCookie } from "@/lib/github-auth";
 import { deleteReaderAccount, exportReaderAccount, feedbackIsConfigured } from "@/lib/feedback-store";
+import { guardMutationRequest } from "@/lib/request-security";
 
 export async function GET(request: Request) {
   const { session, setCookie } = await getGitHubIdentitySession(request);
@@ -22,6 +23,8 @@ export async function GET(request: Request) {
 export async function DELETE(request: Request) {
   const { session, setCookie } = await getGitHubIdentitySession(request);
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to delete your Baxtori data." }, { status: 401 }), setCookie);
+  const mutationError = guardMutationRequest(request);
+  if (mutationError) return withSessionCookie(mutationError, setCookie);
   if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ error: "Account storage is not configured." }, { status: 503 }), setCookie);
 
   try {
