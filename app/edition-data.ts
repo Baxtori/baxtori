@@ -70,6 +70,8 @@ export type ReviewScope = {
   repositories: ScopedRepository[];
 };
 
+// These stories are fixtures for explicit component previews. Published reader
+// data always comes from EDITION, including a valid quiet edition with no stories.
 export const DEMO_STORIES: Story[] = [
   {
     id: "checkout",
@@ -99,7 +101,7 @@ export const DEMO_STORIES: Story[] = [
     learningValue: 4,
     verdict: "Good direction, one edge to watch",
     whatChanged: "Mutations now receive an already-resolved membership context from a shared route guard.",
-    whyItMatters: "Authorization becomes easier to audit because the decision is visible in one place rather than scattered across handlers.",
+    whyItMatters: "Authorization becomes easier to audit because the decision is visible in one place instead of being scattered across handlers.",
     verify: "Compare direct membership, inherited admin access, and revoked membership across read and write routes.",
     tradeoff: "A bug in the shared guard would reach more routes, so inherited-role behavior deserves a compact test matrix.",
     evidence: "3 commits · 7 files · 12 permission cases",
@@ -125,7 +127,7 @@ export const DEMO_STORIES: Story[] = [
 ];
 
 export const EDITION = latestEdition as Edition;
-export const STORIES: Story[] = EDITION.stories.length ? EDITION.stories : DEMO_STORIES;
+export const STORIES: Story[] = EDITION.stories;
 export const ARCHIVED_EDITIONS = [
   archivedEdition20260713,
   archivedEdition20260712,
@@ -149,10 +151,10 @@ export const DEMO_TOPIC_THREAD: TopicThreadRecord = {
     endLine: 81,
     headCommit: "36379892e85bd1e3512663bcc7632a1c6a9a1be5",
     path: "convex/feedback.ts",
-    repository: "teamleaderleo/baxtori",
+    repository: "Baxtori/baxtori",
     startLine: 44,
   },
   origin: "watch",
-  sourceKey: "watch:teamleaderleo/baxtori:reader-review-loop",
+  sourceKey: "watch:Baxtori/baxtori:reader-review-loop",
   status: "active",
 };
