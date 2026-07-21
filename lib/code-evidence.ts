@@ -1,24 +1,18 @@
-import { canonicalRepository, isValidRepositoryName } from "./repository-identity.ts";
+import { canonicalRepository } from "./repository-identity.ts";
+import {
+  isValidCommitReference,
+  parseEvidencePathRange,
+  parseEvidenceRepository,
+  type EvidenceRange,
+} from "./evidence-request.ts";
 
-const COMMIT_PATTERN = /^[0-9a-f]{7,40}$/i;
-const SAFE_PATH_SEGMENT = /^[^\0/]+$/;
-
-export type CodeRange = {
-  endLine: number;
-  startLine: number;
-};
+export type CodeRange = EvidenceRange;
 
 export function parseCodeEvidenceRequest(url: URL) {
-  const repository = canonicalRepository(url.searchParams.get("repo")?.trim() ?? "");
+  const repository = parseEvidenceRepository(url);
   const commit = url.searchParams.get("commit")?.trim() ?? "";
-  const path = url.searchParams.get("path")?.trim() ?? "";
-  const startLine = Number(url.searchParams.get("start"));
-  const endLine = Number(url.searchParams.get("end"));
-
-  if (!isValidRepositoryName(repository)) throw new Error("Invalid repository name.");
-  if (!COMMIT_PATTERN.test(commit)) throw new Error("Invalid commit reference.");
-  if (!isSafeRepositoryPath(path)) throw new Error("Invalid file path.");
-  if (!isValidCodeRange({ endLine, startLine })) throw new Error("Invalid line range.");
+  if (!isValidCommitReference(commit)) throw new Error("Invalid commit reference.");
+  const { endLine, path, startLine } = parseEvidencePathRange(url);
 
   return { commit, endLine, path, repository, startLine };
 }
@@ -38,15 +32,4 @@ export function selectCodeLines(source: string, { endLine, startLine }: CodeRang
     number: startLine + index,
     text,
   }));
-}
-
-function isSafeRepositoryPath(path: string) {
-  if (!path || path.startsWith("/") || path.length > 500) return false;
-  const segments = path.split("/");
-  return segments.every((segment) => segment !== "." && segment !== ".." && SAFE_PATH_SEGMENT.test(segment));
-}
-
-function isValidCodeRange({ endLine, startLine }: CodeRange) {
-  return Number.isInteger(startLine) && Number.isInteger(endLine) &&
-    startLine >= 1 && endLine >= startLine && endLine - startLine < 160;
 }
