@@ -15,6 +15,9 @@ concurrency:
 
 jobs:
   verify:
+    # Blacksmith currently supports organization-owned repositories only.
+    # Enable this after transferring the repository and installing its GitHub App.
+    if: ${{ vars.BLACKSMITH_ENABLED == 'true' }}
     runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 15
 
@@ -41,6 +44,7 @@ jobs:
         run: npm test
 
   visual:
+    if: ${{ vars.BLACKSMITH_ENABLED == 'true' }}
     runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 15
 

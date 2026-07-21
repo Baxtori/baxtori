@@ -73,6 +73,15 @@ Do not add billing for the hackathon. First prove that people want recurring com
 - The GitHub App is read-only. Repository context export and write-back remain explicit future actions.
 - Users can export or permanently delete Baxtori's account data. GitHub installation access remains separately controlled in GitHub.
 
+## CI handoff
+
+The verification workflow is ready for Blacksmith, but Blacksmith only supports
+organization-owned GitHub repositories. After transferring the repository to an
+organization and installing the Blacksmith GitHub App, create the repository
+Actions variable `BLACKSMITH_ENABLED=true`. Until then, the Blacksmith jobs are
+skipped instead of waiting forever for a runner that cannot claim a personal
+repository.
+
 ## After the hackathon
 
 The next proof is one complete personalized loop: a user's repository changes, Codex selects one consequence, the user watches or questions it, and the following edition visibly responds to that decision. Only after that should Baxtori add teams, hosted billing, app subdomains, generic integrations, or a broad all-in-one review surface.
