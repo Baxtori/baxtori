@@ -40,7 +40,22 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Build and test
-        run: npm test
+        shell: bash
+        run: |
+          set -o pipefail
+          if ! npm test > verify-output.log 2>&1; then
+            tail -n 200 verify-output.log
+            exit 1
+          fi
+          cat verify-output.log
+
+      - name: Upload verification failure
+        if: ${{ failure() && !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: baxtori-verify-failure
+          path: verify-output.log
+          retention-days: 14
 
   visual:
     runs-on: ${{ vars.BLACKSMITH_ENABLED == 'true' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-24.04' }}
