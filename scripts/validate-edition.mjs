@@ -1,12 +1,20 @@
 import { readFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { validateEditionSelectionRecord } from "./lib/edition-selection-record.mjs";
+import { validateEditionGitEvidence } from "./lib/git-evidence-validation.mjs";
 
-const edition = JSON.parse(await readFile(new URL("../data/latest.json", import.meta.url), "utf8"));
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const [edition, sources] = await Promise.all([
+  readFile(resolve(root, "data/latest.json"), "utf8").then(JSON.parse),
+  readFile(resolve(root, "baxtori.sources.json"), "utf8").then(JSON.parse),
+]);
 const requiredEditionFields = ["id", "generatedAt", "periodStart", "periodEnd", "stories", "quietRepositories"];
 const requiredStoryFields = [
   "id", "topicId", "project", "repository", "tone", "timing", "title", "brief", "learningValue", "verdict",
   "whatChanged", "whyItMatters", "verify", "tradeoff", "evidence", "files", "codeEvidence", "commits",
 ];
+const fullCommitSha = /^[0-9a-f]{40}$/i;
 
 for (const field of requiredEditionFields) {
   if (!(field in edition)) throw new Error(`Edition is missing ${field}.`);
@@ -32,12 +40,12 @@ for (const story of edition.stories) {
   if (!Array.isArray(story.codeEvidence) || !story.codeEvidence.length || story.codeEvidence.length > 4) {
     throw new Error(`${story.id} must include one to four code excerpts.`);
   }
-  if (!story.commits.every((commit) => /^[0-9a-f]{7,40}$/i.test(commit.sha) && commit.url.includes(`github.com/${story.repository}/commit/`))) {
-    throw new Error(`${story.id} has commit evidence that does not match its repository.`);
+  if (!story.commits.every((commit) => fullCommitSha.test(commit.sha) && commit.url.includes(`github.com/${story.repository}/commit/`))) {
+    throw new Error(`${story.id} has commit evidence that does not match its repository or use a full commit hash.`);
   }
   for (const excerpt of story.codeEvidence) {
-    const validCommit = /^[0-9a-f]{7,40}$/i.test(excerpt.commit) && story.commits.some((commit) => commit.sha.startsWith(excerpt.commit) || excerpt.commit.startsWith(commit.sha));
-    const validBaseCommit = /^[0-9a-f]{7,40}$/i.test(excerpt.baseCommit) && excerpt.baseCommit !== excerpt.commit;
+    const validCommit = fullCommitSha.test(excerpt.commit) && story.commits.some((commit) => commit.sha === excerpt.commit);
+    const validBaseCommit = fullCommitSha.test(excerpt.baseCommit) && excerpt.baseCommit !== excerpt.commit;
     const validRange = Number.isInteger(excerpt.startLine) && Number.isInteger(excerpt.endLine) && excerpt.startLine >= 1 && excerpt.endLine >= excerpt.startLine && excerpt.endLine - excerpt.startLine < 160;
     if (!excerpt.title || !excerpt.why || !excerpt.path || !excerpt.language || !validBaseCommit || !validCommit || !validRange) {
       throw new Error(`${story.id} has invalid code evidence.`);
@@ -48,4 +56,14 @@ for (const story of edition.stories) {
   }
 }
 
-console.log(`Edition ${edition.id} is valid with ${edition.stories.length} stories.`);
+const gitEvidence = await validateEditionGitEvidence({
+  edition,
+  root,
+  sources,
+  strict: process.env.STRICT_EVIDENCE_VALIDATION === "1",
+});
+
+console.log(`Edition ${edition.id} is valid with ${edition.stories.length} stories and ${gitEvidence.excerptCount} Git-checked excerpts.`);
+if (gitEvidence.skippedRepositories.length) {
+  console.warn(`Git evidence skipped for unavailable caches: ${gitEvidence.skippedRepositories.join(", ")}. Run edition:validate:strict before publishing.`);
+}
