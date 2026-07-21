@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { BotanicalIllustration } from "./botanical-illustration";
+import { BotanicalUnfurl } from "./botanical-unfurl";
 import styles from "./trail-reader.module.css";
 
 export function BotanicalProgress() {
@@ -15,12 +15,11 @@ export function BotanicalProgress() {
     let frame = 0;
 
     const applyProgress = (progress: number) => {
-      const lateProgress = Math.max(0, (progress - 0.46) / 0.54);
+      const reveal = 0.36 + progress * 0.64;
       root.dataset.growth = progress.toFixed(3);
       root.style.setProperty("--scroll-progress", progress.toFixed(3));
-      root.style.setProperty("--late-progress", lateProgress.toFixed(3));
-      root.style.setProperty("--fern-clip", `${((1 - progress) * 18).toFixed(2)}%`);
-      root.style.setProperty("--bracken-clip", `${((1 - lateProgress) * 52).toFixed(2)}%`);
+      root.style.setProperty("--fern-reveal", reveal.toFixed(3));
+      root.style.setProperty("--fern-dash", (1 - reveal).toFixed(3));
     };
 
     const draw = () => {
@@ -50,8 +49,12 @@ export function BotanicalProgress() {
 
   return (
     <figure aria-hidden="true" className={styles.botanicalProgress} data-botanical-progress ref={rootRef}>
-      <BotanicalIllustration className={`${styles.botanicalSpecimen} ${styles.primaryFern}`} priority variant="frond" />
-      <BotanicalIllustration className={`${styles.botanicalSpecimen} ${styles.secondaryFern}`} progressMarker variant="crozier" />
+      <div className={styles.fernFrame} data-fern-frame>
+        <BotanicalUnfurl
+          className={styles.primaryFern}
+          growthStrokeClassName={styles.fernGrowthStroke}
+        />
+      </div>
     </figure>
   );
 }

@@ -101,9 +101,8 @@
 .railEdition { margin: auto 0 0; color: var(--trail-muted); font-size: 0.52rem; font-weight: 710; letter-spacing: 0.06em; line-height: 1.7; text-transform: uppercase; }
 
 .botanicalProgress {
-  --bracken-clip: 52%;
-  --fern-clip: 18%;
-  --late-progress: 0;
+  --fern-dash: 0.64;
+  --fern-reveal: 0.36;
   --scroll-progress: 0;
   position: fixed;
   z-index: 1;
@@ -112,41 +111,36 @@
   overflow: hidden;
   contain: strict;
   pointer-events: none;
-  color: var(--trail-green);
 }
 
-.botanicalSpecimen {
+.fernFrame {
   position: absolute;
-  display: block;
-  max-width: none;
-  mix-blend-mode: multiply;
-  pointer-events: none;
-  user-select: none;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: clamp(18rem, 28vw, 30rem);
+  overflow: hidden;
 }
 
 .primaryFern {
-  bottom: -28vh;
-  left: -10vw;
-  width: clamp(38rem, 58vw, 62rem);
-  height: auto;
-  opacity: 0.24;
-  clip-path: inset(var(--fern-clip) 0 0 0);
+  position: absolute;
+  top: 50%;
+  left: -7vw;
+  display: block;
+  width: auto;
+  height: 164vh;
+  max-width: none;
+  opacity: 0.26;
   filter: saturate(0.72) contrast(0.92);
-  transform: translate3d(0, calc(var(--scroll-progress) * -8rem), 0) rotate(-8deg) scale(calc(0.94 + var(--scroll-progress) * 0.06));
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  transform: translate3d(calc((1 - var(--scroll-progress)) * 2.5vw), -50%, 0) rotate(calc(-4deg + var(--scroll-progress) * 2deg)) scale(calc(1.06 - var(--scroll-progress) * 0.04));
   transform-origin: center bottom;
+  user-select: none;
+  will-change: transform;
 }
 
-.secondaryFern {
-  right: -19vw;
-  bottom: -18vh;
-  width: clamp(28rem, 43vw, 46rem);
-  height: auto;
-  opacity: calc(var(--late-progress) * 0.17);
-  clip-path: inset(var(--bracken-clip) 0 0 0);
-  filter: saturate(0.68) contrast(0.92);
-  transform: translate3d(0, calc(var(--late-progress) * -5rem), 0) rotate(5deg) scale(calc(0.95 + var(--late-progress) * 0.05));
-  transform-origin: center bottom;
-}
+.fernGrowthStroke { stroke-dashoffset: var(--fern-dash); }
 
 .journal {
   position: relative;
@@ -299,7 +293,7 @@
   display: block;
   overflow: clip;
   margin-bottom: clamp(1.2rem, 3vh, 2.2rem);
-  padding-right: clamp(11rem, 17vw, 15rem);
+  padding-right: 0;
 }
 .storyLead { min-width: 0; padding-top: clamp(0.5rem, 1.5vh, 1.2rem); }
 .storyLead h2 { margin-top: clamp(0.8rem, 2vh, 1.5rem); }
@@ -466,8 +460,8 @@
   .trailRail { width: 10rem; }
   .journal { width: min(100%, 70rem); padding-left: 12.5rem; }
   .journal::before { left: 10.5rem; }
-  .primaryFern { left: -17vw; width: clamp(40rem, 76vw, 54rem); opacity: 0.2; }
-  .secondaryFern { right: -32vw; width: clamp(31rem, 58vw, 40rem); }
+  .fernFrame { width: clamp(17rem, 32vw, 24rem); }
+  .primaryFern { left: -9vw; height: 172vh; opacity: 0.23; }
   .openingGrid { grid-template-columns: minmax(0, 1fr) minmax(17rem, 0.82fr); gap: 3rem; }
 }
 
@@ -508,10 +502,9 @@
   .issueFooter span:last-child { display: none; }
   .storyScene h2,
   .studyScene h2 { font-size: clamp(2.45rem, 11vw, 3.8rem); }
-  .storyHeader { position: relative; display: block; min-height: 18rem; padding-right: 0; }
+  .storyHeader { position: relative; display: block; min-height: 0; padding-right: 0; }
   .storyLead { position: relative; z-index: 1; padding-top: 0; }
   .storyLead h2 { margin-top: 1rem; }
-  .specimenBearing { position: absolute; z-index: 0; top: -2rem; right: -6rem; width: 15rem; height: 17rem; opacity: 0.46; }
   .botanicalDetail { min-height: 17rem; }
   .storyMeta { flex-wrap: wrap; }
   .meaning { grid-template-columns: 1fr; gap: 0.4rem; }
@@ -521,8 +514,8 @@
   .evidenceLayer { width: calc(100% + 2.3rem); margin-inline: -1.15rem; }
   .sceneNumber { top: 1rem; left: 0; font-size: 1rem; }
   .sceneNav { display: none; }
-  .primaryFern { bottom: -14vh; left: -58vw; width: 154vw; opacity: 0.2; }
-  .secondaryFern { right: -78vw; bottom: -9vh; width: 132vw; opacity: calc(var(--late-progress) * 0.13); }
+  .fernFrame { width: 52vw; }
+  .primaryFern { left: -16vw; height: 178vh; opacity: 0.2; }
   .endSummary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .endSummary > div { border-bottom: 1px solid var(--trail-line); }
   .endSummary > div:nth-child(2) { border-right: 0; }

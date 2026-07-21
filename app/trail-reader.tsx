@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import type { ContinueItem } from "@/lib/continue-queue";
 import type { ReaderTrail, TrailStory } from "@/lib/reader-trail";
-import { BotanicalDetail } from "./botanical-detail";
 import { BotanicalProgress } from "./botanical-progress";
 import styles from "./trail-reader.module.css";
 
@@ -249,9 +248,6 @@ export function TrailReader({
                   </div>
                   <h2>{scene.story.title}</h2>
                   <p className={styles.storyBrief}>{scene.story.brief}</p>
-                </div>
-                <div className={styles.specimenBearing}>
-                  <BotanicalDetail stage={index} />
                 </div>
               </header>
 

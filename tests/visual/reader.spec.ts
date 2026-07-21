@@ -54,33 +54,36 @@ test("the default reader turns the review into a finite field journal", async ({
 
   const progressSpecimen = page.locator("[data-botanical-progress]");
   const fernGrowth = () => progressSpecimen.evaluate((element) => Number(element.getAttribute("data-growth") ?? 0));
+  const fernDash = () => progressSpecimen.evaluate((element) => Number(element.style.getPropertyValue("--fern-dash") || 1));
   await expect(progressSpecimen).toBeVisible();
   const progressBox = await progressSpecimen.boundingBox();
   const viewportWidth = page.viewportSize()?.width ?? 0;
   expect(progressBox).not.toBeNull();
   expect(progressBox?.width ?? 0).toBeGreaterThanOrEqual(viewportWidth);
+  const fernFrame = progressSpecimen.locator("[data-fern-frame]");
+  const fernFrameBox = await fernFrame.boundingBox();
+  expect(fernFrameBox).not.toBeNull();
+  expect(fernFrameBox?.width ?? 0).toBeGreaterThan(viewportWidth * 0.2);
+  expect(fernFrameBox?.width ?? 0).toBeLessThan(viewportWidth * 0.7);
   const fernPlate = progressSpecimen.locator("[data-botanical-plate]");
   await expect(fernPlate).toBeVisible();
   const fernBox = await fernPlate.boundingBox();
+  expect(fernBox).not.toBeNull();
   expect(fernBox?.x ?? 0).toBeLessThan(0);
-  expect(fernBox?.width ?? 0).toBeGreaterThan(viewportWidth * 0.45);
-  await expect(page.locator("[data-botanical-bloom]")).toBeVisible();
-  await expect(fernPlate).toHaveAttribute("src", "/botanical/fern-frond.webp");
+  expect(fernBox?.width ?? 0).toBeGreaterThan((fernFrameBox?.width ?? 0) * 1.65);
+  await expect(fernPlate.locator("image")).toHaveAttribute("href", "/botanical/fern-frond.webp");
   const navigation = page.getByRole("complementary", { name: "Baxtori navigation" });
   const navigationBox = await navigation.boundingBox();
   expect(navigationBox?.x ?? -1).toBe(0);
   const openingGrowth = await fernGrowth();
+  const openingDash = await fernDash();
   await expect(page.getByRole("heading", { name: "Notes from the repositories." })).toBeVisible();
   await page.getByRole("list", { name: "In this edition" }).getByRole("button", { name: /Repository access and reader attention became explicit plans\./ }).click();
 
   await expect(page.getByRole("heading", { name: "Repository access and reader attention became explicit plans." })).toBeVisible();
-  const storySpecimen = page.locator("[data-botanical-detail]").first();
-  await expect(storySpecimen).toBeVisible();
-  const storySpecimenBox = await storySpecimen.boundingBox();
-  expect(storySpecimenBox).not.toBeNull();
-  expect(storySpecimenBox?.width ?? 0).toBeGreaterThan(180);
-  expect(storySpecimenBox?.height ?? 0).toBeGreaterThan(200);
+  await expect(page.locator("[data-botanical-detail]")).toHaveCount(0);
   await expect.poll(fernGrowth).toBeGreaterThan(openingGrowth);
+  await expect.poll(fernDash).toBeLessThan(openingDash);
   await page.getByRole("button", { name: "Evidence", exact: true }).first().click();
   await expect(page.getByText("Code evidence 1/3")).toBeVisible();
   await expect(page.locator(".diff-line.is-addition").first()).toBeVisible();
@@ -104,8 +107,8 @@ test("the botanical trail becomes a complete static specimen with reduced motion
   const specimen = page.locator("[data-botanical-progress]");
   await expect(specimen).toBeVisible();
   await expect(specimen).toHaveAttribute("data-growth", "1.000");
-  expect(await specimen.evaluate((element) => element.style.getPropertyValue("--fern-clip"))).toBe("0.00%");
-  expect(await specimen.evaluate((element) => element.style.getPropertyValue("--bracken-clip"))).toBe("0.00%");
+  expect(await specimen.evaluate((element) => element.style.getPropertyValue("--fern-reveal"))).toBe("1.000");
+  expect(await specimen.evaluate((element) => element.style.getPropertyValue("--fern-dash"))).toBe("0.000");
 });
 
 test("memory makes a concern legible across real editions", async ({ page }, testInfo) => {
