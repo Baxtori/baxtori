@@ -6,7 +6,19 @@ import { canonicalRepository } from "./repository-identity.mjs";
 
 const execFileAsync = promisify(execFile);
 const FULL_COMMIT_SHA = /^[0-9a-f]{40}$/i;
+const REPOSITORY_NAME_PATTERN = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
 const GIT_TIMEOUT_MS = 20_000;
+
+export function isSafeEvidenceRepository(repository) {
+  const canonical = canonicalRepository(repository);
+  if (!REPOSITORY_NAME_PATTERN.test(canonical)) return false;
+  return canonical.split("/").every((segment) => segment !== "." && segment !== "..");
+}
+
+export function isSafeEvidencePath(path) {
+  if (typeof path !== "string" || !path || path.startsWith("/") || path.length > 500 || path.includes("\u0000")) return false;
+  return path.split("/").every((segment) => segment !== "" && segment !== "." && segment !== "..");
+}
 
 async function git(repositoryPath, args) {
   const { stdout } = await execFileAsync("git", ["-C", repositoryPath, ...args], {
@@ -76,6 +88,8 @@ export async function validateEditionGitEvidence({ edition, root, sources, stric
 
   for (const story of edition.stories) {
     const repository = canonicalRepository(story.repository);
+    if (!isSafeEvidenceRepository(repository)) throw new Error(`${story.id} has an invalid repository name.`);
+    if (!story.files.every(isSafeEvidencePath)) throw new Error(`${story.id} has an unsafe evidence file path.`);
     const source = sourcesByRepository.get(repository);
     if (!source) throw new Error(`${story.id} has no configured source for ${repository}.`);
     const repositoryPath = resolve(root, source.path);
@@ -93,6 +107,7 @@ export async function validateEditionGitEvidence({ edition, root, sources, stric
 
     for (const excerpt of story.codeEvidence) {
       excerptCount += 1;
+      if (!isSafeEvidencePath(excerpt.path)) throw new Error(`${story.id} has an unsafe code-evidence path.`);
       if (!FULL_COMMIT_SHA.test(excerpt.baseCommit) || !FULL_COMMIT_SHA.test(excerpt.commit)) {
         throw new Error(`${story.id} must use full commit hashes for code evidence.`);
       }
