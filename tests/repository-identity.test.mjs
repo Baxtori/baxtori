@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   BAXTORI_REPOSITORY,
   LEGACY_BAXTORI_REPOSITORY,
+  PREVIOUS_BAXTORI_REPOSITORY,
   canonicalRepository,
   canonicalRepositoryStateKey,
   canonicalizeRepositoryList,
@@ -17,13 +18,15 @@ async function readJson(path) {
   return JSON.parse(await readFile(new URL(path, root), "utf8"));
 }
 
-test("maps the Glimpse repository alias to Baxtori", () => {
-  assert.equal(canonicalRepository(LEGACY_BAXTORI_REPOSITORY), BAXTORI_REPOSITORY);
+test("maps every historical Baxtori repository identity to the organization repository", () => {
+  for (const alias of [PREVIOUS_BAXTORI_REPOSITORY, LEGACY_BAXTORI_REPOSITORY]) {
+    assert.equal(canonicalRepository(alias), BAXTORI_REPOSITORY);
+    assert.equal(
+      canonicalRepositoryStateKey(`${alias}:reading-loop`),
+      `${BAXTORI_REPOSITORY}:reading-loop`,
+    );
+  }
   assert.equal(canonicalRepository("owner/other"), "owner/other");
-  assert.equal(
-    canonicalRepositoryStateKey(`${LEGACY_BAXTORI_REPOSITORY}:reading-loop`),
-    `${BAXTORI_REPOSITORY}:reading-loop`,
-  );
 });
 
 test("deduplicates repository selections after canonicalization", () => {
@@ -31,16 +34,18 @@ test("deduplicates repository selections after canonicalization", () => {
     canonicalizeRepositoryList([
       LEGACY_BAXTORI_REPOSITORY,
       "owner/other",
+      PREVIOUS_BAXTORI_REPOSITORY,
       BAXTORI_REPOSITORY,
     ]),
     [BAXTORI_REPOSITORY, "owner/other"],
   );
 });
 
-test("preserves canonical state when legacy and current keys coexist", () => {
+test("preserves canonical state when historical and current keys coexist", () => {
   assert.deepEqual(
     canonicalizeRepositoryStateRecord({
-      [`${LEGACY_BAXTORI_REPOSITORY}:area`]: "legacy",
+      [`${LEGACY_BAXTORI_REPOSITORY}:area`]: "oldest",
+      [`${PREVIOUS_BAXTORI_REPOSITORY}:area`]: "previous",
       [`${BAXTORI_REPOSITORY}:area`]: "current",
       unnamespaced: "preserved",
     }),
@@ -51,11 +56,11 @@ test("preserves canonical state when legacy and current keys coexist", () => {
   );
 });
 
-test("matches a legacy map identity to the canonical collected source", () => {
+test("matches a historical map identity to the canonical collected source", () => {
   const impact = buildMapImpact({
     areas: [{ confidence: 80, evidence: ["src/index.ts"], freshness: 70, id: "core", name: "Core" }],
     generatedAt: "2026-07-10T00:00:00Z",
-    repository: LEGACY_BAXTORI_REPOSITORY,
+    repository: PREVIOUS_BAXTORI_REPOSITORY,
   }, [{
     commits: [{
       date: "2026-07-11T00:00:00Z",
