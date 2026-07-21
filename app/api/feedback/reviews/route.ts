@@ -1,13 +1,18 @@
 import { cancelReviewFeedback, feedbackIsConfigured, queueReviewFeedback } from "@/lib/feedback-store";
 import { parseReviewRequest } from "@/lib/feedback-contract";
 import { getGitHubIdentitySession, withSessionCookie } from "@/lib/github-auth";
+import { guardRateLimit } from "@/lib/rate-limit";
 import { guardMutationRequest } from "@/lib/request-security";
+
+const ACCOUNT_MUTATION_LIMIT = { limit: 120, windowMs: 60_000 };
 
 export async function POST(request: Request) {
   const { session, setCookie } = await getGitHubIdentitySession(request);
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to queue a re-review." }, { status: 401 }), setCookie);
   const mutationError = guardMutationRequest(request, { requireJson: true });
   if (mutationError) return withSessionCookie(mutationError, setCookie);
+  const rateLimitError = guardRateLimit("feedback:mutation", String(session.user.id), ACCOUNT_MUTATION_LIMIT);
+  if (rateLimitError) return withSessionCookie(rateLimitError, setCookie);
   if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ error: "The review queue is not configured." }, { status: 503 }), setCookie);
 
   let reviewRequest;
@@ -35,6 +40,8 @@ export async function DELETE(request: Request) {
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to change the review queue." }, { status: 401 }), setCookie);
   const mutationError = guardMutationRequest(request, { requireJson: true });
   if (mutationError) return withSessionCookie(mutationError, setCookie);
+  const rateLimitError = guardRateLimit("feedback:mutation", String(session.user.id), ACCOUNT_MUTATION_LIMIT);
+  if (rateLimitError) return withSessionCookie(rateLimitError, setCookie);
   if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ error: "The review queue is not configured." }, { status: 503 }), setCookie);
 
   let requestId: string;
