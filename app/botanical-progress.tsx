@@ -15,7 +15,7 @@ export function BotanicalProgress() {
     let frame = 0;
 
     const applyProgress = (progress: number) => {
-      const reveal = 0.36 + progress * 0.64;
+      const reveal = 0.5 + progress * 0.5;
       root.dataset.growth = progress.toFixed(3);
       root.style.setProperty("--scroll-progress", progress.toFixed(3));
       root.style.setProperty("--fern-reveal", reveal.toFixed(3));
