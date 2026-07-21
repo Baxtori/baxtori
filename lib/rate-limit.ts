@@ -72,3 +72,8 @@ export function rateLimitError(result: RateLimitResult) {
     { headers: rateLimitHeaders(result), status: 429 },
   );
 }
+
+export function guardRateLimit(scope: string, subject: string, policy: RateLimitPolicy) {
+  const result = consumeRateLimit(scope, subject, policy);
+  return result.allowed ? null : rateLimitError(result);
+}
