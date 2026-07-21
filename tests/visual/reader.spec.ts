@@ -41,7 +41,7 @@ test("the published demo opens directly into the calm reading trail", async ({ p
   await expect(page.getByRole("list", { name: "In this edition" })).toBeVisible();
   await capture(page, testInfo, "published-briefing");
 
-  await page.getByRole("button", { name: "Repository access and reader attention became explicit plans.", exact: true }).click();
+  await page.getByRole("list", { name: "In this edition" }).getByRole("button", { name: /Repository access and reader attention became explicit plans\./ }).click();
   await page.getByRole("button", { name: "Evidence", exact: true }).first().click();
   await expect(page.getByText("Code evidence 1/3")).toBeVisible();
   await expect(page.locator(".diff-line.is-addition").first()).toBeVisible();
@@ -59,19 +59,19 @@ test("the default reader turns the review into a finite field journal", async ({
   const viewportWidth = page.viewportSize()?.width ?? 0;
   expect(progressBox).not.toBeNull();
   expect(progressBox?.width ?? 0).toBeGreaterThanOrEqual(viewportWidth);
-  const fernPlate = page.locator("[data-botanical-plate]");
+  const fernPlate = progressSpecimen.locator("[data-botanical-plate]");
   await expect(fernPlate).toBeVisible();
   const fernBox = await fernPlate.boundingBox();
   expect(fernBox?.x ?? 0).toBeLessThan(0);
   expect(fernBox?.width ?? 0).toBeGreaterThan(viewportWidth * 0.45);
   await expect(page.locator("[data-botanical-bloom]")).toBeVisible();
-  expect(await fernPlate.locator("path").count()).toBeGreaterThan(20);
+  await expect(fernPlate).toHaveAttribute("src", "/botanical/fern-frond.webp");
   const navigation = page.getByRole("complementary", { name: "Baxtori navigation" });
   const navigationBox = await navigation.boundingBox();
   expect(navigationBox?.x ?? -1).toBe(0);
   const openingGrowth = await fernGrowth();
   await expect(page.getByRole("heading", { name: "Notes from the repositories." })).toBeVisible();
-  await page.getByRole("button", { name: "Repository access and reader attention became explicit plans.", exact: true }).click();
+  await page.getByRole("list", { name: "In this edition" }).getByRole("button", { name: /Repository access and reader attention became explicit plans\./ }).click();
 
   await expect(page.getByRole("heading", { name: "Repository access and reader attention became explicit plans." })).toBeVisible();
   const storySpecimen = page.locator("[data-botanical-detail]").first();

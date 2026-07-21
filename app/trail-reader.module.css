@@ -101,8 +101,8 @@
 .railEdition { margin: auto 0 0; color: var(--trail-muted); font-size: 0.52rem; font-weight: 710; letter-spacing: 0.06em; line-height: 1.7; text-transform: uppercase; }
 
 .botanicalProgress {
-  --bracken-clip: 44%;
-  --fern-clip: 24%;
+  --bracken-clip: 52%;
+  --fern-clip: 18%;
   --late-progress: 0;
   --scroll-progress: 0;
   position: fixed;
@@ -115,45 +115,37 @@
   color: var(--trail-green);
 }
 
-.botanicalVector {
+.botanicalSpecimen {
   position: absolute;
   display: block;
   max-width: none;
-  overflow: visible;
-  fill: currentColor;
+  mix-blend-mode: multiply;
   pointer-events: none;
   user-select: none;
 }
 
 .primaryFern {
-  bottom: -23vh;
+  bottom: -28vh;
   left: -10vw;
-  width: 43vw;
+  width: clamp(38rem, 58vw, 62rem);
   height: auto;
-  opacity: 0.16;
+  opacity: 0.24;
   clip-path: inset(var(--fern-clip) 0 0 0);
-  transform: translate3d(0, calc(var(--scroll-progress) * -5.5rem), 0) rotate(-7deg) scale(1.03);
+  filter: saturate(0.72) contrast(0.92);
+  transform: translate3d(0, calc(var(--scroll-progress) * -8rem), 0) rotate(-8deg) scale(calc(0.94 + var(--scroll-progress) * 0.06));
   transform-origin: center bottom;
 }
 
 .secondaryFern {
-  right: -16vw;
-  bottom: 14vh;
-  width: 37vw;
+  right: -19vw;
+  bottom: -18vh;
+  width: clamp(28rem, 43vw, 46rem);
   height: auto;
-  opacity: calc(var(--late-progress) * 0.11);
+  opacity: calc(var(--late-progress) * 0.17);
   clip-path: inset(var(--bracken-clip) 0 0 0);
-  transform: translate3d(0, calc(var(--late-progress) * -3rem), 0) rotate(-12deg);
+  filter: saturate(0.68) contrast(0.92);
+  transform: translate3d(0, calc(var(--late-progress) * -5rem), 0) rotate(5deg) scale(calc(0.95 + var(--late-progress) * 0.05));
   transform-origin: center bottom;
-}
-
-.fiddlehead {
-  right: -10vw;
-  bottom: -14vh;
-  width: 32vw;
-  height: auto;
-  opacity: calc(var(--late-progress) * 0.12);
-  transform: translate3d(0, calc((1 - var(--late-progress)) * 4rem), 0) rotate(7deg);
 }
 
 .journal {
@@ -319,25 +311,25 @@
   min-height: 16rem;
   margin: 0;
   overflow: hidden;
-  color: var(--trail-green);
   transform: rotate(1.6deg);
 }
-.botanicalDetail svg { position: absolute; display: block; overflow: visible; fill: currentColor; }
-.detailFragment { top: 7%; left: -16%; width: 128%; height: 94%; opacity: 0.21; transform: rotate(-10deg); }
-.detailFiddlehead { top: -8%; right: -9%; width: 112%; height: 120%; opacity: 0.2; transform: rotate(6deg); }
-.botanicalDetail[data-specimen="0"] .detailFragment { top: -4%; left: -8%; width: 136%; height: 108%; opacity: 0.19; transform: scaleX(-1) rotate(-6deg); }
-.botanicalDetail[data-specimen="1"] { transform: rotate(-2.4deg); }
-.botanicalDetail[data-specimen="2"] { transform: rotate(3deg); }
-.botanicalDetail figcaption {
+.detailSpecimen {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  color: rgb(49 95 70 / 38%);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.5rem;
-  font-weight: 760;
-  letter-spacing: 0.1em;
+  top: -40%;
+  right: -22%;
+  display: block;
+  width: 112%;
+  height: auto;
+  opacity: 0.2;
+  filter: saturate(0.62) contrast(0.9);
+  mix-blend-mode: multiply;
+  transform: rotate(11deg);
 }
+.botanicalDetail[data-specimen="0"] .detailSpecimen { top: -52%; right: -12%; width: 122%; transform: rotate(-5deg); }
+.botanicalDetail[data-specimen="1"] { transform: rotate(-2.4deg); }
+.botanicalDetail[data-specimen="1"] .detailSpecimen { top: -19%; right: -17%; width: 108%; transform: rotate(5deg); }
+.botanicalDetail[data-specimen="2"] { transform: rotate(3deg); }
+.botanicalDetail[data-specimen="2"] .detailSpecimen { top: -64%; right: -26%; width: 138%; transform: scaleX(-1) rotate(8deg); }
 .storyMeta { justify-content: flex-start; color: var(--trail-green); font-size: 0.6rem; font-weight: 820; letter-spacing: 0.09em; text-transform: uppercase; }
 .storyMeta span + span::before { margin-right: 1rem; color: rgb(49 95 70 / 35%); content: "·"; }
 
@@ -474,8 +466,8 @@
   .trailRail { width: 10rem; }
   .journal { width: min(100%, 70rem); padding-left: 12.5rem; }
   .journal::before { left: 10.5rem; }
-  .primaryFern { left: -17vw; width: 55vw; opacity: 0.13; }
-  .secondaryFern { right: -24vw; width: 48vw; }
+  .primaryFern { left: -17vw; width: clamp(40rem, 76vw, 54rem); opacity: 0.2; }
+  .secondaryFern { right: -32vw; width: clamp(31rem, 58vw, 40rem); }
   .openingGrid { grid-template-columns: minmax(0, 1fr) minmax(17rem, 0.82fr); gap: 3rem; }
 }
 
@@ -529,9 +521,8 @@
   .evidenceLayer { width: calc(100% + 2.3rem); margin-inline: -1.15rem; }
   .sceneNumber { top: 1rem; left: 0; font-size: 1rem; }
   .sceneNav { display: none; }
-  .primaryFern { bottom: -8vh; left: -42vw; width: 96vw; opacity: 0.1; }
-  .secondaryFern { right: -55vw; width: 84vw; opacity: calc(var(--late-progress) * 0.08); }
-  .fiddlehead { right: -46vw; width: 72vw; opacity: calc(var(--late-progress) * 0.09); }
+  .primaryFern { bottom: -14vh; left: -58vw; width: 154vw; opacity: 0.2; }
+  .secondaryFern { right: -78vw; bottom: -9vh; width: 132vw; opacity: calc(var(--late-progress) * 0.13); }
   .endSummary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .endSummary > div { border-bottom: 1px solid var(--trail-line); }
   .endSummary > div:nth-child(2) { border-right: 0; }

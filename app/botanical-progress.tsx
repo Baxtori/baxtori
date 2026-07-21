@@ -19,8 +19,8 @@ export function BotanicalProgress() {
       root.dataset.growth = progress.toFixed(3);
       root.style.setProperty("--scroll-progress", progress.toFixed(3));
       root.style.setProperty("--late-progress", lateProgress.toFixed(3));
-      root.style.setProperty("--fern-clip", `${((1 - progress) * 24).toFixed(2)}%`);
-      root.style.setProperty("--bracken-clip", `${((1 - lateProgress) * 44).toFixed(2)}%`);
+      root.style.setProperty("--fern-clip", `${((1 - progress) * 18).toFixed(2)}%`);
+      root.style.setProperty("--bracken-clip", `${((1 - lateProgress) * 52).toFixed(2)}%`);
     };
 
     const draw = () => {
@@ -50,9 +50,8 @@ export function BotanicalProgress() {
 
   return (
     <figure aria-hidden="true" className={styles.botanicalProgress} data-botanical-progress ref={rootRef}>
-      <BotanicalIllustration className={`${styles.botanicalVector} ${styles.primaryFern}`} variant="frond" />
-      <BotanicalIllustration className={`${styles.botanicalVector} ${styles.secondaryFern}`} variant="fragment" />
-      <BotanicalIllustration className={`${styles.botanicalVector} ${styles.fiddlehead}`} progressMarker variant="fiddlehead" />
+      <BotanicalIllustration className={`${styles.botanicalSpecimen} ${styles.primaryFern}`} priority variant="frond" />
+      <BotanicalIllustration className={`${styles.botanicalSpecimen} ${styles.secondaryFern}`} progressMarker variant="crozier" />
     </figure>
   );
 }
