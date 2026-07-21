@@ -24,13 +24,23 @@
   z-index: 50;
   top: 0.6rem;
   left: 0.6rem;
-  padding: 0.55rem 0.75rem;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
   color: var(--trail-paper-light);
   background: var(--trail-ink);
-  transform: translateY(-160%);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-.skipLink:focus { transform: translateY(0); }
+.skipLink:focus {
+  width: auto;
+  height: auto;
+  padding: 0.55rem 0.75rem;
+  overflow: visible;
+  clip-path: none;
+}
 
 .trailRail {
   position: fixed;
@@ -123,6 +133,8 @@
 .trailSecondaryNav small { font-size: inherit; }
 
 .mobileSources { display: none; }
+.mobileSourcesGlyph { width: 0.75rem; height: 0.75rem; fill: none; stroke: currentColor; stroke-width: 1.1; }
+.mobileSourcesGlyph circle { fill: currentColor; stroke: none; }
 
 .railAccount { display: grid; gap: 0.3rem; margin-top: auto; }
 .railAccount > p { margin: 0; color: var(--trail-muted); font-size: 0.52rem; font-weight: 710; letter-spacing: 0.06em; line-height: 1.7; text-transform: uppercase; }
@@ -142,7 +154,11 @@
   --scroll-progress: 0;
   position: fixed;
   z-index: 1;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100lvh;
   margin: 0;
   overflow: hidden;
   contain: strict;
@@ -162,52 +178,21 @@
   display: block;
   width: auto;
   height: 134vh;
+  height: 134lvh;
   max-width: none;
   opacity: 0.15;
   filter: saturate(0.68) contrast(0.9);
   mix-blend-mode: multiply;
   pointer-events: none;
-  transform: translate3d(-50%, -50%, 0) translateX(calc(var(--scroll-progress) * 1.25vw));
+  transform: translate3d(-50%, -50%, 0);
   transform-origin: center center;
   user-select: none;
-  will-change: transform;
 }
 
 .fernPinnaGrowth {
   transform-origin: 0 0;
   transform-box: view-box;
   will-change: transform, opacity;
-}
-
-@keyframes fern-native-unfurl {
-  from {
-    opacity: var(--fern-opening-opacity);
-    transform: scale(var(--fern-minimum));
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes fern-native-drift {
-  from { transform: translate3d(-50%, -50%, 0); }
-  to { transform: translate3d(calc(-50% + 1.25vw), -50%, 0); }
-}
-
-@supports (animation-timeline: scroll()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .fernPinnaGrowth {
-      animation: fern-native-unfurl 1ms linear both;
-      animation-timeline: scroll(root block);
-      animation-range: var(--fern-range-start) var(--fern-range-end);
-    }
-
-    .primaryFern {
-      animation: fern-native-drift 1ms linear both;
-      animation-timeline: scroll(root block);
-    }
-  }
 }
 
 .journal {
@@ -274,7 +259,8 @@
 }
 .primaryContent { padding-block: clamp(2rem, 5vw, 4rem) 10vh; }
 .primaryContent :global(.history-view),
-.primaryContent :global(.map-view) { padding-top: 0; }
+.primaryContent :global(.map-view),
+.primaryContent :global(.repositories-view) { padding-top: 0; }
 
 .scene {
   position: relative;
@@ -516,17 +502,15 @@
 }
 .storyActions button { display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; }
 
-.storyActions .primaryAction,
 .endActions .primaryAction,
 .studyScene .primaryAction {
   color: var(--trail-paper-light);
   background-color: var(--trail-green);
   border-color: var(--trail-green);
 }
-.storyActions button:not(.primaryAction):hover,
+.storyActions button:hover,
 .endActions button:not(.primaryAction):hover,
 .endActions a:hover { color: var(--trail-ink); background: var(--trail-paper-light); border-color: rgb(49 95 70 / 32%); }
-.storyActions .primaryAction:hover,
 .endActions .primaryAction:hover,
 .studyScene .primaryAction:hover { background-color: #274f3a; border-color: #274f3a; }
 .storyActions button:active,
@@ -534,6 +518,8 @@
 .endActions a:active,
 .primaryAction:active { transform: translateY(1px); }
 .storyActions button[aria-pressed="true"] { color: var(--trail-green); background: rgb(219 232 217 / 75%); border-color: rgb(49 95 70 / 34%); }
+.storyActions button[aria-expanded="true"] { color: var(--trail-green); background: rgb(219 232 217 / 42%); border-color: rgb(49 95 70 / 28%); }
+.actionIcon { display: inline-grid; width: 1rem; place-items: center; font-family: var(--serif); font-size: 0.9rem; line-height: 1; }
 
 .understood::after {
   position: absolute;
@@ -558,8 +544,12 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.fieldNotes { margin-top: 1rem; border-top: 1px solid var(--trail-line); }
-.fieldNotes summary { padding: 0.9rem 0; color: var(--trail-muted); cursor: pointer; font-size: 0.67rem; font-weight: 740; }
+.fieldNotes { margin-top: 1rem; border-block: 1px solid var(--trail-line); }
+.fieldNotes summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.9rem 0; color: var(--trail-muted); cursor: pointer; font-size: 0.67rem; font-weight: 740; list-style: none; }
+.fieldNotes summary::-webkit-details-marker { display: none; }
+.fieldNotes summary > span::before { margin-right: 0.45rem; color: var(--trail-green); content: "+"; font-family: var(--serif); font-size: 0.95rem; }
+.fieldNotes[open] summary > span::before { content: "−"; }
+.fieldNotes summary small { color: var(--trail-muted); font-size: 0.56rem; font-weight: 650; letter-spacing: 0.04em; }
 .fieldNotes > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; padding: 0.5rem 0 1rem; }
 .fieldNotes section { min-width: 0; }
 .fieldNotes section p { margin: 0.45rem 0 0; color: var(--trail-soft); font-family: var(--serif); font-size: 0.8rem; line-height: 1.48; }
@@ -606,7 +596,7 @@
   .trailRail { width: 10rem; }
   .journal { width: min(100%, 70rem); padding-left: 12.5rem; }
   .journal::before { left: 10.5rem; }
-  .primaryFern { left: 7.5rem; height: 128vh; opacity: 0.15; }
+  .primaryFern { left: 7.5rem; height: 128vh; height: 128lvh; opacity: 0.15; }
   .openingGrid { grid-template-columns: minmax(0, 1fr) minmax(17rem, 0.82fr); gap: 3rem; }
 }
 
@@ -626,8 +616,9 @@
   .brand > span:last-child small { display: none; }
   .brandMark { width: 1.65rem; height: 1.65rem; }
   .brand strong { font-size: 1rem; }
-  .trailPrimaryNav { display: flex; gap: 0.55rem; margin: 0 0 0 auto; border: 0; }
-  .trailPrimaryNav button { min-height: auto; border: 0; font-size: 0.62rem; }
+  .trailPrimaryNav { display: flex; gap: 0; margin: 0 0 0 auto; border: 0; }
+  .trailPrimaryNav button { min-height: auto; padding-inline: 0.5rem; border: 0; font-size: 0.62rem; }
+  .trailPrimaryNav button + button { border-left: 1px solid var(--trail-line); }
   .trailPrimaryNav button small { display: none; }
   .trailPrimaryNav button[aria-current="page"]::after { display: none; }
   .trailSecondaryNav,
@@ -635,17 +626,19 @@
   .mobileSources {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    margin-left: 0.05rem;
-    padding: 0;
+    gap: 0.3rem;
+    margin-left: 0.15rem;
+    padding: 0.32rem 0.4rem;
     color: var(--trail-muted);
     background: transparent;
-    border: 0;
+    border: 1px solid var(--trail-line);
+    border-radius: 999px;
     cursor: pointer;
     font-size: 0.58rem;
     font-weight: 740;
   }
-  .mobileSources small { font-size: 0.5rem; }
+  .mobileSources[aria-current="page"] { color: var(--trail-ink); border-color: rgb(49 95 70 / 34%); }
+  .mobileSources small { display: inline-grid; min-width: 1rem; height: 1rem; place-items: center; color: var(--trail-paper-light); background: var(--trail-green); border-radius: 999px; font-size: 0.46rem; }
   .railProgress { position: absolute; right: 0; bottom: -1px; left: 0; display: block; margin: 0; }
   .railProgress span { display: none; }
   .railProgress progress { display: block; width: 100%; height: 2px; }
@@ -677,7 +670,7 @@
   .evidenceLayer { width: calc(100% + 2.3rem); margin-inline: -1.15rem; }
   .sceneNumber { top: 1rem; left: 0; font-size: 1rem; }
   .sceneNav { display: none; }
-  .primaryFern { left: 5vw; height: 118vh; opacity: 0.17; }
+  .primaryFern { left: 5vw; height: 118vh; height: 118lvh; opacity: 0.17; }
   .primaryJournal { padding-top: 6.4rem; }
   .primaryMasthead h1 { font-size: clamp(3.2rem, 14.4vw, 4.45rem); }
   .primaryMasthead::after { right: -8rem; width: 21rem; opacity: 0.06; }
@@ -700,7 +693,6 @@
 @media (forced-colors: active) {
   .botanicalProgress { display: none; }
   .trailRail { background: Canvas; }
-  .storyActions .primaryAction,
   .endActions .primaryAction,
   .studyScene .primaryAction { border: 2px solid ButtonText; }
 }

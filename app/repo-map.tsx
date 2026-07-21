@@ -99,29 +99,13 @@ function formatReviewDate(value: string, compact = false) {
   ).format(new Date(value));
 }
 
-function areaCoverage(area: RepoArea) {
-  return Math.round(area.breadth * 0.35 + area.depth * 0.35 + area.confidence * 0.2 + area.freshness * 0.1);
-}
-
-function adjustedCoverage(area: RepoArea, state: UnderstandingState) {
-  const observed = areaCoverage(area);
-  if (state === "understood") return Math.max(observed, 88);
-  if (state === "revisit") return Math.min(observed, 58);
-  if (state === "introduced") return Math.min(observed, 68);
-  if (state === "skipped") return 0;
-  return Math.min(observed, 42);
-}
-
 export function RepoMap({ attentionBudget, data, onAttentionBudgetChange, onQuestionChange, onStateChange, questionStates, states }: RepoMapProps) {
   const acceptsLegacyState = data.repository === "teamleaderleo/glimpse";
   const stateFor = (area: RepoArea) => states[`${data.repository}:${area.id}`] ?? (acceptsLegacyState ? states[area.id] : undefined) ?? "unexplored";
   const questionStateFor = (question: RepoQuestion) => questionStates[`${data.repository}:${question.id}`] ?? (acceptsLegacyState ? questionStates[question.id] : undefined) ?? question.status;
   const includedAreas = data.areas.filter((area) => stateFor(area) !== "skipped");
-  const totalWeight = includedAreas.reduce((total, area) => total + area.importance, 0);
-  const coverage = totalWeight
-    ? Math.round(includedAreas.reduce((total, area) => total + adjustedCoverage(area, stateFor(area)) * area.importance, 0) / totalWeight)
-    : 0;
   const understood = data.areas.filter((area) => stateFor(area) === "understood").length;
+  const confirmedProgress = includedAreas.length ? understood / includedAreas.length : 0;
   const openQuestions = data.questions.filter((question) => questionStateFor(question) === "open");
   const frontier = [...includedAreas]
     .filter((area) => stateFor(area) !== "understood")
@@ -184,8 +168,8 @@ export function RepoMap({ attentionBudget, data, onAttentionBudgetChange, onQues
   return (
     <section className="map-view" aria-labelledby="map-heading">
       <div className="map-overview">
-        <div className="coverage-dial" style={{ "--coverage": `${coverage * 3.6}deg` } as CSSProperties}>
-          <div><strong>{coverage}%</strong><span>estimated</span></div>
+        <div className="coverage-dial" style={{ "--coverage": `${confirmedProgress * 360}deg` } as CSSProperties}>
+          <div><strong>{understood}/{includedAreas.length}</strong><span>confirmed</span></div>
         </div>
         <div>
           <span className="eyebrow">Repository understanding</span>
@@ -193,7 +177,7 @@ export function RepoMap({ attentionBudget, data, onAttentionBudgetChange, onQues
           <p>{data.summary}</p>
           <div className="coverage-legend">
             <span>{understood}/{data.areas.length} areas confirmed</span>
-            <span>Breadth + depth + evidence + freshness</span>
+            <span>Personal reading state · not a quality score</span>
           </div>
         </div>
       </div>
@@ -258,7 +242,6 @@ export function RepoMap({ attentionBudget, data, onAttentionBudgetChange, onQues
       <div className="map-list" aria-label="Mapped repository areas">
         {data.areas.map((area) => {
           const state = stateFor(area);
-          const score = adjustedCoverage(area, state);
           return (
             <details className={`map-area is-${state}`} id={`area-${area.id}`} key={area.id} open={area.id === frontier?.id} tabIndex={-1}>
               <summary>
@@ -268,7 +251,8 @@ export function RepoMap({ attentionBudget, data, onAttentionBudgetChange, onQues
                   <p>{area.purpose}</p>
                 </div>
                 <div className="map-area-status">
-                  <strong>{score}%</strong>
+                  <strong>{area.evidence.length}</strong>
+                  <small>{area.evidence.length === 1 ? "file" : "files"}</small>
                   <span>{STATE_LABELS[state]}</span>
                 </div>
               </summary>
@@ -297,10 +281,11 @@ export function RepoMap({ attentionBudget, data, onAttentionBudgetChange, onQues
                   </div>
                 </div>
                 <div className="understanding-actions" aria-label={`Set understanding for ${area.name}`}>
-                  <span>My understanding</span>
-                  <button aria-pressed={state === "understood"} onClick={() => onStateChange(area, "understood")} type="button">Got it</button>
-                  <button aria-pressed={state === "revisit"} onClick={() => onStateChange(area, "revisit")} type="button">Go deeper</button>
-                  <button aria-pressed={state === "skipped"} onClick={() => onStateChange(area, "skipped")} type="button">Not worth it</button>
+                  <span>My reading state</span>
+                  <button aria-pressed={state === "understood"} onClick={() => onStateChange(area, "understood")} type="button">Understood</button>
+                  <button aria-pressed={state === "revisit"} onClick={() => onStateChange(area, "revisit")} type="button">Study again</button>
+                  <button aria-pressed={state === "skipped"} onClick={() => onStateChange(area, "skipped")} type="button">Hide area</button>
+                  <small>Private and editable. Choose another state at any time.</small>
                 </div>
                 {area.walkthrough ? (
                   <details className="walkthrough" id={`walkthrough-${area.id}`} tabIndex={-1}>
@@ -347,17 +332,18 @@ export function RepoMap({ attentionBudget, data, onAttentionBudgetChange, onQues
                 <p>{question.whyItMatters}</p>
                 <div className="question-evidence">{question.evidence.map((file) => <code key={file}>{file}</code>)}</div>
                 <div className="question-actions">
-                  <button aria-pressed={disposition === "resolved"} onClick={() => onQuestionChange(question, "resolved")} type="button">Resolved</button>
+                  <button aria-pressed={disposition === "resolved"} onClick={() => onQuestionChange(question, "resolved")} type="button">Mark resolved</button>
                   <button aria-pressed={disposition === "open"} onClick={() => onQuestionChange(question, "open")} type="button">Keep open</button>
-                  <button aria-pressed={disposition === "irrelevant"} onClick={() => onQuestionChange(question, "irrelevant")} type="button">Not relevant</button>
+                  <button aria-pressed={disposition === "irrelevant"} onClick={() => onQuestionChange(question, "irrelevant")} type="button">Dismiss</button>
                 </div>
+                <small className="question-state-note">Saved to your private reader state. Choose another status to undo it.</small>
               </article>
             );
           })}
         </div>
       </section>
 
-      <p className="coverage-note">This is a learning estimate, not a code-scanning score. Skipped areas leave the denominator; changed evidence can lower confidence or put an area back on your frontier.</p>
+      <p className="coverage-note">This map records what you have chosen to understand, revisit, or hide. Changed evidence can still return a confirmed area to your frontier.</p>
     </section>
   );
 }

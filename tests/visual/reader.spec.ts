@@ -88,7 +88,7 @@ test("account hydration never exposes the retired dashboard", async ({ page }) =
   await expect(page.getByText("More", { exact: true })).toHaveCount(0);
 });
 
-test("repository modes persist and newly selected sources enter the system honestly", async ({ page }) => {
+test("repository modes persist and newly selected sources enter the system honestly", async ({ page }, testInfo) => {
   await authenticateVisualReader(page.context());
   const savedStates: Array<Record<string, unknown>> = [];
   const activityRequests: string[] = [];
@@ -139,7 +139,7 @@ test("repository modes persist and newly selected sources enter the system hones
   await sourcesButton.click();
   const modeControl = page.getByRole("group", { name: `Review mode for ${repository.fullName}` }).first();
   await expect(modeControl).toBeVisible();
-  await page.getByLabel("Capture window").selectOption("30d");
+  await page.getByLabel("Look back").selectOption("30d");
   await modeControl.getByRole("button", { name: "Pinned" }).click();
 
   await expect.poll(() => savedStates.some((state) =>
@@ -154,6 +154,7 @@ test("repository modes persist and newly selected sources enter the system hones
   await expect(page.getByRole("heading", { name: "Know the system." })).toBeVisible();
   await expect(page.getByRole("tab", { name: /new-garden Not mapped/ })).toBeVisible();
   await expect(page.getByText("No invented coverage.")).toBeVisible();
+  await capture(page, testInfo, "system-and-sources", true, "allow");
 });
 
 test("the default reader turns the review into a finite field journal", async ({ page }, testInfo) => {
@@ -182,7 +183,7 @@ test("the default reader turns the review into a finite field journal", async ({
   expect(fernFrameBox?.width ?? 0).toBeGreaterThanOrEqual(viewportWidth - 20);
   const fernPlate = progressSpecimen.locator("[data-botanical-plate]");
   await expect(fernPlate).toBeVisible();
-  await expect(progressSpecimen).toHaveAttribute("data-growth-mode", /native-scroll|direct-scroll/);
+  await expect(progressSpecimen).toHaveAttribute("data-growth-mode", "direct-scroll");
   const fernBox = await fernPlate.boundingBox();
   expect(fernBox).not.toBeNull();
   expect(fernBox?.x ?? 0).toBeLessThan(0);
@@ -201,6 +202,7 @@ test("the default reader turns the review into a finite field journal", async ({
   await expect(fernPlate.locator("[data-fern-feather='inner']")).toHaveCount(16);
   await expect(fernPlate.locator("[data-fern-branchlet='lower-left']")).toHaveCount(1);
   await expect(fernPlate.locator("[data-fern-branchlet='crozier']")).toHaveCount(1);
+  await expect(fernPlate.locator("[data-fern-final-reveal]")).toHaveCount(1);
   await expect(fernPlate.locator("[data-fern-pinna='0']")).toHaveAttribute(
     "style",
     /var\(--fern-stage-opacity-0, 0\.66\).*var\(--fern-stage-0, 0\.38\)/,
@@ -220,6 +222,9 @@ test("the default reader turns the review into a finite field journal", async ({
   await page.getByRole("list", { name: "In this edition" }).getByRole("button", { name: /Repository access and reader attention became explicit plans\./ }).click();
 
   await expect(page.getByRole("heading", { name: "Repository access and reader attention became explicit plans." })).toBeVisible();
+  const scrolledFernBox = await fernPlate.boundingBox();
+  expect(Math.abs((scrolledFernBox?.x ?? 0) - (fernBox?.x ?? 0))).toBeLessThan(1);
+  expect(Math.abs((scrolledFernBox?.y ?? 0) - (fernBox?.y ?? 0))).toBeLessThan(1);
   await expect(page.locator("[data-botanical-detail]")).toHaveCount(0);
   await expect.poll(fernGrowth).toBeGreaterThan(openingGrowth);
   await expect.poll(() => fernStage(0)).toBeGreaterThan(openingLowerPinna);
@@ -236,6 +241,7 @@ test("the default reader turns the review into a finite field journal", async ({
   await capture(page, testInfo, "field-journal-clearing", false, "allow");
   const endGrowth = await fernGrowth();
   await expect.poll(() => fernStage(15)).toBeGreaterThan(0.99);
+  await expect.poll(() => fernPlate.locator("[data-fern-final-reveal]").evaluate((element) => Number(getComputedStyle(element).opacity))).toBeGreaterThan(0.99);
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: "auto" }));
   await expect.poll(fernGrowth).toBeLessThan(endGrowth);
   expect(errors).toEqual([]);

@@ -1997,6 +1997,7 @@ kbd {
 }
 
 .map-area-status strong { font-family: var(--serif); font-size: 1.55rem; font-weight: 500; }
+.map-area-status small { color: var(--muted); font-size: 0.54rem; letter-spacing: 0.08em; text-transform: uppercase; }
 .map-area-status span { color: var(--muted); font-size: 0.61rem; text-transform: uppercase; }
 
 .map-area-detail {
@@ -2053,6 +2054,7 @@ kbd {
   font-weight: 740;
 }
 .understanding-actions button[aria-pressed="true"] { color: var(--paper-light); background: var(--green); border-color: var(--green); }
+.understanding-actions > small { flex-basis: 100%; color: var(--muted); font-family: var(--serif); font-size: 0.64rem; }
 
 .walkthrough {
   margin-top: 1rem;
@@ -2192,6 +2194,7 @@ kbd {
 }
 
 .question-actions button[aria-pressed="true"] { color: var(--paper-light); background: var(--green); border-color: var(--green); }
+.question-state-note { display: block; margin-top: 0.45rem; color: var(--muted); font-family: var(--serif); font-size: 0.62rem; }
 
 .coverage-note {
   max-width: 44rem;

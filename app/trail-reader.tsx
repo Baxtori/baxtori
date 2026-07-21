@@ -21,7 +21,7 @@ type TrailEdition = {
 
 type TrailReaderProps = {
   accountLabel?: string;
-  activeView: "briefing" | "history" | "map";
+  activeView: "briefing" | "history" | "map" | "repositories";
   connectHref?: string;
   edition: TrailEdition;
   notice: string;
@@ -207,7 +207,7 @@ export function TrailReader({
             <progress max={session.scenes.length} value={activeIndex + 1} />
           </div>
         ) : (
-          <p className={styles.railSection}>{activeView === "map" ? "Repository bearings" : "Immutable editions"}</p>
+          <p className={styles.railSection}>{activeView === "map" ? "Repository bearings" : activeView === "repositories" ? "Review sources" : "Immutable editions"}</p>
         )}
 
         {activeView === "briefing" && (
@@ -228,13 +228,14 @@ export function TrailReader({
 
         <nav className={styles.trailSecondaryNav} aria-label="Edition and source tools">
           <button onClick={onOpenEditionRecord} type="button">Edition record</button>
-          {onOpenRepositories && <button onClick={onOpenRepositories} type="button">Review sources <small>{repositoryCount}</small></button>}
+          {onOpenRepositories && <button aria-current={activeView === "repositories" ? "page" : undefined} onClick={onOpenRepositories} type="button">Review sources <small>{repositoryCount}</small></button>}
           {connectHref && <a href={connectHref}>Connect GitHub</a>}
         </nav>
 
         {onOpenRepositories && (
-          <button className={styles.mobileSources} onClick={onOpenRepositories} type="button">
-            Sources <small>{repositoryCount}</small>
+          <button aria-current={activeView === "repositories" ? "page" : undefined} className={styles.mobileSources} onClick={onOpenRepositories} type="button">
+            {activeView === "repositories" && <BotanicalGlyph className={styles.mobileSourcesGlyph} />}
+            <span>Sources</span><small>{repositoryCount}</small>
           </button>
         )}
 
@@ -281,7 +282,7 @@ export function TrailReader({
                     <button onClick={() => moveTo(session.scenes.findIndex((candidate) => candidate.id === scene.id))} type="button">
                       <span>{String(index + 1).padStart(2, "0")}</span>
                       <strong>{scene.item.title}</strong>
-                      <small>{scene.kind === "story" ? scene.story.project : scene.item.repository} · {scene.item.minutes} min</small>
+                      <small>{scene.kind === "story" ? scene.story.project : scene.item.repository}</small>
                     </button>
                   </li>
                 ))}
@@ -320,7 +321,7 @@ export function TrailReader({
                   <div className={styles.storyMeta}>
                     <span>{scene.story.project}</span>
                     <BotanicalGlyph />
-                    <span>{scene.item.minutes} min</span>
+                    <span>Published {formatDay(edition.periodEnd)}</span>
                   </div>
                   <h2>{scene.story.title}</h2>
                   <p className={styles.storyBrief}>{scene.story.brief}</p>
@@ -333,19 +334,19 @@ export function TrailReader({
               </section>
 
               <div className={styles.storyActions} aria-label={`Actions for ${scene.story.title}`}>
-                <button aria-pressed={state.understood} className={styles.primaryAction} onClick={() => onUnderstand(scene.story)} type="button">
-                  <span aria-hidden="true">{state.understood ? "✓" : "○"}</span>Understood
+                <button aria-pressed={state.understood} onClick={() => onUnderstand(scene.story)} type="button">
+                  <span className={styles.actionIcon} aria-hidden="true">{state.understood ? "✓" : "○"}</span><span>Understood</span>
                 </button>
-                <button aria-pressed={state.watching} onClick={() => onWatch(scene.story)} type="button">{state.watching ? "Watching" : "Watch"}</button>
+                <button aria-pressed={state.watching} onClick={() => onWatch(scene.story)} type="button"><span className={styles.actionIcon} aria-hidden="true">{state.watching ? "◆" : "◇"}</span><span>Watch</span></button>
                 <button aria-expanded={evidenceOpen} onClick={() => setOpenEvidence((current) => ({ ...current, [scene.story.id]: !evidenceOpen }))} type="button">
-                  {evidenceOpen ? "Close evidence" : "Evidence"}
+                  <span className={styles.actionIcon} aria-hidden="true">{evidenceOpen ? "−" : "+"}</span><span>Evidence</span>
                 </button>
               </div>
 
               {evidenceOpen && <div className={styles.evidenceLayer}>{renderEvidence(scene.story)}</div>}
 
               <details className={styles.fieldNotes}>
-                <summary>Details</summary>
+                <summary><span>Field notes</span><small>Changed · verify · tradeoff</small></summary>
                 <div>
                   <section><span>Changed</span><p>{scene.story.whatChanged}</p></section>
                   <section><span>Verify</span><p>{scene.story.verify}</p></section>

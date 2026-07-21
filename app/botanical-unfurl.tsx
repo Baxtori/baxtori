@@ -104,6 +104,15 @@ export function BotanicalUnfurl({
               </g>
             );
           })}
+          <rect
+            data-fern-final-reveal
+            fill="white"
+            height="1776"
+            opacity="var(--fern-final-reveal, 0)"
+            width="1264"
+            x="-120"
+            y="-120"
+          />
         </mask>
       </defs>
       <g transform="translate(1024 0) scale(-1 1)">

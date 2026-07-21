@@ -53,6 +53,7 @@ import { RepositoryModeControl } from "./repository-mode-control";
 import repositoryModeStyles from "./repository-modes.module.css";
 import { RepositoryMaps } from "./repository-maps";
 import { type QuestionDisposition, type RepoArea, type RepoQuestion, type UnderstandingState } from "./repo-map";
+import { SourcesView } from "./sources-view";
 import { StoryCode } from "./story-code";
 import { TrailReader } from "./trail-reader";
 
@@ -572,7 +573,7 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
   const repositoryCounts = repositoryModeCounts(repositories, repositoryModes);
   const scheduledRepositorySet = new Set(SCHEDULED_REPOSITORIES);
   const selectedRepositorySet = new Set(selectedRepositories);
-  const pendingAddedRepositories = selectedRepositories.filter((repository) => !scheduledRepositorySet.has(repository));
+  const pendingAddedRepositories = selectedRepositories.filter((repository) => !SCHEDULED_REPOSITORIES.includes(repository));
   const pendingRemovedRepositories = SCHEDULED_REPOSITORIES.filter((repository) => !selectedRepositorySet.has(repository));
   const inaccessibleScheduledRepositories = SCHEDULED_REPOSITORIES.filter((repository) =>
     repositories.length > 0 && !repositories.some((candidate) => candidate.fullName === repository),
@@ -999,7 +1000,7 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
     );
   };
 
-  if ((["briefing", "map", "history"] as View[]).includes(view)) {
+  if ((["briefing", "map", "history", "repositories"] as View[]).includes(view)) {
     const primaryContent = view === "map" ? (
       <RepositoryMaps
         activeRepository={activeMapRepository}
@@ -1025,12 +1026,45 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
         questions={threadQuestions}
         topicThreads={topicThreads}
       />
+    ) : view === "repositories" ? (
+      <SourcesView
+        activity={activity}
+        activityLoading={activityLoading}
+        appSlug={auth.appSlug}
+        candidateRepositoryCount={candidateRepositoryCount}
+        captureWindow={captureWindow}
+        displayedRepositories={displayedRepositories}
+        feedbackStatus={feedbackStatus}
+        filteredRepositoryCount={filteredRepositories.length}
+        inaccessibleScheduledRepositories={inaccessibleScheduledRepositories}
+        onCaptureWindowChange={setCaptureWindow}
+        onDeleteAccount={deleteAccount}
+        onModeChange={updateRepositoryMode}
+        onModeFilterChange={setRepositoryModeFilter}
+        onRestorePublishedScope={restorePublishedScope}
+        onSearchChange={setRepositorySearch}
+        onShowAllChange={() => setShowAllRepositories((current) => !current)}
+        pendingAddedCount={pendingAddedRepositories.length}
+        pendingRemovedCount={pendingRemovedRepositories.length}
+        quietRepositoryCount={quietRepositoryCount}
+        recentCommitCount={recentCommitCount}
+        repositories={repositories}
+        repositoryCounts={repositoryCounts}
+        repositoryError={repositoryError}
+        repositoryLoading={repositoryLoading}
+        repositoryModeFilter={repositoryModeFilter}
+        repositoryModes={repositoryModes}
+        repositorySearch={repositorySearch}
+        selectedRepositories={selectedRepositoryData}
+        showAllRepositories={showAllRepositories}
+        userLogin={auth.user?.login}
+      />
     ) : undefined;
 
     return (
       <TrailReader
         accountLabel={auth.authenticated ? `@${auth.user?.login}` : undefined}
-        activeView={view as "briefing" | "history" | "map"}
+        activeView={view as "briefing" | "history" | "map" | "repositories"}
         connectHref={!auth.authenticated && auth.configured ? "/api/auth/github/start" : undefined}
         edition={EDITION}
         notice={notice || authMessage}
@@ -1051,12 +1085,16 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
         }}
         primaryContent={primaryContent}
         primaryDescription={view === "map"
-          ? "Evidence-backed bearings, uncertainty, and the next useful thing to understand. Newly selected repositories stay honest until a reviewed map is published."
-          : "Return to unresolved intent and reopen the exact evidence that shaped earlier understanding."}
-        primaryHeading={view === "map" ? "Know the system." : "Working memory."}
+          ? "A reviewed map of repository areas, evidence, and open questions—not a code-quality score."
+          : view === "repositories"
+            ? "Choose what Baxtori may inspect for the next edition. This never rewrites the published archive."
+            : "Your private reading record: prior editions, watches, open questions, and their exact evidence."}
+        primaryHeading={view === "map" ? "Know the system." : view === "repositories" ? "Sources." : "Working memory."}
         primaryKicker={view === "map"
           ? `${systemSources.length} ${systemSources.length === 1 ? "repository" : "repositories"}`
-          : `${HISTORY_EDITION_COUNT} immutable ${HISTORY_EDITION_COUNT === 1 ? "edition" : "editions"}`}
+          : view === "repositories"
+            ? `${selectedRepositories.length} selected · ${repositories.length} available`
+            : `${HISTORY_EDITION_COUNT} immutable ${HISTORY_EDITION_COUNT === 1 ? "edition" : "editions"}`}
         renderEvidence={renderTrailEvidence}
         repositoryCount={selectedRepositories.length}
         session={trailSession}
