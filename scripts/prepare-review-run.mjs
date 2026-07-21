@@ -1,6 +1,5 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { arch, platform } from "node:process";
 import { fileURLToPath } from "node:url";
 import { buildPreparedReviewRun } from "./lib/review-run.mjs";
 
@@ -20,7 +19,7 @@ const manifest = buildPreparedReviewRun({
   now: new Date(),
   runtime: {
     node: process.version,
-    platform: `${platform}-${arch}`,
+    platform: `${process.platform}-${process.arch}`,
   },
 });
 
