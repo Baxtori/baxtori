@@ -104,5 +104,5 @@ test("mapped-area matching requires the thread to name that area", () => {
 test("reports active topics whose repositories were outside collection", () => {
   const result = buildFollowUpCandidates({ topicThreads: [thread] });
   assert.equal(result.unmatchedThreads[0].reason, "repository-not-collected");
-  assert.equal(result.unmatchedThreads[0].repository, "teamleaderleo/baxtori");
+  assert.equal(result.unmatchedThreads[0].repository, "Baxtori/baxtori");
 });
