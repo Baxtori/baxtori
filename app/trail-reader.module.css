@@ -15,11 +15,12 @@
 }
 
 :global(html:has(.trailShell)) {
+  overflow-x: clip;
   scroll-snap-type: y proximity;
-  scroll-padding-top: 4.4rem;
+  scroll-padding-top: 1.5rem;
 }
 
-:global(body:has(.trailShell)) { background: var(--trail-paper); }
+:global(body:has(.trailShell)) { overflow-x: clip; background: var(--trail-paper); }
 
 .skipLink {
   position: fixed;
@@ -34,24 +35,25 @@
 
 .skipLink:focus { transform: translateY(0); }
 
-.trailHeader {
+.trailRail {
   position: fixed;
   z-index: 20;
   top: 0;
-  right: 0;
+  bottom: 0;
   left: 0;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  min-height: 4.2rem;
-  padding: 0.65rem clamp(1rem, 4vw, 3rem);
-  background: rgb(245 240 229 / 82%);
-  border-bottom: 1px solid rgb(37 63 46 / 12%);
-  backdrop-filter: blur(18px) saturate(0.8);
+  display: flex;
+  flex-direction: column;
+  width: clamp(10.5rem, 14vw, 12.5rem);
+  padding: clamp(1.4rem, 3vw, 2.4rem) 1.15rem 1.35rem;
+  background: rgb(245 240 229 / 78%);
+  border-right: 1px solid rgb(37 63 46 / 13%);
+  backdrop-filter: blur(20px) saturate(0.72);
 }
 
-.brand,
-.exitButton {
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
   width: fit-content;
   padding: 0;
   color: var(--trail-ink);
@@ -59,8 +61,6 @@
   border: 0;
   cursor: pointer;
 }
-
-.brand { display: inline-flex; align-items: center; gap: 0.62rem; }
 .brand > span {
   display: grid;
   place-items: center;
@@ -72,110 +72,128 @@
   font-family: var(--serif);
   font-size: 0.8rem;
 }
+.brand > span:last-child { display: grid; width: auto; height: auto; place-items: initial; color: inherit; background: transparent; border-radius: 0; }
 .brand strong { font-family: var(--serif); font-size: 1.15rem; letter-spacing: -0.04em; }
-.exitButton { justify-self: end; color: var(--trail-muted); font-size: 0.68rem; font-weight: 760; }
+.brand small { color: var(--trail-muted); font-size: 0.54rem; font-weight: 700; letter-spacing: 0.07em; }
 
-.headerProgress { display: grid; grid-template-columns: auto 5.5rem; align-items: center; gap: 0.65rem; }
-.headerProgress span { color: var(--trail-muted); font-size: 0.6rem; font-weight: 760; letter-spacing: 0.08em; text-transform: uppercase; }
-.headerProgress progress { width: 5.5rem; height: 0.22rem; border: 0; background: rgb(37 63 46 / 12%); }
-.headerProgress progress::-webkit-progress-bar { background: rgb(37 63 46 / 12%); }
-.headerProgress progress::-webkit-progress-value { background: var(--trail-green); }
-.headerProgress progress::-moz-progress-bar { background: var(--trail-green); }
+.trailPrimaryNav { display: grid; margin-top: 2.4rem; border-top: 1px solid var(--trail-line); }
+.trailPrimaryNav button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 2.8rem;
+  padding: 0;
+  color: var(--trail-muted);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--trail-line);
+  cursor: pointer;
+  font-size: 0.7rem;
+  text-align: left;
+}
+.trailPrimaryNav button[aria-current="page"] { color: var(--trail-ink); font-weight: 780; }
+.trailPrimaryNav small { font-size: 0.58rem; }
+
+.railBudget { display: grid; grid-template-columns: 1fr auto; gap: 0.35rem 0.5rem; margin-top: 1.2rem; color: var(--trail-muted); font-size: 0.52rem; font-weight: 730; }
+.railBudget output { color: var(--trail-ink); font-family: var(--serif); font-size: 0.72rem; }
+.railBudget input { grid-column: 1 / -1; width: 100%; accent-color: var(--trail-green); }
+
+.railProgress { display: grid; gap: 0.55rem; margin-top: 2.1rem; }
+.railProgress span { color: var(--trail-muted); font-size: 0.53rem; font-weight: 760; letter-spacing: 0.08em; text-transform: uppercase; }
+.railProgress progress { width: 100%; height: 0.18rem; border: 0; background: rgb(37 63 46 / 12%); }
+.railProgress progress::-webkit-progress-bar { background: rgb(37 63 46 / 12%); }
+.railProgress progress::-webkit-progress-value { background: var(--trail-green); }
+.railProgress progress::-moz-progress-bar { background: var(--trail-green); }
+
+.railEdition { margin: auto 0 0; color: var(--trail-muted); font-size: 0.52rem; font-weight: 710; letter-spacing: 0.06em; line-height: 1.7; text-transform: uppercase; }
 
 .botanicalProgress {
+  --bracken-clip: 54%;
+  --fern-clip: 68%;
+  --late-progress: 0;
+  --scroll-progress: 0;
   position: fixed;
   z-index: 1;
   inset: 0;
   margin: 0;
   overflow: hidden;
+  contain: strict;
   pointer-events: none;
-  mix-blend-mode: multiply;
+  isolation: isolate;
 }
 
-.fernStudy,
-.bloomStudy {
+.botanicalImage {
   position: absolute;
   display: block;
-  overflow: visible;
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
 }
 
-.fernStudy {
-  bottom: -10vh;
-  left: -34vw;
-  width: 80vw;
-  height: 118svh;
+.fernPhotograph {
+  top: -6vh;
+  left: -7vw;
+  width: 39vw;
+  height: 112svh;
+  object-fit: cover;
+  object-position: left center;
+  opacity: 0.085;
+  filter: saturate(0.62) contrast(0.9);
+  mask-image: linear-gradient(90deg, #000 0 56%, rgb(0 0 0 / 72%) 74%, transparent 100%);
+  transform: translate3d(0, calc(var(--scroll-progress) * -2.8rem), 0) scale(1.04);
 }
 
-.bloomStudy {
+.maleFernPlate {
+  bottom: -28vh;
+  left: -16vw;
+  width: 48vw;
+  height: auto;
+  opacity: 0.34;
+  filter: saturate(0.68) sepia(0.06) contrast(0.94);
+  mix-blend-mode: multiply;
+  clip-path: inset(var(--fern-clip) 0 0 0);
+  transform: translate3d(0, calc(var(--scroll-progress) * -4.5rem), 0) rotate(-3.5deg);
+  transform-origin: center bottom;
+}
+
+.brackenPlate {
   right: -20vw;
-  bottom: -22vh;
-  width: 65vw;
-  height: 96svh;
+  bottom: -30vh;
+  width: 41vw;
+  height: auto;
+  opacity: calc(0.015 + var(--late-progress) * 0.16);
+  filter: saturate(0.52) contrast(0.92);
+  mix-blend-mode: multiply;
+  clip-path: inset(var(--bracken-clip) 0 0 0);
+  transform: translate3d(0, calc(var(--late-progress) * -3rem), 0) rotate(4deg);
+  transform-origin: center bottom;
 }
 
-.fernGhost,
-.fernLive,
-.bloomGhost,
-.bloomLive {
-  fill: rgb(49 95 70 / 62%);
-  stroke: rgb(37 84 55 / 88%);
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.fiddleheadPhotograph {
+  right: -12vw;
+  bottom: -12vh;
+  width: 43vw;
+  height: 46svh;
+  object-fit: cover;
+  object-position: 78% 68%;
+  opacity: calc(var(--late-progress) * 0.095);
+  filter: saturate(0.54) contrast(0.88);
+  mask-image: radial-gradient(ellipse at 74% 70%, #000 0 25%, rgb(0 0 0 / 74%) 45%, transparent 72%);
 }
-
-.fernGhost { opacity: 0.035; }
-.fernLive { opacity: 0.64; filter: drop-shadow(0 12px 28px rgb(32 66 44 / 9%)); }
-.bloomGhost { opacity: 0.018; }
-.bloomLive { opacity: 0.18; filter: drop-shadow(0 18px 35px rgb(32 66 44 / 7%)); }
-
-.fernRachis,
-.fernPinnaStem,
-.fernFiddlehead {
-  fill: none;
-  vector-effect: non-scaling-stroke;
-}
-
-.fernRachis { stroke-width: 4.4; }
-.fernPinnaStem { stroke-width: 1.55; }
-.fernFiddlehead { stroke-width: 3; }
-.fernLive .fernRachis,
-.fernLive .fernFiddlehead { stroke-dasharray: 1; stroke-dashoffset: 1; }
-.fernPinnaGrowth { opacity: 0.04; scale: 0.025; transform-box: fill-box; transform-origin: 0 0; }
-.fernPinnule { opacity: 0; scale: 0.025; transform-box: fill-box; transform-origin: 0 50%; }
-.fernGhost .fernPinnaGrowth,
-.fernGhost .fernPinnule { opacity: 1; scale: 1; }
-
-.bloomStem { fill: none; stroke-width: 3.2; vector-effect: non-scaling-stroke; }
-.bloomLive > .bloomStem:first-child { stroke-dasharray: 1; stroke-dashoffset: 1; }
-.bloomPetal,
-.bloomBud,
-.bloomLeaf,
-.bloomHeart { transform-box: fill-box; transform-origin: center bottom; }
-.bloomPetal,
-.bloomBud,
-.bloomLeaf { opacity: 0; scale: 0.035; }
-.bloomPetal { fill: rgb(60 105 73 / 34%); stroke-width: 1.2; }
-.bloomBud,
-.bloomLeaf { fill: rgb(49 95 70 / 28%); stroke-width: 1.5; }
-.bloomHeart { fill: rgb(82 112 65 / 42%); opacity: 0; scale: 0.1; transform-origin: center; }
-.bloomGhost .bloomPetal,
-.bloomGhost .bloomBud,
-.bloomGhost .bloomLeaf,
-.bloomGhost .bloomHeart { opacity: 1; scale: 1; }
 
 .journal {
   position: relative;
   z-index: 2;
-  width: min(100%, 88rem);
+  width: min(100%, 86rem);
   margin: 0 auto;
-  padding: 4.2rem clamp(1.2rem, 3vw, 3rem) 18vh clamp(24rem, 34vw, 31rem);
+  padding: 0 clamp(1.2rem, 4vw, 3.5rem) 10vh clamp(15rem, 20vw, 18rem);
 }
 
 .journal::before {
   position: absolute;
-  top: 6rem;
-  bottom: 8rem;
-  left: calc(clamp(24rem, 34vw, 31rem) - 2.4rem);
+  top: 2rem;
+  bottom: 5rem;
+  left: calc(clamp(15rem, 20vw, 18rem) - 2rem);
   width: 1px;
   background: linear-gradient(transparent, rgb(49 95 70 / 13%) 8rem, rgb(49 95 70 / 13%) calc(100% - 8rem), transparent);
   content: "";
@@ -186,9 +204,9 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: max(42rem, calc(100svh - 4.2rem));
-  padding: clamp(4rem, 10vh, 7rem) 0;
-  scroll-margin-top: 4.2rem;
+  min-height: max(34rem, 78svh);
+  padding: clamp(3rem, 6vh, 4.75rem) 0;
+  scroll-margin-top: 1.5rem;
   scroll-snap-align: start;
   outline: none;
 }
@@ -211,7 +229,6 @@
 .studyScene h2 { max-width: 44rem; font-size: clamp(2.6rem, 6vw, 5.1rem); line-height: 0.98; }
 .endScene h2 { max-width: 44rem; font-size: clamp(3.2rem, 7vw, 5.8rem); line-height: 0.96; }
 
-.openingMeta,
 .storyMeta,
 .storyHeader {
   display: flex;
@@ -221,7 +238,8 @@
 }
 
 .openingMeta {
-  margin-bottom: clamp(4rem, 12vh, 8rem);
+  display: block;
+  margin-bottom: clamp(1.5rem, 4vh, 2.8rem);
   color: var(--trail-muted);
   font-size: 0.62rem;
   font-weight: 780;
@@ -243,7 +261,7 @@
   position: relative;
   display: block;
   width: min(100%, 42rem);
-  margin-top: clamp(3rem, 9vh, 6rem);
+  margin-top: clamp(2rem, 5vh, 3.8rem);
   padding: 1.2rem 4.5rem 1.2rem 0;
   color: var(--trail-ink);
   text-align: left;
@@ -257,7 +275,7 @@
 
 .sceneNumber {
   position: absolute;
-  top: clamp(4.4rem, 11vh, 7.5rem);
+  top: clamp(3.3rem, 7vh, 5rem);
   left: -4rem;
   color: rgb(49 95 70 / 25%);
   font-family: var(--serif);
@@ -267,35 +285,30 @@
 .storyHeader {
   position: relative;
   display: block;
-  margin-bottom: clamp(1.8rem, 5vh, 3.5rem);
-  padding-right: clamp(10rem, 15vw, 13rem);
+  overflow: clip;
+  margin-bottom: clamp(1.2rem, 3vh, 2.2rem);
+  padding-right: clamp(11rem, 17vw, 15rem);
 }
-.storyLead { min-width: 0; padding-top: clamp(1rem, 3vh, 2.2rem); }
-.storyLead h2 { margin-top: clamp(1.4rem, 4vh, 2.8rem); }
-.specimenBearing { position: absolute; top: 0; right: 0; width: clamp(10rem, 13vw, 12rem); height: 100%; }
+.storyLead { min-width: 0; padding-top: clamp(0.5rem, 1.5vh, 1.2rem); }
+.storyLead h2 { margin-top: clamp(0.8rem, 2vh, 1.5rem); }
+.specimenBearing { position: absolute; top: -1rem; right: -2rem; width: clamp(12rem, 16vw, 15rem); height: calc(100% + 2rem); }
 .botanicalDetail {
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 18rem;
+  min-height: 16rem;
   margin: 0;
-  color: rgb(49 95 70 / 68%);
+  overflow: hidden;
+  background: rgb(49 95 70 / 2.5%);
   mix-blend-mode: multiply;
+  mask-image: radial-gradient(ellipse 86% 78% at 54% 48%, #000 0 48%, rgb(0 0 0 / 82%) 64%, transparent 100%);
+  transform: rotate(1.6deg);
 }
-.botanicalDetail svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  min-height: 18rem;
-  overflow: visible;
-  fill: none;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.35;
-  vector-effect: non-scaling-stroke;
-}
-.botanicalDetail .specimenLeaf { fill: rgb(49 95 70 / 5%); }
+.botanicalDetail img { object-fit: cover; opacity: 0.44; filter: saturate(0.55) contrast(0.9); }
+.botanicalDetail[data-specimen="0"] img,
+.botanicalDetail[data-specimen="2"] img { opacity: 0.58; }
+.botanicalDetail[data-specimen="1"] { transform: rotate(-2.4deg); }
+.botanicalDetail[data-specimen="3"] { transform: rotate(3deg); }
 .botanicalDetail figcaption {
   position: absolute;
   right: 0;
@@ -323,7 +336,7 @@
   grid-template-columns: 6.5rem minmax(0, 1fr);
   gap: 1.4rem;
   max-width: 45rem;
-  margin-top: 2rem;
+  margin-top: 1.35rem;
   padding: 1rem 0;
   border-top: 1px solid var(--trail-line);
 }
@@ -337,16 +350,6 @@
   text-transform: uppercase;
 }
 .meaning p { margin: 0; color: var(--trail-soft); font-size: 0.8rem; line-height: 1.55; }
-
-.evidenceBearing {
-  display: block;
-  margin-top: 0.7rem;
-  padding: 0.85rem 0;
-  border-top: 1px solid var(--trail-line);
-}
-.evidenceBearing > div { display: grid; gap: 0.24rem; }
-.evidenceBearing span { color: var(--trail-muted); font-size: 0.56rem; font-weight: 780; letter-spacing: 0.08em; text-transform: uppercase; }
-.evidenceBearing strong { overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.65rem; font-weight: 600; }
 
 .storyActions,
 .endActions {
@@ -410,41 +413,26 @@
 .fieldNotes section { min-width: 0; }
 .fieldNotes section p { margin: 0.45rem 0 0; color: var(--trail-soft); font-family: var(--serif); font-size: 0.8rem; line-height: 1.48; }
 
-.nextCue {
-  align-self: flex-end;
-  margin-top: clamp(2rem, 5vh, 4rem);
-  padding: 0.5rem 0;
-  color: var(--trail-green);
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-  font-family: var(--serif);
-  font-size: 0.9rem;
-}
-
 .studyScene { align-items: flex-start; }
 .studyScene .repositoryBearing { margin: 1rem 0; color: var(--trail-muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.65rem; }
 .studyScene .primaryAction { margin-top: 1.2rem; }
 
 .endScene { align-items: flex-start; }
-.endSummary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; margin: clamp(2rem, 6vh, 4rem) 0 0; border-block: 1px solid var(--trail-line); }
+.endSummary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; margin: clamp(1.5rem, 3vh, 2.4rem) 0 0; border-block: 1px solid var(--trail-line); }
 .endSummary > div { display: flex; flex-direction: column-reverse; gap: 0.3rem; padding: 1rem; border-right: 1px solid var(--trail-line); }
 .endSummary > div:first-child { padding-left: 0; }
 .endSummary > div:last-child { border-right: 0; }
 .endSummary dt { color: var(--trail-muted); font-size: 0.56rem; font-weight: 780; letter-spacing: 0.08em; text-transform: uppercase; }
 .endSummary dd { margin: 0; font-family: var(--serif); font-size: 2rem; }
 .sceneNav {
-  position: fixed;
-  z-index: 10;
-  top: 50%;
-  right: clamp(0.8rem, 2vw, 2rem);
-  display: grid;
-  gap: 0.35rem;
-  transform: translateY(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.22rem;
+  margin-top: 0.8rem;
 }
-.sceneNav button { display: grid; place-items: center; width: 1.4rem; height: 1.4rem; padding: 0; background: transparent; border: 0; cursor: pointer; }
-.sceneNav button span { display: block; width: 0.28rem; height: 0.28rem; background: rgb(49 95 70 / 28%); border-radius: 50%; transition: transform 180ms ease, background 180ms ease; }
-.sceneNav button[aria-current="step"] span { background: var(--trail-green); transform: scale(1.8); }
+.sceneNav button { display: grid; place-items: center; min-width: 1.65rem; height: 1.5rem; padding: 0; color: rgb(49 95 70 / 42%); background: transparent; border: 0; cursor: pointer; }
+.sceneNav button span { font-family: var(--serif); font-size: 0.63rem; transition: color 180ms ease, transform 180ms ease; }
+.sceneNav button[aria-current="step"] span { color: var(--trail-green); transform: translateY(-0.12rem); }
 
 .notice {
   position: fixed;
@@ -464,46 +452,62 @@
 @keyframes notice-show { 0%, 100% { opacity: 0; transform: translateY(0.5rem); } 12%, 82% { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: 1080px) {
-  .journal { width: min(100%, 60rem); padding-left: clamp(1.1rem, 4vw, 3rem); }
-  .journal::before { display: none; }
-  .fernStudy { left: -53vw; width: 110vw; }
-  .bloomStudy { right: -38vw; width: 92vw; }
-  .fernLive { opacity: 0.42; }
-  .bloomLive { opacity: 0.13; }
+  .trailRail { width: 10rem; }
+  .journal { width: min(100%, 70rem); padding-left: 12.5rem; }
+  .journal::before { left: 10.5rem; }
+  .fernPhotograph { left: -10vw; width: 46vw; opacity: 0.07; }
+  .maleFernPlate { left: -25vw; width: 60vw; opacity: 0.23; }
+  .brackenPlate { right: -28vw; width: 52vw; }
 }
 
 @media (max-width: 760px) {
-  :global(html:has(.trailShell)) { scroll-padding-top: 3.7rem; }
-  .trailHeader { grid-template-columns: 1fr auto; min-height: 3.7rem; padding-inline: 0.9rem; }
-  .headerProgress { grid-column: 1 / -1; grid-row: 2; display: block; position: absolute; right: 0; bottom: -1px; left: 0; }
-  .headerProgress span { position: absolute; right: 5.8rem; top: -2.25rem; }
-  .headerProgress progress { display: block; width: 100%; height: 2px; }
-  .exitButton { grid-column: 2; grid-row: 1; }
-  .journal { padding: 3.7rem 1.15rem 14vh; }
-  .scene { min-height: max(38rem, calc(100svh - 3.7rem)); padding-block: 4rem; scroll-margin-top: 3.7rem; }
-  .openingScene h1 { font-size: clamp(3.15rem, 14vw, 4.35rem); }
+  :global(html:has(.trailShell)) { scroll-padding-top: 3.8rem; }
+  .trailRail {
+    right: 0;
+    bottom: auto;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    min-height: 3.8rem;
+    padding: 0.65rem 0.9rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--trail-line);
+  }
+  .brand > span:last-child small { display: none; }
+  .brand strong { font-size: 1rem; }
+  .trailPrimaryNav { display: flex; gap: 0.55rem; margin: 0 0 0 auto; border: 0; }
+  .trailPrimaryNav button { min-height: auto; border: 0; font-size: 0.62rem; }
+  .trailPrimaryNav button small { display: none; }
+  .railProgress { position: absolute; right: 0; bottom: -1px; left: 0; display: block; margin: 0; }
+  .railProgress span { display: none; }
+  .railProgress progress { display: block; width: 100%; height: 2px; }
+  .sceneNav,
+  .railBudget,
+  .railEdition { display: none; }
+  .journal { padding: 3.8rem 1.15rem 10vh; }
+  .journal::before { display: none; }
+  .scene { min-height: max(32rem, 76svh); padding-block: 3.25rem; scroll-margin-top: 3.8rem; }
+  .openingScene h1 { font-size: clamp(3.15rem, 14vw, 4.25rem); }
   .storyScene h2,
-  .studyScene h2 { font-size: clamp(2.65rem, 12vw, 4rem); }
-  .storyHeader { position: relative; display: block; min-height: 24rem; padding-right: 0; }
+  .studyScene h2 { font-size: clamp(2.45rem, 11vw, 3.8rem); }
+  .storyHeader { position: relative; display: block; min-height: 18rem; padding-right: 0; }
   .storyLead { position: relative; z-index: 1; padding-top: 0; }
-  .storyLead h2 { margin-top: 1.4rem; }
-  .specimenBearing { position: absolute; z-index: 0; top: -2.5rem; right: -1.5rem; width: 12rem; height: 18rem; opacity: 0.42; }
+  .storyLead h2 { margin-top: 1rem; }
+  .specimenBearing { position: absolute; z-index: 0; top: -2rem; right: -6rem; width: 15rem; height: 17rem; opacity: 0.46; }
   .botanicalDetail,
-  .botanicalDetail svg { min-height: 18rem; }
+  .botanicalDetail img { min-height: 17rem; }
   .storyMeta { flex-wrap: wrap; }
   .meaning { grid-template-columns: 1fr; gap: 0.4rem; }
-  .evidenceBearing { grid-template-columns: 1fr; align-items: start; }
-  .evidenceBearing code { max-width: none; text-align: left; }
   .fieldNotes > div { grid-template-columns: 1fr; }
   .storyActions { display: grid; grid-template-columns: repeat(3, 1fr); }
   .storyActions button { min-height: 3rem; }
   .evidenceLayer { width: calc(100% + 2.3rem); margin-inline: -1.15rem; }
   .sceneNumber { top: 1rem; left: 0; font-size: 1rem; }
   .sceneNav { display: none; }
-  .fernStudy { bottom: -6vh; left: -128vw; width: 176vw; height: 112svh; }
-  .bloomStudy { right: -72vw; bottom: -18vh; width: 148vw; height: 88svh; }
-  .fernLive { opacity: 0.3; }
-  .bloomLive { opacity: 0.1; }
+  .fernPhotograph { left: -38vw; width: 76vw; opacity: 0.055; }
+  .maleFernPlate { bottom: -18vh; left: -62vw; width: 92vw; opacity: 0.24; }
+  .brackenPlate { right: -48vw; width: 72vw; opacity: calc(0.01 + var(--late-progress) * 0.1); }
+  .fiddleheadPhotograph { right: -46vw; width: 82vw; opacity: calc(var(--late-progress) * 0.065); }
   .endSummary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .endSummary > div { border-bottom: 1px solid var(--trail-line); }
   .endSummary > div:nth-child(2) { border-right: 0; }
@@ -521,7 +525,7 @@
 
 @media (forced-colors: active) {
   .botanicalProgress { display: none; }
-  .trailHeader { background: Canvas; }
+  .trailRail { background: Canvas; }
   .storyActions .primaryAction,
   .endActions .primaryAction,
   .studyScene .primaryAction { border: 2px solid ButtonText; }

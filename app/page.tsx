@@ -48,7 +48,6 @@ import { StoryCode } from "./story-code";
 import { TrailReader } from "./trail-reader";
 
 type View = "briefing" | "history" | "map" | "timeline" | "repositories";
-type ReaderMode = "classic" | "trail";
 
 type StoryState = ReaderStoryState;
 
@@ -129,7 +128,6 @@ export default function Home() {
   const [demoMode, setDemoMode] = useState(false);
   const [authMessage, setAuthMessage] = useState("");
   const [view, setView] = useState<View>("briefing");
-  const [readerMode, setReaderMode] = useState<ReaderMode>("classic");
   const [states, setStates] = useState<Record<string, StoryState>>({});
   const [hideUnderstood, setHideUnderstood] = useState(false);
   const [mapStates, setMapStates] = useState<Record<string, UnderstandingState>>({});
@@ -177,7 +175,6 @@ export default function Home() {
     const result = search.get("github");
     queueMicrotask(() => {
       if (search.get("demo") === "1") setDemoMode(true);
-      if (search.get("reader") === "trail") setReaderMode("trail");
       if (result === "connected") setAuthMessage("GitHub connected. Now choose the repositories that matter.");
       else if (result) setAuthMessage("GitHub sign-in could not be completed. Please try again.");
     });
@@ -836,17 +833,8 @@ export default function Home() {
     setActivity({});
   };
 
-  const setReaderExperience = (mode: ReaderMode) => {
-    setReaderMode(mode);
-    const url = new URL(window.location.href);
-    if (mode === "trail") url.searchParams.set("reader", "trail");
-    else url.searchParams.delete("reader");
-    url.searchParams.delete("item");
-    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
-  };
-
   useEffect(() => {
-    if (readerMode === "trail") return;
+    if (view === "briefing") return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setShowHelp(false);
@@ -884,7 +872,7 @@ export default function Home() {
     return () => window.removeEventListener("keydown", onKeyDown);
     // The handler intentionally rebinds when the reading queue or story state changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusedStoryId, readerMode, states, visibleStories]);
+  }, [focusedStoryId, states, view, visibleStories]);
 
   const renderSourceBanner = () => {
     if (demoMode) {
@@ -923,7 +911,7 @@ export default function Home() {
     return <SignedOutShell authMessage={authMessage} configured={auth.configured} onExploreDemo={() => setDemoMode(true)} />;
   }
 
-  if (hasHydrated && readerMode === "trail" && view === "briefing") {
+  if (hasHydrated && view === "briefing") {
     const actualStory = (trailStory: TrailStory) => STORIES.find((story) => story.id === trailStory.id);
     const renderTrailEvidence = (trailStory: TrailStory) => {
       const story = actualStory(trailStory);
@@ -955,9 +943,10 @@ export default function Home() {
 
     return (
       <TrailReader
+        attentionMinutes={continueBudget}
         edition={EDITION}
         notice={notice}
-        onExit={() => setReaderExperience("classic")}
+        onAttentionMinutesChange={setContinueBudget}
         onOpenContinueItem={openContinueItem}
         onOpenMemory={() => setView("history")}
         onOpenSystem={() => setView("map")}
@@ -1020,7 +1009,17 @@ export default function Home() {
           <button onClick={signOut} type="button">{demoMode ? "Exit" : "Sign out"}</button>
         </div>
 
+        <button className="rail-collapse" onClick={() => setFocusMode(true)} type="button">
+          <span aria-hidden="true">←</span> Collapse sidebar
+        </button>
+
       </aside>
+
+      {focusMode && (
+        <button className="rail-reopen" onClick={() => setFocusMode(false)} type="button">
+          <span aria-hidden="true">→</span> Open sidebar
+        </button>
+      )}
 
       <main id="content">
         <header className="masthead">
@@ -1035,10 +1034,6 @@ export default function Home() {
                     : `Current edition · ${formatEditionDate(EDITION.periodStart)}–${formatEditionDate(EDITION.periodEnd)}`}
             </span>
             <div>
-              {view === "briefing" && <button onClick={() => setReaderExperience("trail")} type="button">Trail reader</button>}
-              <button aria-pressed={focusMode} onClick={() => setFocusMode((current) => !current)} type="button">
-                {focusMode ? "Exit focus" : "Focus"}
-              </button>
               {(view === "briefing" || view === "timeline") && <button onClick={copyBackstory} type="button">Copy edition</button>}
               <button aria-expanded={showHelp} aria-label={showHelp ? "Hide keyboard shortcuts" : "Show keyboard shortcuts"} onClick={() => setShowHelp((current) => !current)} type="button">?</button>
             </div>

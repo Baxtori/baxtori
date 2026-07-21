@@ -219,6 +219,41 @@ summary:focus-visible {
   min-height: calc(100vh - 5rem);
 }
 
+.rail-collapse {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  margin-top: 0.9rem;
+  padding: 0.35rem 0;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 0.6rem;
+}
+
+.rail-collapse:hover { color: var(--ink); }
+
+.rail-reopen {
+  position: fixed;
+  z-index: 30;
+  top: 1.25rem;
+  left: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.65rem;
+  color: var(--ink-soft);
+  background: rgb(251 248 241 / 86%);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  font-size: 0.62rem;
+  font-weight: 730;
+  backdrop-filter: blur(14px);
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -2255,7 +2290,8 @@ kbd {
 
   .connection-card,
   .account-card,
-  .rail-note { display: none; }
+  .rail-note,
+  .rail-collapse { display: none; }
 
   .secondary-nav {
     grid-row: 3;

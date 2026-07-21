@@ -19,9 +19,10 @@ type TrailEdition = {
 };
 
 type TrailReaderProps = {
+  attentionMinutes: number;
   edition: TrailEdition;
   notice: string;
-  onExit: () => void;
+  onAttentionMinutesChange: (minutes: number) => void;
   onOpenContinueItem: (item: ContinueItem) => void;
   onOpenMemory: () => void;
   onOpenSystem: () => void;
@@ -46,27 +47,21 @@ function formatGenerated(value: string) {
   }).format(new Date(value));
 }
 
-function evidenceBearing(story: TrailStory) {
-  const evidence = story.codeEvidence?.[0];
-  if (!evidence) return null;
-  return `${evidence.path}:${evidence.startLine}–${evidence.endLine}`;
-}
-
 export function TrailReader({
+  attentionMinutes,
   edition,
   notice,
-  onExit,
+  onAttentionMinutesChange,
   onOpenContinueItem,
   onOpenMemory,
   onOpenSystem,
   onUnderstand,
   onWatch,
   renderEvidence,
-  session: initialSession,
+  session,
   sourceLabel,
   storyState,
 }: TrailReaderProps) {
-  const [session] = useState(initialSession);
   const [activeIndex, setActiveIndex] = useState(0);
   const [openEvidence, setOpenEvidence] = useState<Record<string, boolean>>({});
   const restoredItem = useRef(false);
@@ -99,7 +94,7 @@ export function TrailReader({
       if (index < 0) return;
       setActiveIndex(index);
       const url = new URL(window.location.href);
-      url.searchParams.set("reader", "trail");
+      url.searchParams.delete("reader");
       url.searchParams.set("item", session.scenes[index].id);
       window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
     }, { rootMargin: "-24% 0px -52%", threshold: [0, 0.2, 0.55, 0.8] });
@@ -159,38 +154,57 @@ export function TrailReader({
       <a className={styles.skipLink} href="#trail-reading">Skip to the journal</a>
       <BotanicalProgress />
 
-      <header className={styles.trailHeader}>
+      <aside className={styles.trailRail} aria-label="Baxtori navigation">
         <button className={styles.brand} onClick={() => moveTo(0)} type="button">
           <span aria-hidden="true">B</span>
-          <strong>Baxtori</strong>
+          <span><strong>Baxtori</strong><small>Stay the author</small></span>
         </button>
-        <div className={styles.headerProgress} aria-live="polite">
-          <span>{Math.min(activeIndex + 1, session.scenes.length)} of {session.scenes.length}</span>
+
+        <nav className={styles.trailPrimaryNav} aria-label="Primary">
+          <button aria-current="page" onClick={() => moveTo(0)} type="button"><span>Now</span><small>{session.plannedMinutes}m</small></button>
+          <button onClick={onOpenSystem} type="button"><span>System</span></button>
+          <button onClick={onOpenMemory} type="button"><span>Memory</span></button>
+        </nav>
+
+        <label className={styles.railBudget} htmlFor="trail-attention-window">
+          <span>Attention window</span>
+          <output htmlFor="trail-attention-window">{attentionMinutes} min</output>
+          <input
+            id="trail-attention-window"
+            max="60"
+            min="5"
+            onChange={(event) => onAttentionMinutesChange(Number(event.target.value))}
+            step="5"
+            type="range"
+            value={attentionMinutes}
+          />
+        </label>
+
+        <div className={styles.railProgress} aria-live="polite">
+          <span>Edition · {Math.min(activeIndex + 1, session.scenes.length)} of {session.scenes.length}</span>
           <progress max={session.scenes.length} value={activeIndex + 1} />
         </div>
-        <button className={styles.exitButton} onClick={onExit} type="button">Standard</button>
-      </header>
 
-      <nav aria-label="Trail progress" className={styles.sceneNav}>
-        {session.scenes.map((scene, index) => (
-          <button
-            aria-current={index === activeIndex ? "step" : undefined}
-            aria-label={`Go to ${scene.kind === "opening" ? "the beginning" : scene.kind === "end" ? "the clearing" : scene.item.title}`}
-            key={scene.id}
-            onClick={() => moveTo(index)}
-            type="button"
-          >
-            <span />
-          </button>
-        ))}
-      </nav>
+        <nav aria-label="Edition progress" className={styles.sceneNav}>
+          {session.scenes.map((scene, index) => (
+            <button
+              aria-current={index === activeIndex ? "step" : undefined}
+              aria-label={`Go to ${scene.kind === "opening" ? "the beginning" : scene.kind === "end" ? "the clearing" : scene.item.title}`}
+              key={scene.id}
+              onClick={() => moveTo(index)}
+              type="button"
+            >
+              <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+            </button>
+          ))}
+        </nav>
+
+        <p className={styles.railEdition}>{formatDay(edition.periodStart)}–{formatDay(edition.periodEnd)}<br />{sourceLabel}</p>
+      </aside>
 
       <main className={styles.journal} id="trail-reading">
         <section className={`${styles.scene} ${styles.openingScene}`} data-trail-scene id="trail-opening" tabIndex={-1}>
-          <div className={styles.openingMeta}>
-            <span>{sourceLabel}</span>
-            <span>{formatDay(edition.periodStart)}–{formatDay(edition.periodEnd)} · {formatGenerated(edition.generatedAt)}</span>
-          </div>
+          <span className={styles.openingMeta}>{formatGenerated(edition.generatedAt)}</span>
           <h1>What changed.</h1>
           <p className={styles.openingDek}>
             {readingScenes.length
@@ -222,7 +236,6 @@ export function TrailReader({
           }
 
           const state = storyState(scene.story);
-          const bearing = evidenceBearing(scene.story);
           const evidenceOpen = Boolean(openEvidence[scene.story.id]);
           return (
             <article className={`${styles.scene} ${styles.storyScene} ${state.understood ? styles.understood : ""}`} data-trail-scene id={scene.id} key={scene.id} tabIndex={-1}>
@@ -246,13 +259,6 @@ export function TrailReader({
                 <p>{scene.story.whyItMatters}</p>
               </section>
 
-              <div className={styles.evidenceBearing}>
-                <div>
-                  <span>{scene.story.codeEvidence?.length ?? 0} {scene.story.codeEvidence?.length === 1 ? "excerpt" : "excerpts"}</span>
-                  <strong>{bearing ?? scene.story.evidence}</strong>
-                </div>
-              </div>
-
               <div className={styles.storyActions} aria-label={`Actions for ${scene.story.title}`}>
                 <button aria-pressed={state.understood} className={styles.primaryAction} onClick={() => onUnderstand(scene.story)} type="button">
                   <span aria-hidden="true">{state.understood ? "✓" : "○"}</span>Understood
@@ -274,9 +280,6 @@ export function TrailReader({
                 </div>
               </details>
 
-              <button className={styles.nextCue} onClick={() => moveTo(index + 1)} type="button">
-                Next <span aria-hidden="true">↓</span>
-              </button>
             </article>
           );
         })}
@@ -293,7 +296,6 @@ export function TrailReader({
             <div className={styles.endActions}>
               <button className={styles.primaryAction} onClick={onOpenMemory} type="button">Memory</button>
               <button onClick={onOpenSystem} type="button">System</button>
-              <button onClick={onExit} type="button">Standard reader</button>
             </div>
           </section>
         )}
