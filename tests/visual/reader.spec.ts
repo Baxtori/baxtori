@@ -127,9 +127,6 @@ test("the default reader turns the review into a finite field journal", async ({
     const range = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
     return window.scrollY / range;
   });
-  const fernDash = () => progressSpecimen.locator("[data-fern-growth-stroke]").evaluate(
-    (element) => Number.parseFloat(getComputedStyle(element).strokeDashoffset),
-  );
   const fernStage = (index: number) => progressSpecimen.locator(`[data-fern-pinna='${index}']`).evaluate((element) => {
     const transform = getComputedStyle(element).transform;
     if (transform === "none") return 1;
@@ -156,6 +153,7 @@ test("the default reader turns the review into a finite field journal", async ({
   expect((fernBox?.x ?? 0) + (fernBox?.width ?? 0)).toBeGreaterThan(viewportWidth * 0.4);
   await expect(fernPlate.locator("image")).toHaveCount(1);
   await expect(fernPlate.locator("image")).toHaveAttribute("href", "/botanical/fern-frond.webp");
+  await expect(fernPlate.locator("[data-fern-growth-stroke]")).toHaveCount(0);
   await expect(fernPlate.locator("[data-fern-pinna]")).toHaveCount(16);
   await expect(fernPlate.locator("#fern-growth-mask")).toHaveCount(1);
   await expect(fernPlate.locator("clipPath")).toHaveCount(0);
@@ -175,8 +173,8 @@ test("the default reader turns the review into a finite field journal", async ({
   const navigation = page.getByRole("complementary", { name: "Baxtori navigation" });
   const navigationBox = await navigation.boundingBox();
   expect(navigationBox?.x ?? -1).toBe(0);
+  await expect(navigation.locator(".botanical-brand-mark img")).toHaveAttribute("src", "/botanical/brand-fiddlehead.png");
   const openingGrowth = await fernGrowth();
-  const openingDash = await fernDash();
   const openingLowerPinna = await fernStage(0);
   const openingMiddlePinna = await fernStage(3);
   await expect(page.getByRole("heading", { name: "Notes from the repositories." })).toBeVisible();
@@ -185,7 +183,6 @@ test("the default reader turns the review into a finite field journal", async ({
   await expect(page.getByRole("heading", { name: "Repository access and reader attention became explicit plans." })).toBeVisible();
   await expect(page.locator("[data-botanical-detail]")).toHaveCount(0);
   await expect.poll(fernGrowth).toBeGreaterThan(openingGrowth);
-  await expect.poll(fernDash).toBeLessThan(openingDash);
   await expect.poll(() => fernStage(0)).toBeGreaterThan(openingLowerPinna);
   await expect.poll(() => fernStage(3)).toBeGreaterThanOrEqual(openingMiddlePinna);
   await page.getByRole("button", { name: "Evidence", exact: true }).first().click();
@@ -200,7 +197,6 @@ test("the default reader turns the review into a finite field journal", async ({
   await capture(page, testInfo, "field-journal-clearing", false, "allow");
   const endGrowth = await fernGrowth();
   await expect.poll(() => fernStage(15)).toBeGreaterThan(0.99);
-  await expect.poll(fernDash).toBeLessThan(0.01);
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: "auto" }));
   await expect.poll(fernGrowth).toBeLessThan(endGrowth);
   expect(errors).toEqual([]);
@@ -213,7 +209,7 @@ test("the botanical trail becomes a complete static specimen with reduced motion
   const specimen = page.locator("[data-botanical-progress]");
   await expect(specimen).toBeVisible();
   await expect(specimen).toHaveAttribute("data-growth", "1.000");
-  expect(Number(await specimen.evaluate((element) => element.style.getPropertyValue("--fern-stem-dash")))).toBe(0);
+  await expect(specimen.locator("[data-fern-growth-stroke]")).toHaveCount(0);
   expect(Number(await specimen.evaluate((element) => element.style.getPropertyValue("--fern-stage-0")))).toBe(1);
   expect(Number(await specimen.evaluate((element) => element.style.getPropertyValue("--fern-stage-15")))).toBe(1);
 });

@@ -50,11 +50,26 @@ input { font: inherit; }
 }
 
 .auth-card {
+  position: relative;
+  overflow: hidden;
   width: min(100%, 47rem);
   padding: clamp(1.5rem, 5vw, 4rem);
   background: rgb(251 248 241 / 78%);
   border: 1px solid var(--line);
   box-shadow: 0 2rem 6rem rgb(42 49 43 / 8%);
+}
+
+.auth-card::before {
+  position: absolute;
+  top: -1.8rem;
+  right: -5.5rem;
+  width: min(29rem, 72%);
+  height: 11rem;
+  background: url("/botanical/marginalia-flourish.png") center / contain no-repeat;
+  content: "";
+  opacity: 0.13;
+  pointer-events: none;
+  transform: rotate(7deg);
 }
 
 .auth-brand {
@@ -98,6 +113,8 @@ input { font: inherit; }
 }
 
 .github-button {
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -116,6 +133,8 @@ input { font: inherit; }
 .github-button:hover { background: #26352e; }
 
 .demo-button {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -129,6 +148,25 @@ input { font: inherit; }
   font-size: 0.78rem;
   font-weight: 760;
 }
+
+.demo-button::after,
+.github-button::after {
+  position: absolute;
+  right: -2.2rem;
+  bottom: -2.35rem;
+  width: 10rem;
+  height: 5.8rem;
+  background: url("/botanical/marginalia-flourish.png") center / contain no-repeat;
+  content: "";
+  opacity: 0.23;
+  pointer-events: none;
+  transform: rotate(-8deg);
+}
+
+.github-button::after { opacity: 0.13; filter: grayscale(1) brightness(2); }
+
+.demo-button > span,
+.github-button > svg { position: relative; z-index: 1; }
 
 .demo-button:hover { background: #244b39; }
 
@@ -260,17 +298,35 @@ summary:focus-visible {
   gap: 0.75rem;
 }
 
-.brand-mark {
+.botanical-brand-mark {
+  position: relative;
   display: grid;
+  flex: 0 0 auto;
+  width: 2.15rem;
+  height: 2.15rem;
+  overflow: hidden;
   place-items: center;
-  width: 1.9rem;
-  height: 1.9rem;
-  color: var(--paper-light);
-  background: var(--green);
-  border-radius: 50%;
-  font-family: var(--serif);
-  font-size: 1.1rem;
-  font-weight: 700;
+  background: radial-gradient(circle at 38% 32%, #fffdf6, #e7ddca 78%);
+  border: 1px solid rgb(49 95 70 / 65%);
+  border-radius: 58% 42% 52% 48% / 44% 56% 42% 58%;
+  box-shadow: inset 0 0 0 3px rgb(251 248 241 / 72%), 0 0 0 1px rgb(161 83 63 / 18%);
+  transform: rotate(-4deg);
+}
+
+.botanical-brand-mark::after {
+  position: absolute;
+  inset: 0.19rem;
+  border: 1px solid rgb(161 83 63 / 34%);
+  border-radius: 48% 52% 43% 57% / 58% 44% 56% 42%;
+  content: "";
+}
+
+.botanical-brand-mark img {
+  width: 106%;
+  height: 106%;
+  object-fit: contain;
+  filter: saturate(0.72) contrast(1.08);
+  transform: translate(0.05rem, 0.1rem) rotate(5deg);
 }
 
 .brand > div {
@@ -314,6 +370,15 @@ summary:focus-visible {
 .primary-nav button:hover,
 .primary-nav button.is-active {
   color: var(--ink);
+}
+
+.primary-nav button.is-active::after {
+  width: 1.05rem;
+  height: 1.05rem;
+  background: url("/botanical/brand-fiddlehead.png") center / contain no-repeat;
+  content: "";
+  opacity: 0.58;
+  transform: rotate(9deg);
 }
 
 .primary-nav button.is-active span {

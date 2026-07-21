@@ -7,11 +7,9 @@ import {
 
 type BotanicalUnfurlProps = {
   className?: string;
-  growthStrokeClassName?: string;
   pinnaGrowthClassName?: string;
 };
 
-const RACHIS_PATH = "M 82 1492 C 218 1270 300 1084 390 860 C 468 665 486 525 590 382 C 708 220 842 170 912 106";
 const VERTICAL_FROND_TRANSFORM = "rotate(-33 512 768)";
 
 const PINNA_BRANCHLETS = [
@@ -35,7 +33,6 @@ const PINNA_BRANCHLETS = [
 
 export function BotanicalUnfurl({
   className,
-  growthStrokeClassName,
   pinnaGrowthClassName,
 }: BotanicalUnfurlProps) {
   return (
@@ -111,17 +108,6 @@ export function BotanicalUnfurl({
       </defs>
       <g transform="translate(1024 0) scale(-1 1)">
         <g transform={VERTICAL_FROND_TRANSFORM}>
-          <path
-            className={growthStrokeClassName}
-            data-fern-growth-stroke
-            d={RACHIS_PATH}
-            fill="none"
-            pathLength="1"
-            stroke="#315f46"
-            strokeDasharray="1"
-            strokeLinecap="round"
-            strokeWidth="9"
-          />
           <g mask="url(#fern-growth-mask)">
             <image
               filter="url(#fern-alpha-clean)"

@@ -31,10 +31,8 @@ export function BotanicalProgress() {
 
     const applyProgress = (rawProgress: number) => {
       const progress = Math.min(1, rawProgress / FERN_COMPLETION_PROGRESS);
-      const stemReveal = 0.22 + progress * 0.78;
       root.dataset.growth = progress.toFixed(3);
       root.style.setProperty("--scroll-progress", progress.toFixed(5));
-      root.style.setProperty("--fern-stem-dash", (1 - stemReveal).toFixed(5));
 
       BRANCHLET_GROWTH.forEach(({ minimum, openingOpacity, start }, index) => {
         const duration = Math.min(BRANCHLET_REVEAL_DURATION, 1 - start);
@@ -89,7 +87,6 @@ export function BotanicalProgress() {
       <div className={styles.fernFrame} data-fern-frame>
         <BotanicalUnfurl
           className={styles.primaryFern}
-          growthStrokeClassName={styles.fernGrowthStroke}
           pinnaGrowthClassName={styles.fernPinnaGrowth}
         />
       </div>

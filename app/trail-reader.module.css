@@ -58,17 +58,7 @@
   border: 0;
   cursor: pointer;
 }
-.brand > span {
-  display: grid;
-  place-items: center;
-  width: 1.65rem;
-  height: 1.65rem;
-  color: var(--trail-paper-light);
-  background: var(--trail-green);
-  border-radius: 50%;
-  font-family: var(--serif);
-  font-size: 0.8rem;
-}
+.brandMark { width: 1.8rem; height: 1.8rem; }
 .brand > span:last-child { display: grid; width: auto; height: auto; place-items: initial; color: inherit; background: transparent; border-radius: 0; }
 .brand strong { font-family: var(--serif); font-size: 1.15rem; letter-spacing: -0.04em; }
 .brand small { color: var(--trail-muted); font-size: 0.54rem; font-weight: 700; letter-spacing: 0.07em; }
@@ -89,6 +79,14 @@
   text-align: left;
 }
 .trailPrimaryNav button[aria-current="page"] { color: var(--trail-ink); font-weight: 780; }
+.trailPrimaryNav button[aria-current="page"]::after {
+  width: 1rem;
+  height: 1rem;
+  background: url("/botanical/brand-fiddlehead.png") center / contain no-repeat;
+  content: "";
+  opacity: 0.55;
+  transform: rotate(8deg);
+}
 .trailPrimaryNav small { font-size: 0.58rem; }
 
 .railProgress { display: grid; gap: 0.55rem; margin-top: 1.5rem; }
@@ -131,7 +129,6 @@
 .railEdition { margin: auto 0 0; color: var(--trail-muted); font-size: 0.52rem; font-weight: 710; letter-spacing: 0.06em; line-height: 1.7; text-transform: uppercase; }
 
 .botanicalProgress {
-  --fern-stem-dash: 0.78;
   --scroll-progress: 0;
   position: fixed;
   z-index: 1;
@@ -166,8 +163,6 @@
   will-change: transform;
 }
 
-.fernGrowthStroke { stroke-dashoffset: var(--fern-stem-dash); }
-
 .fernPinnaGrowth {
   transform-origin: 0 0;
   transform-box: view-box;
@@ -185,11 +180,6 @@
   }
 }
 
-@keyframes fern-native-stem {
-  from { stroke-dashoffset: 0.78; }
-  to { stroke-dashoffset: 0; }
-}
-
 @keyframes fern-native-drift {
   from { transform: translate3d(-50%, -50%, 0); }
   to { transform: translate3d(calc(-50% + 1.25vw), -50%, 0); }
@@ -201,12 +191,6 @@
       animation: fern-native-unfurl 1ms cubic-bezier(0.33, 0, 0.15, 1) both;
       animation-timeline: scroll(root block);
       animation-range: var(--fern-range-start) var(--fern-range-end);
-    }
-
-    .fernGrowthStroke {
-      animation: fern-native-stem 1ms linear both;
-      animation-timeline: scroll(root block);
-      animation-range: 0% 82%;
     }
 
     .primaryFern {
@@ -237,8 +221,21 @@
 .primaryJournal { min-height: 100vh; padding-top: clamp(4rem, 9vh, 7rem); }
 .primaryMasthead {
   position: relative;
+  overflow: hidden;
   padding: 0 0 clamp(2rem, 5vw, 4rem);
   border-bottom: 1px solid var(--trail-ink);
+}
+.primaryMasthead::after {
+  position: absolute;
+  right: -3.5rem;
+  bottom: -1.6rem;
+  width: clamp(16rem, 40vw, 30rem);
+  height: 10rem;
+  background: url("/botanical/marginalia-flourish.png") center / contain no-repeat;
+  content: "";
+  opacity: 0.12;
+  pointer-events: none;
+  transform: rotate(-5deg);
 }
 .primaryMasthead > span {
   color: var(--trail-green);
@@ -446,6 +443,7 @@
 }
 
 .meaning {
+  position: relative;
   display: grid;
   grid-template-columns: 6.5rem minmax(0, 1fr);
   gap: 1.4rem;
@@ -453,6 +451,19 @@
   margin-top: 1.35rem;
   padding: 1rem 0;
   border-top: 1px solid var(--trail-line);
+}
+
+.meaning::after {
+  position: absolute;
+  top: -1.7rem;
+  right: -0.5rem;
+  width: 8.5rem;
+  height: 3.2rem;
+  background: url("/botanical/marginalia-flourish.png") center / contain no-repeat;
+  content: "";
+  opacity: 0.12;
+  pointer-events: none;
+  transform: rotate(-4deg);
 }
 
 .meaning > span,
@@ -493,9 +504,16 @@
 .endActions .primaryAction,
 .studyScene .primaryAction {
   color: var(--trail-paper-light);
-  background: var(--trail-green);
+  background-color: var(--trail-green);
+  background-image: url("/botanical/marginalia-flourish.png");
+  background-position: calc(100% + 2.3rem) center;
+  background-repeat: no-repeat;
+  background-size: 9.5rem auto;
+  background-blend-mode: soft-light;
   border-color: var(--trail-green);
 }
+.storyActions button:nth-child(2) { color: #285f88; background: rgb(225 235 241 / 58%); border-color: rgb(40 95 136 / 26%); }
+.storyActions button:nth-child(3) { color: #8c4937; background: rgb(241 227 220 / 62%); border-color: rgb(161 83 63 / 27%); }
 .storyActions button[aria-pressed="true"] { color: var(--trail-green); background: rgb(219 232 217 / 75%); border-color: rgb(49 95 70 / 34%); }
 
 .understood::after {
@@ -587,10 +605,12 @@
     border-bottom: 1px solid var(--trail-line);
   }
   .brand > span:last-child small { display: none; }
+  .brandMark { width: 1.65rem; height: 1.65rem; }
   .brand strong { font-size: 1rem; }
   .trailPrimaryNav { display: flex; gap: 0.55rem; margin: 0 0 0 auto; border: 0; }
   .trailPrimaryNav button { min-height: auto; border: 0; font-size: 0.62rem; }
   .trailPrimaryNav button small { display: none; }
+  .trailPrimaryNav button[aria-current="page"]::after { display: none; }
   .trailSecondaryNav,
   .railSection { display: none; }
   .mobileTools { position: relative; display: block; margin-left: 0.1rem; }
@@ -660,6 +680,7 @@
   .primaryFern { left: 5vw; height: 118vh; opacity: 0.17; }
   .primaryJournal { padding-top: 6.4rem; }
   .primaryMasthead h1 { font-size: clamp(3.2rem, 14.4vw, 4.45rem); }
+  .primaryMasthead::after { right: -8rem; width: 21rem; opacity: 0.1; }
   .endSummary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .endSummary > div { border-bottom: 1px solid var(--trail-line); }
   .endSummary > div:nth-child(2) { border-right: 0; }

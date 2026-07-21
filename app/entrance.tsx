@@ -1,9 +1,11 @@
 "use client";
 
+import { BrandMark } from "./brand-mark";
+
 export function LoadingShell() {
   return (
     <main className="auth-shell" aria-busy="true">
-      <div className="auth-brand"><span className="brand-mark" aria-hidden="true">B</span><strong>Baxtori</strong></div>
+      <div className="auth-brand"><BrandMark /><strong>Baxtori</strong></div>
       <p>Opening your code backstory…</p>
     </main>
   );
@@ -17,7 +19,7 @@ export function SignedOutShell({ configured, authMessage, onExploreDemo }: {
   return (
     <main className="auth-shell">
       <section className="auth-card" aria-labelledby="auth-heading">
-        <div className="auth-brand"><span className="brand-mark" aria-hidden="true">B</span><strong>Baxtori</strong></div>
+        <div className="auth-brand"><BrandMark /><strong>Baxtori</strong></div>
         <span className="auth-kicker">A living memory for your code</span>
         <h1 id="auth-heading">Understand what you&apos;re becoming.</h1>
         <p>Baxtori turns repository activity into a calm, evidence-backed practice: what deserves attention now, how the system fits together, and which questions should survive the week.</p>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import type { ContinueItem } from "@/lib/continue-queue";
 import type { ReaderTrail, TrailStory } from "@/lib/reader-trail";
 import { BotanicalProgress } from "./botanical-progress";
+import { BrandMark } from "./brand-mark";
 import styles from "./trail-reader.module.css";
 
 type StoryDecisionState = {
@@ -176,7 +177,7 @@ export function TrailReader({
 
       <aside className={styles.trailRail} aria-label="Baxtori navigation">
         <button className={styles.brand} onClick={() => activeView === "briefing" ? moveTo(0) : onOpenNow()} type="button">
-          <span aria-hidden="true">B</span>
+          <BrandMark className={styles.brandMark} />
           <span><strong>Baxtori</strong><small>Stay the author</small></span>
         </button>
 

@@ -38,6 +38,7 @@ import {
 } from "./edition-data";
 import { EditionSelectionLedger } from "./edition-selection-ledger";
 import { EditionHistory } from "./edition-history";
+import { BrandMark } from "./brand-mark";
 import { LoadingShell, SignedOutShell } from "./entrance";
 import { formatEditionDate, formatGeneratedAt, formatRelativeDate, formatReviewCursor } from "./format";
 import { RepositoryModeControl } from "./repository-mode-control";
@@ -1025,7 +1026,7 @@ export default function Home() {
 
       <aside className="site-rail" aria-label="Baxtori navigation">
         <div className="brand">
-          <span className="brand-mark" aria-hidden="true">B</span>
+          <BrandMark />
           <div>
             <strong>Baxtori</strong>
             <span>Stay the author</span>

@@ -19,14 +19,15 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     icons: {
-      icon: "/favicon.svg",
-      shortcut: "/favicon.svg",
+      apple: "/botanical/brand-fiddlehead.png",
+      icon: "/botanical/brand-fiddlehead.png",
+      shortcut: "/botanical/brand-fiddlehead.png",
     },
     openGraph: {
       type: "website",
       title,
       description,
-      images: [{ url: image, width: 1731, height: 909, alt: "Baxtori — The backstory behind your code." }],
+      images: [{ url: image, width: 1536, height: 1024, alt: "Baxtori — The backstory behind your code." }],
     },
     twitter: {
       card: "summary_large_image",
