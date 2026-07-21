@@ -15,7 +15,7 @@
 .heading > div { min-width: 0; }
 .heading span,
 .section h3 {
-  color: var(--blue);
+  color: var(--green);
   font-size: 0.61rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -117,7 +117,7 @@
 }
 .section li > div { min-width: 0; }
 .section li span {
-  color: var(--blue);
+  color: var(--green);
   font-size: 0.56rem;
   font-weight: 760;
   text-transform: uppercase;

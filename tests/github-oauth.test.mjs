@@ -7,8 +7,11 @@ process.env.GITHUB_SESSION_SECRET = "test-session-secret-with-at-least-32-bytes"
 
 const {
   createGitHubOAuthState,
+  getGitHubIdentitySession,
   githubOAuthAuthorizeUrl,
   githubOAuthTokenBody,
+  sealSession,
+  SESSION_COOKIE,
   validateGitHubOAuthState,
 } = await import("../lib/github-auth.ts");
 
@@ -39,4 +42,22 @@ test("token exchange uses the same registered callback default", () => {
   assert.equal(tokenBody.get("client_secret"), "test-client-secret");
   assert.equal(tokenBody.get("code"), "test-code");
   assert.equal(tokenBody.has("redirect_uri"), false);
+});
+
+test("Baxtori account identity survives access-token expiry while refresh credentials remain live", async () => {
+  const now = Date.now();
+  const value = await sealSession({
+    accessToken: "expired-token",
+    accessTokenExpiresAt: now - 1_000,
+    refreshToken: "live-refresh-token",
+    refreshTokenExpiresAt: now + 60_000,
+    user: { avatarUrl: "https://example.com/avatar", id: 42, login: "reader", name: null },
+  });
+  const request = new Request("https://www.baxtori.com/", {
+    headers: { cookie: `${SESSION_COOKIE}=${encodeURIComponent(value)}` },
+  });
+
+  const result = await getGitHubIdentitySession(request);
+  assert.equal(result.session?.user.id, 42);
+  assert.equal(result.setCookie, null);
 });

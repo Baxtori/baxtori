@@ -112,6 +112,12 @@ test("reader chooses a persistent attention budget without breaking legacy state
   assert.throws(() => parseReaderState(readerState({ continueBudgetMinutes: 17 })), /Invalid attention budget/);
 });
 
+test("reader state persists a bounded capture window without breaking legacy state", () => {
+  assert.equal(parseReaderState(readerState()).captureWindow, "since-review");
+  assert.equal(parseReaderState(readerState({ captureWindow: "30d" })).captureWindow, "30d");
+  assert.equal(parseReaderState(readerState({ captureWindow: "365d" })).captureWindow, "since-review");
+});
+
 test("version-one reader state remains valid before repository modes existed", () => {
   const legacy = readerState({ selectedRepositories: ["teamleaderleo/glimpse"] });
   delete legacy.repositoryModes;

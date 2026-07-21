@@ -27,10 +27,11 @@ const OAUTH_STATE_MAX_AGE_MS = 10 * 60 * 1000;
 const OAUTH_STATE_CLOCK_SKEW_MS = 60 * 1000;
 
 export function githubIsConfigured() {
+  const sessionSecret = process.env.GITHUB_SESSION_SECRET?.trim() ?? "";
   return Boolean(
     process.env.GITHUB_CLIENT_ID?.trim() &&
       process.env.GITHUB_CLIENT_SECRET?.trim() &&
-      process.env.GITHUB_SESSION_SECRET?.trim(),
+      sessionSecret.length >= 32,
   );
 }
 
@@ -82,11 +83,19 @@ function base64UrlToBytes(value: string) {
   return Uint8Array.from(binary, (character) => character.charCodeAt(0));
 }
 
+let cachedSessionSecret = "";
+let cachedSessionKey: Promise<CryptoKey> | null = null;
+
 async function sessionKey() {
   const secret = process.env.GITHUB_SESSION_SECRET?.trim();
   if (!secret) throw new Error("GitHub session encryption is not configured.");
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(secret));
-  return crypto.subtle.importKey("raw", digest, "AES-GCM", false, ["encrypt", "decrypt"]);
+  if (!cachedSessionKey || cachedSessionSecret !== secret) {
+    cachedSessionSecret = secret;
+    cachedSessionKey = crypto.subtle
+      .digest("SHA-256", new TextEncoder().encode(secret))
+      .then((digest) => crypto.subtle.importKey("raw", digest, "AES-GCM", false, ["encrypt", "decrypt"]));
+  }
+  return cachedSessionKey;
 }
 
 async function sealValue(value: unknown) {
@@ -130,8 +139,32 @@ export async function readGitHubSession(request: Request) {
   if (!value || !githubIsConfigured()) return null;
   const session = await openSession(value);
   if (!session) return null;
-  if (session.accessTokenExpiresAt && session.accessTokenExpiresAt <= Date.now()) return null;
+  if (!sessionCredentialIsLive(session)) return null;
   return session;
+}
+
+function sessionCredentialIsLive(session: GitHubSession, now = Date.now()) {
+  const accessLive = !session.accessTokenExpiresAt || session.accessTokenExpiresAt > now;
+  const refreshLive = Boolean(
+    session.refreshToken &&
+    (!session.refreshTokenExpiresAt || session.refreshTokenExpiresAt > now),
+  );
+  return accessLive || refreshLive;
+}
+
+/**
+ * Authenticates Baxtori-owned account data without refreshing GitHub tokens.
+ * This keeps feedback and repository requests from racing a single-use refresh
+ * token while preserving the encrypted, expiring identity boundary.
+ */
+export async function getGitHubIdentitySession(request: Request) {
+  const value = parseCookies(request).get(SESSION_COOKIE);
+  if (!value || !githubIsConfigured()) return { session: null, setCookie: null };
+  const session = await openSession(value);
+  if (!session || !sessionCredentialIsLive(session)) {
+    return { session: null, setCookie: clearCookieHeader(request, SESSION_COOKIE) };
+  }
+  return { session, setCookie: null };
 }
 
 export async function createGitHubOAuthState(now = Date.now()) {

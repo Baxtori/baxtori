@@ -2,6 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { mapWithConcurrency } from "@/lib/async-pool";
+import {
+  CAPTURE_WINDOWS,
+  CAPTURE_WINDOW_LABELS,
+  DEFAULT_CAPTURE_WINDOW,
+  captureWindowEmptyLabel,
+  captureWindowSearch,
+  isCaptureWindow,
+  type CaptureWindow,
+} from "@/lib/capture-window";
 import { buildContinueQueue, planContinueQueue, type ContinueItem, type ContinueItemKind } from "@/lib/continue-queue";
 import { buildReaderTrail, type TrailStory } from "@/lib/reader-trail";
 import type { GitHubUser } from "@/lib/github-auth";
@@ -39,8 +48,7 @@ import {
 import { EditionSelectionLedger } from "./edition-selection-ledger";
 import { EditionHistory } from "./edition-history";
 import { BrandMark } from "./brand-mark";
-import { LoadingShell } from "./entrance";
-import { formatEditionDate, formatGeneratedAt, formatRelativeDate, formatReviewCursor } from "./format";
+import { formatEditionDate, formatGeneratedAt, formatRelativeDate } from "./format";
 import { RepositoryModeControl } from "./repository-mode-control";
 import repositoryModeStyles from "./repository-modes.module.css";
 import { RepositoryMaps } from "./repository-maps";
@@ -128,7 +136,7 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
   initialAuth: AuthStatus;
   initialDemoMode?: boolean;
 }) {
-  const [auth, setAuth] = useState<AuthStatus | null>(initialAuth);
+  const [auth, setAuth] = useState<AuthStatus>(initialAuth);
   const [demoMode, setDemoMode] = useState(initialDemoMode);
   const [authMessage, setAuthMessage] = useState("");
   const [view, setView] = useState<View>("briefing");
@@ -141,6 +149,7 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
   const [showHelp, setShowHelp] = useState(false);
   const [focusedStoryId, setFocusedStoryId] = useState<string | null>(null);
   const [continueBudget, setContinueBudget] = useState(DEFAULT_CONTINUE_BUDGET);
+  const [captureWindow, setCaptureWindow] = useState<CaptureWindow>(DEFAULT_CAPTURE_WINDOW);
   const [focusTarget, setFocusTarget] = useState<FocusTarget | null>(null);
   const [notice, setNotice] = useState("");
   const [hasHydrated, setHasHydrated] = useState(false);
@@ -170,7 +179,7 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
 
   const storyState = useCallback((id: string): StoryState => ({ ...EMPTY_STORY_STATE, ...states[id] }), [states]);
   const selectedRepositories = useMemo(() => reviewRepositoriesFromModes(repositoryModes), [repositoryModes]);
-  const readerAuthenticated = Boolean(auth?.authenticated || demoMode);
+  const readerAuthenticated = Boolean(auth.authenticated || demoMode);
   const accountStorageKey = demoMode ? `${STORAGE_KEY}:${DEMO_STORAGE_SUFFIX}` : auth?.user ? `${STORAGE_KEY}:${auth.user.id}` : null;
   const questionStorageKey = demoMode ? `${LOCAL_QUESTION_STORAGE_KEY}:${DEMO_STORAGE_SUFFIX}` : auth?.user ? `${LOCAL_QUESTION_STORAGE_KEY}:${auth.user.id}` : null;
 
@@ -183,15 +192,6 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
       else if (result) setAuthMessage("GitHub sign-in could not be completed. Please try again.");
     });
 
-    fetch("/api/auth/github/status")
-      .then(async (response) => {
-        const payload = (await response.json()) as AuthStatus;
-        if (!response.ok) throw new Error("GitHub sign-in status is unavailable.");
-        setAuth(payload);
-        if (payload.authenticated) setDemoMode(false);
-      })
-      .catch(() => setAuth({ appSlug: null, authenticated: false, configured: false, user: null }));
-
     if (result) window.history.replaceState({}, "", window.location.pathname);
   }, []);
 
@@ -203,6 +203,7 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
         setActiveMapRepository(parsed.activeMapRepository);
       }
       if (typeof parsed.hideUnderstood === "boolean") setHideUnderstood(parsed.hideUnderstood);
+      if (isCaptureWindow(parsed.captureWindow)) setCaptureWindow(parsed.captureWindow);
       if (
         typeof parsed.continueBudgetMinutes === "number" &&
         parsed.continueBudgetMinutes >= 5 &&
@@ -298,6 +299,7 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
     if (!hasHydrated || !accountStorageKey || !repositoryModesInitialized) return;
     const saved: SavedState = {
       activeMapRepository,
+      captureWindow,
       continueBudgetMinutes: continueBudget,
       editionId: EDITION.id,
       hideUnderstood,
@@ -350,7 +352,7 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
       window.clearTimeout(timeout);
       controller.abort();
     };
-  }, [accountStorageKey, activeMapRepository, applySavedState, continueBudget, feedbackConfigured, hasHydrated, hideUnderstood, mapStates, questionStates, repositoryModes, repositoryModesInitialized, selectedRepositories, states, view]);
+  }, [accountStorageKey, activeMapRepository, applySavedState, captureWindow, continueBudget, feedbackConfigured, hasHydrated, hideUnderstood, mapStates, questionStates, repositoryModes, repositoryModesInitialized, selectedRepositories, states, view]);
 
   useEffect(() => {
     if (!hasHydrated || !questionStorageKey) return;
@@ -391,7 +393,7 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
   }, [feedbackConfigured, hasHydrated]);
 
   useEffect(() => {
-    if (!auth?.authenticated || demoMode) return;
+    if (!auth.authenticated || demoMode) return;
     let cancelled = false;
     queueMicrotask(() => {
       if (!cancelled) {
@@ -424,7 +426,7 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
     return () => {
       cancelled = true;
     };
-  }, [auth?.authenticated, demoMode]);
+  }, [auth.authenticated, demoMode]);
 
   useEffect(() => {
     if (!hasHydrated || !repositoriesLoaded || repositoryModesInitialized) return;
@@ -452,7 +454,7 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
   }, [repositories, repositoryModesInitialized]);
 
   useEffect(() => {
-    if (!auth?.authenticated || demoMode || !repositoryModesInitialized || !selectedRepositories.length) {
+    if (!auth.authenticated || demoMode || !repositoryModesInitialized || !selectedRepositories.length) {
       queueMicrotask(() => setActivity({}));
       return;
     }
@@ -461,11 +463,14 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
     queueMicrotask(() => {
       if (!cancelled) setActivityLoading(true);
     });
+    const windowSearch = captureWindowSearch(captureWindow, REVIEW_SCOPE.lastReviewedAt);
     mapWithConcurrency(
       selectedRepositories,
       6,
       async (repository) => {
-        const response = await fetch(`/api/github/activity?repo=${encodeURIComponent(repository)}&since=${encodeURIComponent(REVIEW_SCOPE.lastReviewedAt)}`);
+        const search = new URLSearchParams(windowSearch);
+        search.set("repo", repository);
+        const response = await fetch(`/api/github/activity?${search}`);
         const payload = (await response.json()) as ActivityResponse;
         return [repository, payload] as const;
       },
@@ -480,7 +485,7 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
     return () => {
       cancelled = true;
     };
-  }, [auth?.authenticated, demoMode, repositoryModesInitialized, selectedRepositories]);
+  }, [auth.authenticated, captureWindow, demoMode, repositoryModesInitialized, selectedRepositories]);
 
   const updateStory = (id: string, patch: Partial<StoryState>) => {
     setStates((current) => ({
@@ -526,15 +531,30 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
   }), [effectiveStoryStates, mapStates, questionStates, reviewRequests]);
   const continuePlan = useMemo(() => planContinueQueue(continueQueue, continueBudget), [continueBudget, continueQueue]);
   const nextContinueItem = continuePlan.items[0];
+  const editionItems = useMemo<ContinueItem[]>(() => STORIES.map((story, index) => ({
+    id: `edition-story:${story.id}`,
+    kind: "story",
+    minutes: Math.max(3, Math.min(5, story.learningValue)),
+    priority: STORIES.length - index,
+    reason: "Selected for this edition.",
+    repository: story.repository ?? story.project,
+    targetId: story.id,
+    title: story.title,
+    view: "briefing",
+  })), []);
+  const editionMinutes = useMemo(
+    () => editionItems.reduce((total, item) => total + item.minutes, 0),
+    [editionItems],
+  );
   const trailSession = useMemo(() => buildReaderTrail({
-    budgetMinutes: continueBudget,
+    budgetMinutes: editionMinutes,
     editionId: EDITION.id,
-    items: continuePlan.items,
-    plannedMinutes: continuePlan.plannedMinutes,
+    items: editionItems,
+    plannedMinutes: editionMinutes,
     quietRepositories: EDITION.quietRepositories,
     stories: STORIES,
-    totalItemCount: continueQueue.length,
-  }), [continueBudget, continuePlan, continueQueue.length]);
+    totalItemCount: editionItems.length,
+  }), [editionItems, editionMinutes]);
 
   const selectedRepositoryData = sortRepositoriesByMode(repositories.filter((repository) =>
     selectedRepositories.includes(repository.fullName),
@@ -593,8 +613,19 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
     const activeThread = activeWatchThreadFor(topicThreads, story);
     const watching = Boolean(activeThread || storyState(story.id).watching);
     const input = storyWatchInput(story, EDITION.id);
+    const nextWatching = !watching;
 
-    if (feedbackConfigured && input) {
+    // Reflect the reader's decision immediately. Account persistence happens
+    // behind the interaction and falls back to the local state on failure.
+    updateStory(story.id, { watching: nextWatching });
+    if (activeThread) {
+      setTopicThreads((current) => current.map((thread) =>
+        thread._id === activeThread._id ? { ...thread, status: "resolved" } : thread,
+      ));
+    }
+    setNotice(nextWatching ? `${story.project} added to your watch list.` : `${story.project} removed from your watch list.`);
+
+    if (feedbackConfigured && input && (!watching || activeThread)) {
       try {
         const response = await fetch("/api/feedback/topics", {
           body: JSON.stringify(activeThread
@@ -609,18 +640,19 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
           const next = current.filter((thread) => thread._id !== payload.topic?._id && thread.sourceKey !== payload.topic?.sourceKey);
           return payload.topic ? [payload.topic, ...next] : next;
         });
-        updateStory(story.id, { watching: !activeThread });
         setNotice(activeThread ? `${story.project} watch resolved.` : `${story.project} will return when new evidence advances this topic.`);
         return;
       } catch {
-        updateStory(story.id, { watching: !watching });
+        if (activeThread) {
+          setTopicThreads((current) => current.map((thread) =>
+            thread._id === activeThread._id ? activeThread : thread,
+          ));
+          updateStory(story.id, { watching: true });
+        }
         setNotice("The watch is saved on this device until account sync is available.");
         return;
       }
     }
-
-    updateStory(story.id, { watching: !watching });
-    setNotice(watching ? `${story.project} removed from your watch list.` : `${story.project} added to your watch list on this device.`);
   };
 
   const toggleStoryLock = (story: Story) => {
@@ -931,14 +963,12 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
       <>
         <p>
           <strong>{selectedRepositories.length} {selectedRepositories.length === 1 ? "repository" : "repositories"}</strong>{" · "}
-          {activityLoading ? "Checking commits…" : `${recentCommitCount} commits since ${formatReviewCursor(REVIEW_SCOPE.lastReviewedAt)}`}
+          {activityLoading ? "Checking commits…" : `${recentCommitCount} commits · ${CAPTURE_WINDOW_LABELS[captureWindow].toLowerCase()}`}
         </p>
         <button onClick={openRepositoryControls} type="button">Manage repositories</button>
       </>
     );
   };
-
-  if (!auth) return <LoadingShell />;
 
   const actualStory = (trailStory: TrailStory) => STORIES.find((story) => story.id === trailStory.id);
   const renderTrailEvidence = (trailStory: TrailStory) => {
@@ -1491,7 +1521,14 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
                 <div>
                   <span className="eyebrow">Next scheduled review · {REVIEW_SCOPE.schedule}</span>
                   <h2 id="review-preview-heading">Monday’s scope</h2>
-                  <p>Pinned repositories are checked first. Automatic repositories join when their activity provides a useful reason. Muted repositories remain in your library without scheduled checks.</p>
+                  <p>Pinned repositories are checked first. Automatic repositories join when their activity provides a useful reason. Muted repositories stay outside scheduled checks.</p>
+                  <label className="capture-window" htmlFor="capture-window">
+                    <span>Capture window</span>
+                    <select id="capture-window" onChange={(event) => setCaptureWindow(event.target.value as CaptureWindow)} value={captureWindow}>
+                      {CAPTURE_WINDOWS.map((window) => <option key={window} value={window}>{CAPTURE_WINDOW_LABELS[window]}</option>)}
+                    </select>
+                    <small>Controls candidate commits for the next edition—not the published archive.</small>
+                  </label>
                 </div>
                 <div className="review-preview-metrics" aria-label="Scheduled review preview">
                   <div><strong>{recentCommitCount}{Object.values(activity).some((item) => item.truncated) ? "+" : ""}</strong><span>candidate commits</span></div>
@@ -1533,7 +1570,7 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
                               ? repositoryActivity.error
                               : commitCount
                                 ? `${commitCount}${repositoryActivity?.truncated ? "+" : ""} commits await review.`
-                                : `No commits since ${formatReviewCursor(REVIEW_SCOPE.lastReviewedAt)}.`}
+                                : captureWindowEmptyLabel(captureWindow, REVIEW_SCOPE.lastReviewedAt)}
                         </p>
                         {repositoryActivity?.commits?.length ? (
                           <details>

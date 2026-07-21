@@ -25,6 +25,7 @@ export type EditionHistoryEntry<TStory extends HistoricalStory = HistoricalStory
 export type EditionHistoryFilters = {
   query?: string;
   repository?: string;
+  since?: string;
   topicId?: string;
 };
 
@@ -69,6 +70,7 @@ export function filterEditionHistory<TStory extends HistoricalStory>(
 
   return history.filter((entry) => {
     if (repository && entry.repository !== repository) return false;
+    if (filters.since && entry.edition.periodEnd < filters.since) return false;
     if (filters.topicId && entry.story.topicId !== filters.topicId) return false;
     if (!query) return true;
 

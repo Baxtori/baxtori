@@ -1,9 +1,9 @@
 import { feedbackIsConfigured, updateTopicFeedback, upsertTopicFeedback } from "@/lib/feedback-store";
 import { parseTopicThread, parseTopicThreadUpdate } from "@/lib/topic-contract";
-import { getGitHubSession, withSessionCookie } from "@/lib/github-auth";
+import { getGitHubIdentitySession, withSessionCookie } from "@/lib/github-auth";
 
 export async function POST(request: Request) {
-  const { session, setCookie } = await getGitHubSession(request);
+  const { session, setCookie } = await getGitHubIdentitySession(request);
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to save a topic." }, { status: 401 }), setCookie);
   if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ error: "Account topics are not configured." }, { status: 503 }), setCookie);
 
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const { session, setCookie } = await getGitHubSession(request);
+  const { session, setCookie } = await getGitHubIdentitySession(request);
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to update a topic." }, { status: 401 }), setCookie);
   if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ error: "Account topics are not configured." }, { status: 503 }), setCookie);
 

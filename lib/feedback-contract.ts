@@ -1,5 +1,6 @@
 import { canonicalRepository, canonicalizeRepositoryList, canonicalizeRepositoryStateRecord, isValidRepositoryName } from "./repository-identity.ts";
 import type { RepositoryMode } from "./repository-modes.ts";
+import { DEFAULT_CAPTURE_WINDOW, isCaptureWindow, type CaptureWindow } from "./capture-window.ts";
 
 export type ReaderStoryState = {
   expanded: boolean;
@@ -15,6 +16,7 @@ export type ReaderStoryState = {
 
 export type ReaderStatePayload = {
   activeMapRepository: string;
+  captureWindow: CaptureWindow;
   continueBudgetMinutes: number;
   editionId: string;
   hideUnderstood: boolean;
@@ -74,6 +76,7 @@ export function parseReaderState(input: unknown): ReaderStatePayload {
 
   return {
     activeMapRepository: canonicalRepository(readString(input.activeMapRepository, 200)),
+    captureWindow: isCaptureWindow(input.captureWindow) ? input.captureWindow : DEFAULT_CAPTURE_WINDOW,
     continueBudgetMinutes: readAttentionBudget(input.continueBudgetMinutes),
     editionId: readString(input.editionId, 100),
     hideUnderstood: readBoolean(input.hideUnderstood),

@@ -54,16 +54,11 @@ maps remain versioned in Git and separate from editable personal state.
 
 ### Present multi-user limits
 
-Two external boundaries still make this a single-owner product:
-
-1. The live `baxtori` GitHub App is **private**, so accounts other than its
-   owner cannot install it on their repositories.
-2. The local weekly compiler requires one explicit `FEEDBACK_GITHUB_LOGIN`.
-   Account state is multi-user, but scheduled compilation and publication are
-   intentionally single-account.
-
-This is a good safety boundary for the prototype. It is not yet a public
-onboarding model.
+The live `baxtori` GitHub App is now public, so another GitHub account can
+install it and use the repository reader with account-isolated state. The
+remaining single-owner boundary is compilation: the local weekly compiler
+requires one explicit `FEEDBACK_GITHUB_LOGIN`. Reading and memory are
+multi-user; scheduled generation and publication are not yet tenant-aware.
 
 ## Why use this instead of a review agent?
 
@@ -116,8 +111,8 @@ artifact should replace or resolve prior items rather than append forever.
 
 ### P1 — Make installation safe for other people
 
-- Change the GitHub App from private to installable by any account only after
-  publishing a plain-language privacy/data-retention page.
+- **Done:** make the GitHub App installable and publish a plain-language
+  privacy/data-retention page.
 - Add account data export and deletion, including reader state, inventory,
   threads, questions, and queued reviews.
 - Show exactly what is stored: repository metadata in the account store; source

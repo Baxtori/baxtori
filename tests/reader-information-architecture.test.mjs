@@ -37,6 +37,14 @@ test("the journal does not wait for account hydration before replacing the retir
   assert.match(serverPage, /initialAuth=\{initialAuth\}/);
 });
 
+test("the published journal is not silently truncated by the attention budget", async () => {
+  const page = await readFile(new URL("../app/baxtori-app.tsx", import.meta.url), "utf8");
+
+  assert.match(page, /const editionItems = useMemo<ContinueItem\[\]>/);
+  assert.match(page, /items: editionItems/);
+  assert.doesNotMatch(page, /items: continuePlan\.items,[\s\S]{0,180}buildReaderTrail/);
+});
+
 test("the product contract preserves progressive evidence density", async () => {
   const contract = await readFile(new URL("../docs/NORTH_STAR.md", import.meta.url), "utf8");
 

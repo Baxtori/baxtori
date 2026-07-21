@@ -1,7 +1,7 @@
-import { getGitHubSession, githubIsConfigured, withSessionCookie } from "@/lib/github-auth";
+import { getGitHubIdentitySession, githubIsConfigured, withSessionCookie } from "@/lib/github-auth";
 
 export async function GET(request: Request) {
-  const { session, setCookie } = await getGitHubSession(request);
+  const { session, setCookie } = await getGitHubIdentitySession(request);
   return withSessionCookie(
     Response.json(
       {

@@ -2,10 +2,10 @@ import { feedbackIsConfigured, getReaderFeedback, saveReaderFeedback } from "@/l
 import { parseReaderState } from "@/lib/feedback-contract";
 import { canonicalRepository } from "@/lib/repository-identity";
 import { canonicalizeEvidenceAddress } from "@/lib/topic-contract";
-import { getGitHubSession, withSessionCookie } from "@/lib/github-auth";
+import { getGitHubIdentitySession, withSessionCookie } from "@/lib/github-auth";
 
 export async function GET(request: Request) {
-  const { session, setCookie } = await getGitHubSession(request);
+  const { session, setCookie } = await getGitHubIdentitySession(request);
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to load your reading state." }, { status: 401 }), setCookie);
   if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ configured: false, reviewRequests: [], state: null, threadQuestions: [], topicThreads: [] }, { status: 200 }), setCookie);
 
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const { session, setCookie } = await getGitHubSession(request);
+  const { session, setCookie } = await getGitHubIdentitySession(request);
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to save your reading state." }, { status: 401 }), setCookie);
   if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ configured: false }, { status: 503 }), setCookie);
 

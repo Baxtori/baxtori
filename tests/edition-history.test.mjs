@@ -78,4 +78,8 @@ test("filters history by repository, topic, and normalized search text", () => {
     filterEditionHistory(history, { repository: "teamleaderleo/ourchival" }).map((entry) => entry.story.id),
     ["auth-boundary"],
   );
+  assert.deepEqual(
+    filterEditionHistory(history, { since: "2026-07-08" }).map((entry) => entry.story.id),
+    ["reader-loop"],
+  );
 });

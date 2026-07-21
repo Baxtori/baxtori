@@ -1,4 +1,5 @@
 import { expect, test, type Page, type TestInfo } from "@playwright/test";
+import { authenticateVisualReader } from "./test-auth";
 
 function collectBrowserErrors(page: Page) {
   const errors: string[] = [];
@@ -57,6 +58,7 @@ test("the published demo opens directly into the calm reading trail", async ({ p
 });
 
 test("account hydration never exposes the retired dashboard", async ({ page }) => {
+  await authenticateVisualReader(page.context());
   await page.addInitScript(() => {
     const trackedWindow = window as unknown as { __sawRetiredReader: boolean };
     trackedWindow.__sawRetiredReader = false;
@@ -65,15 +67,6 @@ test("account hydration never exposes the retired dashboard", async ({ page }) =
     };
     new MutationObserver(inspect).observe(document.documentElement, { childList: true, subtree: true });
   });
-  await page.route("**/api/auth/github/status", (route) => route.fulfill({
-    body: JSON.stringify({
-      appSlug: "baxtori-test",
-      authenticated: true,
-      configured: true,
-      user: { avatarUrl: "", id: 42, login: "reader", name: "Reader" },
-    }),
-    contentType: "application/json",
-  }));
   await page.route("**/api/feedback/state", async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 800));
     await route.fulfill({
@@ -96,7 +89,9 @@ test("account hydration never exposes the retired dashboard", async ({ page }) =
 });
 
 test("repository modes persist and newly selected sources enter the system honestly", async ({ page }) => {
+  await authenticateVisualReader(page.context());
   const savedStates: Array<Record<string, unknown>> = [];
+  const activityRequests: string[] = [];
   const repository = {
     archived: false,
     defaultBranch: "main",
@@ -113,15 +108,6 @@ test("repository modes persist and newly selected sources enter the system hones
     url: "https://github.com/reader/new-garden",
   };
 
-  await page.route("**/api/auth/github/status", (route) => route.fulfill({
-    body: JSON.stringify({
-      appSlug: "baxtori-test",
-      authenticated: true,
-      configured: true,
-      user: { avatarUrl: "", id: 42, login: "reader", name: "Reader" },
-    }),
-    contentType: "application/json",
-  }));
   await page.route("**/api/feedback/state", async (route) => {
     if (route.request().method() === "PUT") {
       savedStates.push(route.request().postDataJSON() as Record<string, unknown>);
@@ -137,23 +123,30 @@ test("repository modes persist and newly selected sources enter the system hones
     body: JSON.stringify({ inventorySaved: true, repositories: [repository], truncated: false }),
     contentType: "application/json",
   }));
-  await page.route("**/api/github/activity?**", (route) => route.fulfill({
-    body: JSON.stringify({ commits: [], repository: repository.fullName, truncated: false }),
-    contentType: "application/json",
-  }));
+  await page.route("**/api/github/activity?**", (route) => {
+    activityRequests.push(route.request().url());
+    return route.fulfill({
+      body: JSON.stringify({ commits: [], repository: repository.fullName, truncated: false }),
+      contentType: "application/json",
+    });
+  });
 
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Notes from the repositories." })).toBeVisible();
+  await waitForReader(page);
   const sourcesButton = page.locator("button:visible").filter({ hasText: "Sources" });
   await expect(sourcesButton).toHaveCount(1);
   await sourcesButton.click();
   const modeControl = page.getByRole("group", { name: `Review mode for ${repository.fullName}` }).first();
   await expect(modeControl).toBeVisible();
+  await page.getByLabel("Capture window").selectOption("30d");
   await modeControl.getByRole("button", { name: "Pinned" }).click();
 
   await expect.poll(() => savedStates.some((state) =>
+    state.captureWindow === "30d" &&
     (state.repositoryModes as Record<string, string> | undefined)?.[repository.fullName] === "pinned"
   )).toBe(true);
+  await expect.poll(() => activityRequests.some((url) => new URL(url).searchParams.get("days") === "30")).toBe(true);
   await expect(page.getByText("Modes saved to account")).toBeVisible();
 
   await page.getByLabel("Primary").getByRole("button", { name: /^Now/ }).click();
@@ -239,7 +232,7 @@ test("the default reader turns the review into a finite field journal", async ({
   await page.locator("#trail-end").scrollIntoViewIfNeeded();
   await expect(page.getByRole("heading", { name: "Caught up." })).toBeVisible();
   await expect(page.getByText("Quiet repos")).toBeVisible();
-  await expect(page.getByText("5 of 5")).toContainText("5 of 5");
+  await expect(page.getByText("Reading · 7 of 7")).toHaveText("Reading · 7 of 7");
   await capture(page, testInfo, "field-journal-clearing", false, "allow");
   const endGrowth = await fernGrowth();
   await expect.poll(() => fernStage(15)).toBeGreaterThan(0.99);

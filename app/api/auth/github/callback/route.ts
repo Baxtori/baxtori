@@ -35,10 +35,14 @@ export async function GET(request: Request) {
   const state = url.searchParams.get("state");
   const expectedState = parseCookies(request).get(STATE_COOKIE);
   const clearState = clearCookieHeader(request, STATE_COOKIE);
-  const statelessStateValid = state ? await validateGitHubOAuthState(state) : false;
-  const legacyCookieStateValid = Boolean(state && expectedState && state === expectedState);
+  const stateValid = Boolean(
+    state &&
+    expectedState &&
+    state === expectedState &&
+    await validateGitHubOAuthState(state),
+  );
 
-  if (!code || (!statelessStateValid && !legacyCookieStateValid)) {
+  if (!code || !stateValid) {
     return redirectHome(request, "state-error", [clearState]);
   }
 

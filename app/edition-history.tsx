@@ -47,6 +47,22 @@ type EditionHistoryProps = {
 };
 
 type AttentionFilter = "all" | "questions" | "watched";
+type ArchiveRange = "all" | "7d" | "30d" | "90d";
+
+const ARCHIVE_RANGES: { label: string; value: ArchiveRange }[] = [
+  { label: "All editions", value: "all" },
+  { label: "Last 7 days", value: "7d" },
+  { label: "Last 30 days", value: "30d" },
+  { label: "Last 90 days", value: "90d" },
+];
+
+function archiveRangeStart(latestPeriodEnd: string, range: ArchiveRange) {
+  if (range === "all" || !latestPeriodEnd) return undefined;
+  const days = Number(range.slice(0, -1));
+  const latest = new Date(`${latestPeriodEnd}T12:00:00Z`);
+  latest.setUTCDate(latest.getUTCDate() - days + 1);
+  return latest.toISOString().slice(0, 10);
+}
 
 function editionRange(edition: HistoricalEdition) {
   const formatter = new Intl.DateTimeFormat("en", {
@@ -74,10 +90,15 @@ export function EditionHistory({
 }: EditionHistoryProps) {
   const [query, setQuery] = useState("");
   const [repository, setRepository] = useState("");
+  const [archiveRange, setArchiveRange] = useState<ArchiveRange>("all");
   const [topicId, setTopicId] = useState("");
   const [attention, setAttention] = useState<AttentionFilter>("all");
   const [openEntry, setOpenEntry] = useState<string | null>(null);
   const history = useMemo(() => buildEditionHistory(editions), [editions]);
+  const latestPeriodEnd = useMemo(
+    () => editions.reduce((latest, edition) => edition.periodEnd > latest ? edition.periodEnd : latest, ""),
+    [editions],
+  );
   const repositories = useMemo(
     () => [...new Set(history.flatMap((entry) => entry.repository ? [entry.repository] : []))].sort(),
     [history],
@@ -104,7 +125,12 @@ export function EditionHistory({
       .sort((left, right) => right.count - left.count)[0];
   }, [history, topicEditionCounts]);
   const filtered = useMemo(() => {
-    const matching = filterEditionHistory(history, { query, repository, topicId });
+    const matching = filterEditionHistory(history, {
+      query,
+      repository,
+      since: archiveRangeStart(latestPeriodEnd, archiveRange),
+      topicId,
+    });
     if (attention === "questions") {
       return matching.filter((entry) => questions.some((question) =>
         question.status === "open" &&
@@ -116,7 +142,7 @@ export function EditionHistory({
       return matching.filter((entry) => Boolean(activeWatchThreadFor(topicThreads, entry.story)));
     }
     return matching;
-  }, [attention, history, query, questions, repository, topicId, topicThreads]);
+  }, [archiveRange, attention, history, latestPeriodEnd, query, questions, repository, topicId, topicThreads]);
   const editionGroups = useMemo(() => {
     const groups = new Map<string, typeof filtered>();
     for (const entry of filtered) {
@@ -130,6 +156,7 @@ export function EditionHistory({
   const resetFilters = () => {
     setQuery("");
     setRepository("");
+    setArchiveRange("all");
     setTopicId("");
     setAttention("all");
   };
@@ -163,6 +190,12 @@ export function EditionHistory({
         <label className="history-search">
           <span>Search history</span>
           <input onChange={(event) => setQuery(event.target.value)} placeholder="Title, project, topic, repository" type="search" value={query} />
+        </label>
+        <label>
+          <span>Edition range</span>
+          <select onChange={(event) => setArchiveRange(event.target.value as ArchiveRange)} value={archiveRange}>
+            {ARCHIVE_RANGES.map((range) => <option key={range.value} value={range.value}>{range.label}</option>)}
+          </select>
         </label>
         <label>
           <span>Repository</span>

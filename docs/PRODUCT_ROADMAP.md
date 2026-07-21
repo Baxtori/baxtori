@@ -190,7 +190,7 @@ This preview should remain deterministic and free of generated conclusions.
 
 ### Performance and code health
 
-- split `app/page.tsx` into focused view and state modules
+- split `app/baxtori-app.tsx` into focused view and state modules
 - isolate queue ranking and repository identity logic into pure tested modules
 - reduce root rerenders while code excerpts load
 - add interaction tests for hydration, keyboard reading, repository rename migration, and cross-edition carry-forward
