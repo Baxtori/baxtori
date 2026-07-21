@@ -1,5 +1,6 @@
 import { getGitHubSession, githubHeaders, withSessionCookie } from "@/lib/github-auth";
 import { resolveActivityWindow } from "@/lib/github-activity";
+import { guardRateLimit } from "@/lib/rate-limit";
 import { isValidRepositoryName } from "@/lib/repository-identity";
 
 type GitHubCommit = {
@@ -12,6 +13,8 @@ type GitHubCommit = {
   };
 };
 
+const ACTIVITY_LIMIT = { limit: 60, windowMs: 60_000 };
+
 export async function GET(request: Request) {
   const { session, setCookie } = await getGitHubSession(request);
   if (!session) {
@@ -20,6 +23,9 @@ export async function GET(request: Request) {
       setCookie,
     );
   }
+  const rateLimitError = guardRateLimit("github:activity", String(session.user.id), ACTIVITY_LIMIT);
+  if (rateLimitError) return withSessionCookie(rateLimitError, setCookie);
+
   const requestUrl = new URL(request.url);
   const repository = requestUrl.searchParams.get("repo")?.trim() ?? "";
   const requestedDays = Number(requestUrl.searchParams.get("days") ?? "14");
