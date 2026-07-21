@@ -252,23 +252,22 @@ This is the most valuable recurring moment in the product and deserves its own s
 
 ### Phase 6 — Add the nature system
 
-Treat this phase as an editorial art system, not an asset gallery. Start with a tiny set of source-backed botanical plates and reuse them through scale, crop, and reveal. Add variety only when a new plate serves a distinct structural role.
+Treat this phase as an editorial art system, not an asset gallery. Use one transparent vector grammar so every specimen shares the same ink, anatomy, and paper rather than blending scans or photographs with incompatible backgrounds. Add variety only when a new form serves a distinct structural role.
 
 Suggested files:
 
 ```text
-public/art/README.md
-public/art/male-fern-nature-print.png
-public/art/bracken-nature-print.png
+app/botanical-illustration.tsx
 app/botanical-progress.tsx
+app/botanical-detail.tsx
 app/trail-reader.module.css
 ```
 
 Start with:
 
-- one viewport-scale specimen that grows with the whole reading trail;
-- one secondary plate for large, scene-level specimen studies;
-- factual captions and provenance recorded in the repository;
+- one viewport-scale frond that grows with the whole reading trail;
+- a small set of fragments derived from the same geometry for scene-level studies;
+- transparent artwork with no rectangular image boundary or simulated paper;
 - native scroll-timeline animation, a small JavaScript fallback, and a complete reduced-motion state.
 
 Set an explicit media budget and verify the first recommendation remains readable before imagery completes loading. The reading column must never move when a plate arrives, and mobile crops must stay faint enough that text remains primary.

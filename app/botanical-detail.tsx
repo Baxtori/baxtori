@@ -1,12 +1,7 @@
-import Image from "next/image";
+import { BotanicalIllustration } from "./botanical-illustration";
 import styles from "./trail-reader.module.css";
 
-const SPECIMENS = [
-  { label: "FILIX MAS", position: "68% 30%", src: "/art/male-fern-nature-print.png" },
-  { label: "FOREST STUDY", position: "16% 46%", src: "/art/fern-shadow-photo.jpg" },
-  { label: "PTERIDIUM", position: "58% 24%", src: "/art/bracken-nature-print.png" },
-  { label: "CROZIER", position: "82% 68%", src: "/art/fiddlehead-floor-photo.jpg" },
-] as const;
+const SPECIMENS = ["FROND / 01", "PINNA / 02", "CROZIER / 03"] as const;
 
 export function BotanicalDetail({ stage }: { stage: number }) {
   const specimenIndex = stage % SPECIMENS.length;
@@ -14,15 +9,9 @@ export function BotanicalDetail({ stage }: { stage: number }) {
 
   return (
     <figure aria-hidden="true" className={styles.botanicalDetail} data-botanical-detail data-specimen={specimenIndex}>
-      <Image
-        alt=""
-        fill
-        sizes="(max-width: 760px) 44vw, 13vw"
-        src={specimen.src}
-        style={{ objectPosition: specimen.position }}
-        unoptimized
-      />
-      <figcaption>{specimen.label}</figcaption>
+      {(specimenIndex === 0 || specimenIndex === 1) && <BotanicalIllustration className={styles.detailFragment} variant="fragment" />}
+      {specimenIndex === 2 && <BotanicalIllustration className={styles.detailFiddlehead} variant="fiddlehead" />}
+      <figcaption>{specimen}</figcaption>
     </figure>
   );
 }

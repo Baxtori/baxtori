@@ -943,10 +943,8 @@ export default function Home() {
 
     return (
       <TrailReader
-        attentionMinutes={continueBudget}
         edition={EDITION}
         notice={notice}
-        onAttentionMinutesChange={setContinueBudget}
         onOpenContinueItem={openContinueItem}
         onOpenMemory={() => setView("history")}
         onOpenSystem={() => setView("map")}

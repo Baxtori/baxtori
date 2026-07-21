@@ -19,10 +19,8 @@ type TrailEdition = {
 };
 
 type TrailReaderProps = {
-  attentionMinutes: number;
   edition: TrailEdition;
   notice: string;
-  onAttentionMinutesChange: (minutes: number) => void;
   onOpenContinueItem: (item: ContinueItem) => void;
   onOpenMemory: () => void;
   onOpenSystem: () => void;
@@ -48,10 +46,8 @@ function formatGenerated(value: string) {
 }
 
 export function TrailReader({
-  attentionMinutes,
   edition,
   notice,
-  onAttentionMinutesChange,
   onOpenContinueItem,
   onOpenMemory,
   onOpenSystem,
@@ -146,7 +142,6 @@ export function TrailReader({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [activeIndex, moveTo, onUnderstand, session]);
 
-  const firstReadingScene = readingScenes[0];
   const endScene = session.scenes.find((scene) => scene.kind === "end");
 
   return (
@@ -161,27 +156,13 @@ export function TrailReader({
         </button>
 
         <nav className={styles.trailPrimaryNav} aria-label="Primary">
-          <button aria-current="page" onClick={() => moveTo(0)} type="button"><span>Now</span><small>{session.plannedMinutes}m</small></button>
+          <button aria-current="page" onClick={() => moveTo(0)} type="button"><span>Now</span></button>
           <button onClick={onOpenSystem} type="button"><span>System</span></button>
           <button onClick={onOpenMemory} type="button"><span>Memory</span></button>
         </nav>
 
-        <label className={styles.railBudget} htmlFor="trail-attention-window">
-          <span>Attention window</span>
-          <output htmlFor="trail-attention-window">{attentionMinutes} min</output>
-          <input
-            id="trail-attention-window"
-            max="60"
-            min="5"
-            onChange={(event) => onAttentionMinutesChange(Number(event.target.value))}
-            step="5"
-            type="range"
-            value={attentionMinutes}
-          />
-        </label>
-
         <div className={styles.railProgress} aria-live="polite">
-          <span>Edition · {Math.min(activeIndex + 1, session.scenes.length)} of {session.scenes.length}</span>
+          <span>Reading · {Math.min(activeIndex + 1, session.scenes.length)} of {session.scenes.length}</span>
           <progress max={session.scenes.length} value={activeIndex + 1} />
         </div>
 
@@ -199,24 +180,44 @@ export function TrailReader({
           ))}
         </nav>
 
-        <p className={styles.railEdition}>{formatDay(edition.periodStart)}–{formatDay(edition.periodEnd)}<br />{sourceLabel}</p>
+        <p className={styles.railEdition}>Current edition<br />{formatDay(edition.periodStart)}–{formatDay(edition.periodEnd)}<br />{sourceLabel}</p>
       </aside>
 
       <main className={styles.journal} id="trail-reading">
         <section className={`${styles.scene} ${styles.openingScene}`} data-trail-scene id="trail-opening" tabIndex={-1}>
-          <span className={styles.openingMeta}>{formatGenerated(edition.generatedAt)}</span>
-          <h1>What changed.</h1>
-          <p className={styles.openingDek}>
-            {readingScenes.length
-              ? `${readingScenes.length} ${readingScenes.length === 1 ? "item" : "items"} · ${session.plannedMinutes} min`
-              : "Nothing needs your attention."}
-          </p>
-          {firstReadingScene && (
-            <button className={styles.firstStop} onClick={() => moveTo(1)} type="button">
-              <strong>{firstReadingScene.item.title}</strong>
-              <i aria-hidden="true">↓</i>
-            </button>
-          )}
+          <header className={styles.issueMasthead}>
+            <strong>Baxtori Review</strong>
+            <span>{formatDay(edition.periodStart)}—{formatDay(edition.periodEnd)}</span>
+            <span>{sourceLabel}</span>
+          </header>
+          <div className={styles.openingGrid}>
+            <div className={styles.openingLead}>
+              <span className={styles.openingMeta}>Current edition</span>
+              <h1>Notes from the repositories.</h1>
+              <p className={styles.openingDek}>
+                {readingScenes.length
+                  ? `${readingScenes.length} ${readingScenes.length === 1 ? "story" : "stories"}, edited into about ${session.plannedMinutes} minutes of reading.`
+                  : "No meaningful change needs a reader this time."}
+              </p>
+            </div>
+            {readingScenes.length > 0 && (
+              <ol className={styles.openingContents} aria-label="In this edition">
+                {readingScenes.map((scene, index) => (
+                  <li key={scene.id}>
+                    <button onClick={() => moveTo(session.scenes.findIndex((candidate) => candidate.id === scene.id))} type="button">
+                      <span>{String(index + 1).padStart(2, "0")}</span>
+                      <strong>{scene.item.title}</strong>
+                      <small>{scene.kind === "story" ? scene.story.project : scene.item.repository} · {scene.item.minutes} min</small>
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+          <footer className={styles.issueFooter}>
+            <span>Generated {formatGenerated(edition.generatedAt)}</span>
+            <span>Evidence available inside each story</span>
+          </footer>
         </section>
 
         {session.scenes.map((scene, index) => {

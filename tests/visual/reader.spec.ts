@@ -35,16 +35,10 @@ test("the published demo opens directly into the calm reading trail", async ({ p
   const errors = collectBrowserErrors(page);
   await page.goto("/?demo=1");
 
-  await expect(page.getByRole("heading", { name: "What changed." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Notes from the repositories." })).toBeVisible();
   await expect(page.getByRole("complementary", { name: "Baxtori navigation" })).toBeVisible();
-  const attentionWindow = page.getByLabel("Attention window");
-  await expect(attentionWindow).toHaveValue("15");
-  if ((page.viewportSize()?.width ?? 0) > 760) {
-    await attentionWindow.fill("30");
-    await expect(page.getByText("30 min", { exact: true })).toBeVisible();
-    await page.reload();
-    await expect(page.getByLabel("Attention window")).toHaveValue("30");
-  }
+  await expect(page.getByLabel("Attention window")).toHaveCount(0);
+  await expect(page.getByRole("list", { name: "In this edition" })).toBeVisible();
   await capture(page, testInfo, "published-briefing");
 
   await page.getByRole("button", { name: "Repository access and reader attention became explicit plans.", exact: true }).click();
@@ -71,12 +65,12 @@ test("the default reader turns the review into a finite field journal", async ({
   expect(fernBox?.x ?? 0).toBeLessThan(0);
   expect(fernBox?.width ?? 0).toBeGreaterThan(viewportWidth * 0.45);
   await expect(page.locator("[data-botanical-bloom]")).toBeVisible();
-  expect(await fernPlate.evaluate((element) => (element as HTMLImageElement).naturalHeight)).toBeGreaterThan(700);
+  expect(await fernPlate.locator("path").count()).toBeGreaterThan(20);
   const navigation = page.getByRole("complementary", { name: "Baxtori navigation" });
   const navigationBox = await navigation.boundingBox();
   expect(navigationBox?.x ?? -1).toBe(0);
   const openingGrowth = await fernGrowth();
-  await expect(page.getByRole("heading", { name: "What changed." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Notes from the repositories." })).toBeVisible();
   await page.getByRole("button", { name: "Repository access and reader attention became explicit plans.", exact: true }).click();
 
   await expect(page.getByRole("heading", { name: "Repository access and reader attention became explicit plans." })).toBeVisible();

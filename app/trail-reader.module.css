@@ -1,6 +1,6 @@
 .trailShell {
-  --trail-paper: #f5f0e5;
-  --trail-paper-light: #fbf8f0;
+  --trail-paper: var(--paper);
+  --trail-paper-light: var(--paper-light);
   --trail-ink: #19241d;
   --trail-soft: #4f5c52;
   --trail-muted: #727d72;
@@ -8,10 +8,7 @@
   --trail-line: rgb(37 63 46 / 18%);
   min-height: 100vh;
   color: var(--trail-ink);
-  background:
-    radial-gradient(circle at 8% 14%, rgb(76 116 84 / 7%), transparent 34rem),
-    radial-gradient(circle at 90% 76%, rgb(122 83 55 / 3.5%), transparent 30rem),
-    var(--trail-paper);
+  background: var(--trail-paper);
 }
 
 :global(html:has(.trailShell)) {
@@ -20,7 +17,7 @@
   scroll-padding-top: 1.5rem;
 }
 
-:global(body:has(.trailShell)) { overflow-x: clip; background: var(--trail-paper); }
+:global(body:has(.trailShell)) { overflow-x: clip; background: var(--paper); }
 
 .skipLink {
   position: fixed;
@@ -45,7 +42,7 @@
   flex-direction: column;
   width: clamp(10.5rem, 14vw, 12.5rem);
   padding: clamp(1.4rem, 3vw, 2.4rem) 1.15rem 1.35rem;
-  background: rgb(245 240 229 / 78%);
+  background: rgb(244 239 229 / 92%);
   border-right: 1px solid rgb(37 63 46 / 13%);
   backdrop-filter: blur(20px) saturate(0.72);
 }
@@ -94,11 +91,7 @@
 .trailPrimaryNav button[aria-current="page"] { color: var(--trail-ink); font-weight: 780; }
 .trailPrimaryNav small { font-size: 0.58rem; }
 
-.railBudget { display: grid; grid-template-columns: 1fr auto; gap: 0.35rem 0.5rem; margin-top: 1.2rem; color: var(--trail-muted); font-size: 0.52rem; font-weight: 730; }
-.railBudget output { color: var(--trail-ink); font-family: var(--serif); font-size: 0.72rem; }
-.railBudget input { grid-column: 1 / -1; width: 100%; accent-color: var(--trail-green); }
-
-.railProgress { display: grid; gap: 0.55rem; margin-top: 2.1rem; }
+.railProgress { display: grid; gap: 0.55rem; margin-top: 1.5rem; }
 .railProgress span { color: var(--trail-muted); font-size: 0.53rem; font-weight: 760; letter-spacing: 0.08em; text-transform: uppercase; }
 .railProgress progress { width: 100%; height: 0.18rem; border: 0; background: rgb(37 63 46 / 12%); }
 .railProgress progress::-webkit-progress-bar { background: rgb(37 63 46 / 12%); }
@@ -108,8 +101,8 @@
 .railEdition { margin: auto 0 0; color: var(--trail-muted); font-size: 0.52rem; font-weight: 710; letter-spacing: 0.06em; line-height: 1.7; text-transform: uppercase; }
 
 .botanicalProgress {
-  --bracken-clip: 54%;
-  --fern-clip: 68%;
+  --bracken-clip: 44%;
+  --fern-clip: 24%;
   --late-progress: 0;
   --scroll-progress: 0;
   position: fixed;
@@ -119,66 +112,48 @@
   overflow: hidden;
   contain: strict;
   pointer-events: none;
-  isolation: isolate;
+  color: var(--trail-green);
 }
 
-.botanicalImage {
+.botanicalVector {
   position: absolute;
   display: block;
   max-width: none;
+  overflow: visible;
+  fill: currentColor;
   pointer-events: none;
   user-select: none;
 }
 
-.fernPhotograph {
-  top: -6vh;
-  left: -7vw;
-  width: 39vw;
-  height: 112svh;
-  object-fit: cover;
-  object-position: left center;
-  opacity: 0.085;
-  filter: saturate(0.62) contrast(0.9);
-  mask-image: linear-gradient(90deg, #000 0 56%, rgb(0 0 0 / 72%) 74%, transparent 100%);
-  transform: translate3d(0, calc(var(--scroll-progress) * -2.8rem), 0) scale(1.04);
-}
-
-.maleFernPlate {
-  bottom: -28vh;
-  left: -16vw;
-  width: 48vw;
-  height: auto;
-  opacity: 0.34;
-  filter: saturate(0.68) sepia(0.06) contrast(0.94);
-  mix-blend-mode: multiply;
-  clip-path: inset(var(--fern-clip) 0 0 0);
-  transform: translate3d(0, calc(var(--scroll-progress) * -4.5rem), 0) rotate(-3.5deg);
-  transform-origin: center bottom;
-}
-
-.brackenPlate {
-  right: -20vw;
-  bottom: -30vh;
-  width: 41vw;
-  height: auto;
-  opacity: calc(0.015 + var(--late-progress) * 0.16);
-  filter: saturate(0.52) contrast(0.92);
-  mix-blend-mode: multiply;
-  clip-path: inset(var(--bracken-clip) 0 0 0);
-  transform: translate3d(0, calc(var(--late-progress) * -3rem), 0) rotate(4deg);
-  transform-origin: center bottom;
-}
-
-.fiddleheadPhotograph {
-  right: -12vw;
-  bottom: -12vh;
+.primaryFern {
+  bottom: -23vh;
+  left: -10vw;
   width: 43vw;
-  height: 46svh;
-  object-fit: cover;
-  object-position: 78% 68%;
-  opacity: calc(var(--late-progress) * 0.095);
-  filter: saturate(0.54) contrast(0.88);
-  mask-image: radial-gradient(ellipse at 74% 70%, #000 0 25%, rgb(0 0 0 / 74%) 45%, transparent 72%);
+  height: auto;
+  opacity: 0.16;
+  clip-path: inset(var(--fern-clip) 0 0 0);
+  transform: translate3d(0, calc(var(--scroll-progress) * -5.5rem), 0) rotate(-7deg) scale(1.03);
+  transform-origin: center bottom;
+}
+
+.secondaryFern {
+  right: -16vw;
+  bottom: 14vh;
+  width: 37vw;
+  height: auto;
+  opacity: calc(var(--late-progress) * 0.11);
+  clip-path: inset(var(--bracken-clip) 0 0 0);
+  transform: translate3d(0, calc(var(--late-progress) * -3rem), 0) rotate(-12deg);
+  transform-origin: center bottom;
+}
+
+.fiddlehead {
+  right: -10vw;
+  bottom: -14vh;
+  width: 32vw;
+  height: auto;
+  opacity: calc(var(--late-progress) * 0.12);
+  transform: translate3d(0, calc((1 - var(--late-progress)) * 4rem), 0) rotate(7deg);
 }
 
 .journal {
@@ -204,8 +179,8 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: max(34rem, 78svh);
-  padding: clamp(3rem, 6vh, 4.75rem) 0;
+  min-height: max(32rem, 66svh);
+  padding: clamp(3.5rem, 7vh, 5.5rem) 0;
   scroll-margin-top: 1.5rem;
   scroll-snap-align: start;
   outline: none;
@@ -224,7 +199,7 @@
   text-wrap: balance;
 }
 
-.openingScene h1 { max-width: 47rem; font-size: clamp(3.6rem, 8vw, 6.7rem); line-height: 0.93; }
+.openingScene h1 { max-width: 42rem; font-size: clamp(3.8rem, 7.2vw, 6.4rem); line-height: 0.88; }
 .storyScene h2 { max-width: 46rem; font-size: clamp(2.6rem, 4.8vw, 4.4rem); line-height: 0.98; }
 .studyScene h2 { max-width: 44rem; font-size: clamp(2.6rem, 6vw, 5.1rem); line-height: 0.98; }
 .endScene h2 { max-width: 44rem; font-size: clamp(3.2rem, 7vw, 5.8rem); line-height: 0.96; }
@@ -237,10 +212,40 @@
   gap: 1rem;
 }
 
+.openingScene {
+  justify-content: space-between;
+  min-height: 100svh;
+  padding-block: clamp(1.5rem, 3vw, 2.75rem);
+}
+
+.issueMasthead {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 2rem;
+  align-items: center;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--trail-ink);
+  font-size: 0.58rem;
+  font-weight: 780;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.issueMasthead strong { font-family: var(--serif); font-size: 1.1rem; font-weight: 600; letter-spacing: -0.035em; text-transform: none; }
+.issueMasthead span:last-child { color: var(--trail-muted); }
+
+.openingGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(18rem, 0.88fr);
+  gap: clamp(3rem, 7vw, 7rem);
+  align-items: end;
+  padding-block: clamp(4rem, 9vh, 7.5rem);
+}
+
+.openingLead { align-self: center; }
 .openingMeta {
   display: block;
-  margin-bottom: clamp(1.5rem, 4vh, 2.8rem);
-  color: var(--trail-muted);
+  margin-bottom: 1.25rem;
+  color: var(--trail-green);
   font-size: 0.62rem;
   font-weight: 780;
   letter-spacing: 0.1em;
@@ -248,30 +253,45 @@
 }
 
 .openingDek {
-  max-width: 40rem;
-  margin: 1.2rem 0 0;
-  color: var(--trail-muted);
-  font-size: 0.72rem;
-  font-weight: 760;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  max-width: 31rem;
+  margin: 1.8rem 0 0;
+  color: var(--trail-soft);
+  font-family: var(--serif);
+  font-size: clamp(1rem, 1.55vw, 1.24rem);
+  line-height: 1.45;
 }
 
-.firstStop {
-  position: relative;
-  display: block;
-  width: min(100%, 42rem);
-  margin-top: clamp(2rem, 5vh, 3.8rem);
-  padding: 1.2rem 4.5rem 1.2rem 0;
+.openingContents { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--trail-ink); }
+.openingContents li { border-bottom: 1px solid var(--trail-line); }
+.openingContents button {
+  display: grid;
+  grid-template-columns: 2.25rem 1fr;
+  gap: 0.25rem 0.85rem;
+  width: 100%;
+  padding: 1rem 0;
   color: var(--trail-ink);
   text-align: left;
   background: transparent;
   border: 0;
-  border-top: 1px solid var(--trail-line);
   cursor: pointer;
 }
-.firstStop strong { font-family: var(--serif); font-size: clamp(1.45rem, 3vw, 2rem); font-weight: 520; }
-.firstStop i { position: absolute; right: 1.3rem; bottom: 1.2rem; color: var(--trail-green); font-family: var(--serif); font-size: 2rem; font-style: normal; }
+.openingContents button > span { grid-row: 1 / 3; color: var(--trail-green); font-family: var(--serif); font-size: 1.15rem; }
+.openingContents strong { font-family: var(--serif); font-size: clamp(1.08rem, 1.7vw, 1.35rem); font-weight: 560; line-height: 1.08; }
+.openingContents small { color: var(--trail-muted); font-size: 0.52rem; font-weight: 760; letter-spacing: 0.07em; text-transform: uppercase; }
+.openingContents button:hover strong { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
+
+.issueFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.8rem;
+  color: var(--trail-muted);
+  border-top: 1px solid var(--trail-line);
+  font-size: 0.52rem;
+  font-weight: 720;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 
 .sceneNumber {
   position: absolute;
@@ -299,16 +319,15 @@
   min-height: 16rem;
   margin: 0;
   overflow: hidden;
-  background: rgb(49 95 70 / 2.5%);
-  mix-blend-mode: multiply;
-  mask-image: radial-gradient(ellipse 86% 78% at 54% 48%, #000 0 48%, rgb(0 0 0 / 82%) 64%, transparent 100%);
+  color: var(--trail-green);
   transform: rotate(1.6deg);
 }
-.botanicalDetail img { object-fit: cover; opacity: 0.44; filter: saturate(0.55) contrast(0.9); }
-.botanicalDetail[data-specimen="0"] img,
-.botanicalDetail[data-specimen="2"] img { opacity: 0.58; }
+.botanicalDetail svg { position: absolute; display: block; overflow: visible; fill: currentColor; }
+.detailFragment { top: 7%; left: -16%; width: 128%; height: 94%; opacity: 0.21; transform: rotate(-10deg); }
+.detailFiddlehead { top: -8%; right: -9%; width: 112%; height: 120%; opacity: 0.2; transform: rotate(6deg); }
+.botanicalDetail[data-specimen="0"] .detailFragment { top: -4%; left: -8%; width: 136%; height: 108%; opacity: 0.19; transform: scaleX(-1) rotate(-6deg); }
 .botanicalDetail[data-specimen="1"] { transform: rotate(-2.4deg); }
-.botanicalDetail[data-specimen="3"] { transform: rotate(3deg); }
+.botanicalDetail[data-specimen="2"] { transform: rotate(3deg); }
 .botanicalDetail figcaption {
   position: absolute;
   right: 0;
@@ -455,9 +474,9 @@
   .trailRail { width: 10rem; }
   .journal { width: min(100%, 70rem); padding-left: 12.5rem; }
   .journal::before { left: 10.5rem; }
-  .fernPhotograph { left: -10vw; width: 46vw; opacity: 0.07; }
-  .maleFernPlate { left: -25vw; width: 60vw; opacity: 0.23; }
-  .brackenPlate { right: -28vw; width: 52vw; }
+  .primaryFern { left: -17vw; width: 55vw; opacity: 0.13; }
+  .secondaryFern { right: -24vw; width: 48vw; }
+  .openingGrid { grid-template-columns: minmax(0, 1fr) minmax(17rem, 0.82fr); gap: 3rem; }
 }
 
 @media (max-width: 760px) {
@@ -482,20 +501,26 @@
   .railProgress span { display: none; }
   .railProgress progress { display: block; width: 100%; height: 2px; }
   .sceneNav,
-  .railBudget,
   .railEdition { display: none; }
   .journal { padding: 3.8rem 1.15rem 10vh; }
   .journal::before { display: none; }
-  .scene { min-height: max(32rem, 76svh); padding-block: 3.25rem; scroll-margin-top: 3.8rem; }
-  .openingScene h1 { font-size: clamp(3.15rem, 14vw, 4.25rem); }
+  .scene { min-height: max(30rem, 64svh); padding-block: 3.5rem; scroll-margin-top: 3.8rem; }
+  .openingScene { min-height: calc(100svh - 3.8rem); padding-block: 1rem 1.4rem; }
+  .issueMasthead { grid-template-columns: 1fr auto; gap: 0.75rem; }
+  .issueMasthead span:last-child { display: none; }
+  .openingGrid { display: block; padding-block: 3.2rem 2.4rem; }
+  .openingScene h1 { max-width: 22rem; font-size: clamp(3.2rem, 14.4vw, 4.45rem); }
+  .openingDek { max-width: 22rem; margin-top: 1.25rem; }
+  .openingContents { margin-top: 2.8rem; }
+  .openingContents button { padding-block: 0.85rem; }
+  .issueFooter span:last-child { display: none; }
   .storyScene h2,
   .studyScene h2 { font-size: clamp(2.45rem, 11vw, 3.8rem); }
   .storyHeader { position: relative; display: block; min-height: 18rem; padding-right: 0; }
   .storyLead { position: relative; z-index: 1; padding-top: 0; }
   .storyLead h2 { margin-top: 1rem; }
   .specimenBearing { position: absolute; z-index: 0; top: -2rem; right: -6rem; width: 15rem; height: 17rem; opacity: 0.46; }
-  .botanicalDetail,
-  .botanicalDetail img { min-height: 17rem; }
+  .botanicalDetail { min-height: 17rem; }
   .storyMeta { flex-wrap: wrap; }
   .meaning { grid-template-columns: 1fr; gap: 0.4rem; }
   .fieldNotes > div { grid-template-columns: 1fr; }
@@ -504,10 +529,9 @@
   .evidenceLayer { width: calc(100% + 2.3rem); margin-inline: -1.15rem; }
   .sceneNumber { top: 1rem; left: 0; font-size: 1rem; }
   .sceneNav { display: none; }
-  .fernPhotograph { left: -38vw; width: 76vw; opacity: 0.055; }
-  .maleFernPlate { bottom: -18vh; left: -62vw; width: 92vw; opacity: 0.24; }
-  .brackenPlate { right: -48vw; width: 72vw; opacity: calc(0.01 + var(--late-progress) * 0.1); }
-  .fiddleheadPhotograph { right: -46vw; width: 82vw; opacity: calc(var(--late-progress) * 0.065); }
+  .primaryFern { bottom: -8vh; left: -42vw; width: 96vw; opacity: 0.1; }
+  .secondaryFern { right: -55vw; width: 84vw; opacity: calc(var(--late-progress) * 0.08); }
+  .fiddlehead { right: -46vw; width: 72vw; opacity: calc(var(--late-progress) * 0.09); }
   .endSummary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .endSummary > div { border-bottom: 1px solid var(--trail-line); }
   .endSummary > div:nth-child(2) { border-right: 0; }
