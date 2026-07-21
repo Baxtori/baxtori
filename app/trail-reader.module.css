@@ -131,6 +131,22 @@
 .trailSecondaryNav button:hover,
 .trailSecondaryNav a:hover { color: var(--trail-ink); }
 .trailSecondaryNav small { font-size: inherit; }
+.trailSecondaryNav .connectGithub {
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.4rem;
+  width: fit-content;
+  margin-top: 0.35rem;
+  padding: 0.48rem 0.62rem;
+  color: var(--trail-green);
+  background: rgb(255 253 247 / 72%);
+  border: 1px solid rgb(49 95 70 / 28%);
+  border-radius: 999px;
+  box-shadow: 0 0.3rem 1rem rgb(49 95 70 / 6%);
+  font-weight: 780;
+}
+.trailSecondaryNav .connectGithub:hover { color: var(--trail-paper-light); background: var(--trail-green); }
+.connectGithubIcon { flex: 0 0 auto; width: 0.9rem; height: 0.9rem; }
 
 .mobileSources { display: none; }
 .mobileSourcesGlyph { width: 0.75rem; height: 0.75rem; fill: none; stroke: currentColor; stroke-width: 1.1; }
@@ -618,7 +634,7 @@
   .brandMark { width: 1.65rem; height: 1.65rem; }
   .brand strong { font-size: 1rem; }
   .trailPrimaryNav { display: flex; gap: 0; margin: 0 0 0 auto; border: 0; }
-  .trailPrimaryNav button { min-height: auto; padding-inline: 0.5rem; border: 0; font-size: 0.62rem; }
+  .trailPrimaryNav button { min-height: 2rem; padding-inline: 0.5rem; border: 0; font-size: 0.62rem; }
   .trailPrimaryNav button + button { border-left: 1px solid var(--trail-line); }
   .trailPrimaryNav button small { display: none; }
   .trailPrimaryNav button[aria-current="page"]::after { display: none; }
@@ -629,6 +645,7 @@
     align-items: center;
     gap: 0.3rem;
     margin-left: 0.15rem;
+    min-height: 2rem;
     padding: 0.32rem 0.4rem;
     color: var(--trail-muted);
     background: transparent;
@@ -638,6 +655,7 @@
     font-size: 0.58rem;
     font-weight: 740;
   }
+  .mobileConnect { color: var(--trail-paper-light); background: var(--trail-green); border-color: var(--trail-green); text-decoration: none; }
   .mobileSources[aria-current="page"] { color: var(--trail-ink); border-color: rgb(49 95 70 / 34%); }
   .mobileSources small { display: inline-grid; min-width: 1rem; height: 1rem; place-items: center; color: var(--trail-paper-light); background: var(--trail-green); border-radius: 999px; font-size: 0.46rem; }
   .railProgress { position: absolute; right: 0; bottom: -1px; left: 0; display: block; margin: 0; }

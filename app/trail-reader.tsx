@@ -6,6 +6,7 @@ import type { ReaderTrail, TrailStory } from "@/lib/reader-trail";
 import { BotanicalProgress } from "./botanical-progress";
 import { BotanicalGlyph } from "./botanical-glyph";
 import { BrandMark } from "./brand-mark";
+import { GitHubMark } from "./github-mark";
 import styles from "./trail-reader.module.css";
 
 type StoryDecisionState = {
@@ -229,7 +230,12 @@ export function TrailReader({
         <nav className={styles.trailSecondaryNav} aria-label="Edition and source tools">
           <button aria-current={activeView === "timeline" ? "page" : undefined} onClick={onOpenEditionRecord} type="button">Edition record</button>
           {onOpenRepositories && <button aria-current={activeView === "repositories" ? "page" : undefined} onClick={onOpenRepositories} type="button">Review sources <small>{repositoryCount}</small></button>}
-          {connectHref && <a href={connectHref}>Connect GitHub</a>}
+          {connectHref && (
+            <a className={styles.connectGithub} href={connectHref}>
+              <GitHubMark className={styles.connectGithubIcon} />
+              <span>Connect GitHub</span>
+            </a>
+          )}
         </nav>
 
         {onOpenRepositories && (
@@ -239,7 +245,12 @@ export function TrailReader({
           </button>
         )}
 
-        {connectHref && <a className={styles.mobileSources} href={connectHref}>Connect</a>}
+        {connectHref && (
+          <a aria-label="Connect GitHub" className={`${styles.mobileSources} ${styles.mobileConnect}`} href={connectHref}>
+            <GitHubMark className={styles.connectGithubIcon} />
+            <span>Connect</span>
+          </a>
+        )}
 
         <div className={styles.railAccount}>
           <p>Current edition<br />{formatDay(edition.periodStart)}–{formatDay(edition.periodEnd)}<br />{sourceLabel}</p>
@@ -267,7 +278,7 @@ export function TrailReader({
           </header>
           <div className={styles.openingGrid}>
             <div className={styles.openingLead}>
-              <span className={styles.openingMeta}><BotanicalGlyph />Current edition</span>
+              <span className={styles.openingMeta}><BotanicalGlyph />{sourceLabel}</span>
               <h1>Notes from the repositories.</h1>
               <p className={styles.openingDek}>
                 {readingScenes.length

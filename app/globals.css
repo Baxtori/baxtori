@@ -2004,20 +2004,6 @@ kbd {
   padding: 0 0.85rem 1.15rem;
 }
 
-.signal-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.7rem;
-  padding: 0.85rem 0;
-  border-block: 1px solid var(--line);
-}
-
-.signal-grid > div { display: grid; grid-template-columns: 1fr auto; gap: 0.25rem 0.5rem; }
-.signal-grid span { color: var(--muted); font-size: 0.62rem; text-transform: capitalize; }
-.signal-grid strong { color: var(--ink-soft); font-size: 0.65rem; }
-.signal-grid i { grid-column: 1 / -1; height: 3px; background: var(--paper-deep); }
-.signal-grid b { display: block; height: 100%; background: var(--green); }
-
 .map-columns {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -2440,7 +2426,6 @@ kbd {
   .study-session-heading { align-items: flex-start; flex-direction: column; }
   .study-plan li { grid-template-columns: 1fr; }
   .study-plan li > button { justify-self: start; }
-  .signal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .map-columns { grid-template-columns: 1fr; }
   .understanding-actions > span { width: 100%; }
   .question-ledger { grid-template-columns: 1fr; }

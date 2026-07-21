@@ -1105,9 +1105,7 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
         renderEvidence={renderTrailEvidence}
         repositoryCount={selectedRepositories.length}
         session={trailSession}
-        sourceLabel={demoMode
-          ? "published example"
-          : `example edition · ${selectedRepositories.length} ${selectedRepositories.length === 1 ? "source" : "sources"}`}
+        sourceLabel="public example edition"
         storyState={(trailStory) => {
           const story = actualStory(trailStory);
           return story
