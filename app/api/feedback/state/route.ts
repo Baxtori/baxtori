@@ -2,8 +2,11 @@ import { feedbackIsConfigured, getReaderFeedback, saveReaderFeedback } from "@/l
 import { parseReaderState } from "@/lib/feedback-contract";
 import { canonicalRepository } from "@/lib/repository-identity";
 import { guardMutationRequest } from "@/lib/request-security";
+import { guardRateLimit } from "@/lib/rate-limit";
 import { canonicalizeEvidenceAddress } from "@/lib/topic-contract";
 import { getGitHubIdentitySession, withSessionCookie } from "@/lib/github-auth";
+
+const ACCOUNT_MUTATION_LIMIT = { limit: 120, windowMs: 60_000 };
 
 export async function GET(request: Request) {
   const { session, setCookie } = await getGitHubIdentitySession(request);
@@ -44,6 +47,8 @@ export async function PUT(request: Request) {
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to save your reading state." }, { status: 401 }), setCookie);
   const mutationError = guardMutationRequest(request, { requireJson: true });
   if (mutationError) return withSessionCookie(mutationError, setCookie);
+  const rateLimitError = guardRateLimit("feedback:mutation", String(session.user.id), ACCOUNT_MUTATION_LIMIT);
+  if (rateLimitError) return withSessionCookie(rateLimitError, setCookie);
   if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ configured: false }, { status: 503 }), setCookie);
 
   let payload;
