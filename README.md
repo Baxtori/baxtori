@@ -11,7 +11,7 @@ searches earlier editions and reader notes.
 
 ## What works
 
-- A finite, scroll-first edition on the home page, including valid quiet editions
+- A finite, scroll-first edition on the home page, including valid zero-story editions
 - Commit-addressed diffs and current-code excerpts
 - Read-only GitHub App access to selected repositories
 - Per-account repository choices, reading state, watches, questions, and review requests
@@ -19,28 +19,27 @@ searches earlier editions and reader notes.
 - Search and filters across prior editions
 - Cursor-based collection from the last reviewed commit, with explicit history-rewrite fallback
 - Versioned Codex review instructions and an immutable run-receipt protocol
-- A signed-out demo that does not require GitHub access
+- A public example that opens directly from the demo link
 - Desktop and mobile browser tests
 
-Baxtori does not write to connected repositories. The hosted app fetches code
-from GitHub only when a reader opens an excerpt. It does not run a model over a
-connected user's private code.
+The GitHub App has read-only permissions. The hosted app fetches code when a
+reader opens an excerpt. Scheduled model work covers the owner's explicitly
+configured source caches.
 
 ## Built with Codex and GPT-5.6
 
-Baxtori was developed with Codex and GPT-5.6 during OpenAI Build Week. Codex
-helped inspect the repository, challenge the product boundary, implement the
-GitHub and account flows, refine the editorial reader, and repeatedly run the
-project's tests and evidence validators. GPT-5.6 was used for the judgment-heavy
-work: deciding which accepted changes deserve a developer's attention, tracing
-their consequences across files, and turning exact Git evidence into a finite
-reading edition.
+I built Baxtori with Codex and GPT-5.6 during OpenAI Build Week. I used Codex to
+inspect the repository, work through the product boundary, implement the GitHub
+and account flows, refine the reader, and run the project's tests and evidence
+validators. GPT-5.6 handled work that needed judgment across the codebase:
+selecting consequential changes, tracing their effects across files, and turning
+exact Git evidence into a finite reading edition.
 
-The product workflow also uses a scheduled local Codex review. Deterministic
-scripts collect bounded Git evidence; Codex performs selection and explanation;
-strict validators check the resulting commit, path, range, archive, and map
-claims before publication. The hosted demo itself does not invoke a model API or
-send a connected reader's private code to the project owner's model account.
+The review workflow runs as a scheduled local Codex task. Deterministic scripts
+collect bounded Git evidence, Codex selects and explains the important changes,
+and strict validators check every commit, path, range, archive, and map claim
+before publication. The hosted demo serves validated edition files and fetches
+requested evidence directly from GitHub.
 
 ## Run locally
 
@@ -75,14 +74,14 @@ npm run test:visual
 ```
 
 CI runs lint, type-check, build, unit validation, and desktop/mobile browser tests.
-It uses Blacksmith when `BLACKSMITH_ENABLED=true`; otherwise it uses a GitHub-hosted
-Ubuntu runner, so verification never disappears because a runner variable is absent.
+It uses Blacksmith when `BLACKSMITH_ENABLED=true` and a GitHub-hosted Ubuntu
+runner for the fallback path.
 
 ## How editions are produced
 
-The hosted app does not call a model. A scheduled local Codex task reviews the
-configured repositories and writes versioned edition data to this repository.
-The versioned judgment contract lives in `codex/review-instructions.md`.
+A scheduled local Codex task reviews the configured repositories and writes
+versioned edition data to this repository. The hosted app serves those validated
+files. The versioned judgment contract lives in `codex/review-instructions.md`.
 
 ```bash
 npm run feedback:export   # optional account-scoped reader input
@@ -94,14 +93,15 @@ npm run edition:finalize # strict Git evidence checks and immutable run receipt
 `edition:prepare` collects configured origin branches concurrently with bounded
 Git commands. It prefers `last-reviewed-commit..origin/branch`, records history
 rewrites, falls back to the configured time window when necessary, and reports
-stale repository inventory. Local checkout paths never enter the candidate file.
+stale repository inventory. The candidate file excludes local checkout paths.
 
-`edition:finalize` refuses changed inputs or instructions, missing source caches,
-short or unavailable commit hashes, invalid ancestry, unchanged evidence paths,
-out-of-range lines, conflicting archives, and duplicate run IDs. Successful run
-receipts live under `data/review-runs/` with source heads, instruction and input
-hashes, model/runtime metadata, processed feedback IDs, human-edit notes, output
-hash, and validator results.
+`edition:finalize` blocks publication when inputs or instructions changed, source
+caches are missing, commit hashes are short or unavailable, ancestry is invalid,
+evidence paths are unchanged, line ranges fall outside the file, archives
+conflict, or run IDs collide. Successful run receipts live under
+`data/review-runs/` with source heads, instruction and input hashes,
+model/runtime metadata, processed feedback IDs, human-edit notes, output hashes,
+and validator results.
 
 `baxtori.sources.json` lists repositories that have an inspectable source cache.
 `data/review-scope.json` contains the safe, client-visible review scope.
@@ -109,10 +109,10 @@ hash, and validator results.
 ignored scratch input. Published editions live in `data/latest.json` and
 `data/editions/`; repository maps live in `data/repo-map.json` and `data/maps/`.
 
-A connected repository outside `baxtori.sources.json` can currently be selected
-and retained as authorized metadata, but it cannot produce exact code claims in
-the scheduled review. Completing that loop requires unattended GitHub App
-installation-token access and an isolated temporary source cache per account.
+A connected repository outside `baxtori.sources.json` is stored as authorized
+metadata and becomes eligible for exact code claims after an unattended GitHub
+App installation-token collector creates an isolated source cache for that
+account.
 
 ## Project notes
 

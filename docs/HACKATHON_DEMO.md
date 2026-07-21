@@ -1,122 +1,117 @@
 # Baxtori hackathon demo
 
-## The one-sentence case
+## Short description
 
-Baxtori is the quiet continuity layer after coding agents and review tools: Codex selects the few accepted changes that should alter a developer's mental model, publishes them as a finite field journal, and carries the developer's questions and watches into the next review.
+Baxtori turns merged changes across several repositories into a short,
+evidence-backed reading edition and carries the reader's questions into the next
+Codex review.
 
 ## Who it is for
 
-Solo developers and small, AI-heavy teams can now produce more code than they can continuously absorb. Pull-request reviewers are good at finding defects in one change. Coding agents are good at explaining or fixing something on demand. Neither gives a returning developer a calm, cross-repository answer to:
+I built Baxtori for solo developers and small teams using coding agents across
+several projects. The agents can move faster than one person can keep every
+system in their head. Baxtori reviews the work after it lands, picks the changes
+that affect how the system works, and gives the owner a manageable way to catch
+up.
 
-- What changed that is actually worth understanding?
-- How did it alter the system I think I own?
-- Which concern from last week should survive into this week?
+## Demo video script — approximately 2:45
 
-Baxtori does not replace GitHub, Codex, CodeRabbit, Greptile, or a repository graph. It edits their evidence into maintained human understanding.
+The quoted paragraphs are the voiceover. The italic text describes the shot.
+Use cuts between the public and connected sessions so the video keeps moving.
 
-## Demo video script — approximately 2:50
+### 0:00–0:22 — Why I built it
 
-Record the product full-screen and use deliberate cuts rather than waiting for
-OAuth or page loads. The words below are the voiceover; italic text describes
-what should be visible.
+*Open `https://www.baxtori.com` at the top of Now and hold on the edition.*
 
-### 0:00–0:18 — The problem
+> Hey, this is Baxtori. I built it after coding agents started moving work across my repositories faster than I could absorb it. I could follow each task while it happened, then come back a few days later and realize I had lost the larger shape of my own system.
 
-*Open `https://www.baxtori.com` at the top of Now. Let the title and contents
-remain still for a moment.*
+### 0:22–0:48 — What Baxtori does
 
-> Coding agents can now change several repositories faster than one developer can absorb them. Pull-request review checks whether a change can merge. It does not preserve the author's understanding after it merges. Baxtori is a quiet continuity layer for that gap.
+*Scroll through the contents and open the first story.*
 
-### 0:18–0:43 — The product
+> Baxtori reviews recent merged work and turns the changes worth understanding into a short edition. Each story gives me the change, its consequence, and a practical check. When every change falls below the publication threshold, the edition simply has zero stories. This page is the public example, and it opens directly into the full reading flow.
 
-*Scroll through the finite contents and stop on the first story.*
+### 0:48–1:17 — Show the evidence
 
-> Codex reviews accepted changes and selects only the few that should alter my mental model. Baxtori publishes those findings as a finite field journal—not another notification feed. This is a public example edition, so a judge can read it without an account. A valid review can also publish nothing when nothing is important enough.
+*Open Evidence. Show the base and head commits, the file and line range, then the
+source and diff tabs.*
 
-### 0:43–1:12 — Exact evidence
+> The evidence view is the part I care about most. Every technical claim points to a repository, two full commit hashes, a changed file, and an exact line range. The publishing scripts verify each address, so I can read the explanation and inspect the underlying code in the same place.
 
-*Open Evidence. Show the full base and head commits, file and line range, then
-briefly switch between code and diff.*
+### 1:17–1:43 — Show Memory
 
-> Every claim is attached to exact Git evidence: repository, full commits, changed file, and line range. Before publication, validators check the Git objects, ancestry, changed path, file existence, and line bounds. The prose is useful, but it never asks you to trust an unsupported summary.
+*Mark one story Understood, Watch another, then open Memory and show a topic that
+appears across editions.*
 
-### 1:12–1:39 — Memory changes the next review
+> These controls turn my reading into input for the next review. I can mark something understood, watch a concern, or ask a question on a specific code range. Memory carries those decisions across editions, and the next Codex run receives them as review context.
 
-*Mark the story Understood, Watch another, then open Memory and show the watched
-thread across editions.*
+### 1:43–2:05 — Connect GitHub
 
-> I can mark what I understand, watch a concern, or leave a question on exact code. Memory carries those decisions across editions. The next Codex review receives that explicit human context instead of beginning from a blank prompt every week.
+*Show the Connect GitHub button, then cut to an authorized test account and open
+Sources. Change one repository mode.*
 
-### 1:39–2:02 — Connect GitHub honestly
+> Connect GitHub uses a read-only GitHub App. A connected account can choose its sources and sync its reading state, watches, and questions. The journal stays labeled as the public example while personalized compilation is being built. The account features already use real GitHub data.
 
-*Show the GitHub connection button, then cut to an already connected account and
-open Sources. Change one repository between Pinned, Automatic, and Muted.*
+### 2:05–2:39 — Codex and GPT-5.6
 
-> Connect GitHub uses a read-only GitHub App. Repository access and reader memory are isolated by numeric GitHub user ID. The current journal remains clearly labeled as the public example: connection proves safe source selection and durable account memory, while unattended private compilation is the next product boundary.
-
-### 2:02–2:38 — Codex and GPT-5.6
-
-*Show the primary Codex task with `/status` visible, then
+*Show the primary Codex task with `/status`, then briefly show
 `codex/review-instructions.md`, `scripts/collect-backstory.mjs`,
-`scripts/finalize-review-run.mjs`, and one passing validation result.*
+`scripts/finalize-review-run.mjs`, and a passing validation result.*
 
-> I built Baxtori with Codex and GPT-5.6. GPT-5.6 helped me challenge the product boundary, trace security and data-flow risks, implement the reader and GitHub workflows, and verify the result. Inside the product workflow, deterministic scripts collect bounded Git evidence; a local Codex review does the judgment-heavy selection and explanation; then strict code, edition, and map validators decide whether it can be published. The hosted app never sends a connected user's private code to my model account.
+> I built Baxtori with Codex and GPT-5.6. I used GPT-5.6 to work through the product model, trace authentication and data flows, implement the reader and GitHub features, review security, and run the tests. The review pipeline has a clear split: scripts collect the Git facts, Codex decides what matters and explains it, and validators check every published reference. The scheduled Codex task covers the owner's configured sources.
 
-### 2:38–2:50 — Close
+### 2:39–2:48 — Close
 
-*Return to the journal and end on an open story with its evidence visible.*
+*Return to the journal with one evidence panel open.*
 
-> Review agents help code get merged. Baxtori helps the author remain able to explain what the merged system became.
+> Baxtori helps me keep up with what my agents and I ship, so I can explain the systems I own.
 
-## Recording preflight
+## Recording checklist
 
-- Keep the final edit under three minutes; aim for 2:45–2:50.
-- Use a public YouTube upload and include audible narration.
-- Run `/status` in the primary build task and show the Session ID plus the exact GPT-5.6 model name. Submit that same Session ID in the form.
-- Confirm the demo URL is running the intended Git commit before recording.
-- Start with a clean public browser session, then cut to an already connected test account rather than spending video time inside OAuth.
-- Do not imply that connecting GitHub already compiles a private edition.
-- Do not show `data/review-runs/` as proof until it contains a genuine completed receipt. Show the receipt protocol and passing validators instead.
+- Keep the final edit below three minutes and aim for about 2:45.
+- Upload it publicly to YouTube with audible narration.
+- Show `/status` from the primary build task with the Session ID and exact
+  GPT-5.6 model name. Use that Session ID in the submission form.
+- Confirm that the demo URL is running the intended Git commit before recording.
+- Begin in a clean public browser session, then cut to an authorized test account
+  for Sources.
+- Describe the current edition as the public example and personalized compilation
+  as the next product milestone.
+- Show the receipt protocol and passing validators. Add a completed receipt to
+  the shot when one exists.
 
-## Judging criteria
+## How the demo maps to judging
 
-| Criterion | What the demo proves |
+| Criterion | What the demo shows |
 | --- | --- |
-| Technological implementation | A non-trivial Codex workflow sits between deterministic Git evidence collection and strict edition/map validators. The versioned instruction contract and receipt protocol can identify inputs, source heads, model/runtime, processed feedback, human edits, output, and validation results for a finalized run. |
-| Design | Anonymous entry goes directly to a coherent botanical field journal. The same Now, System, Memory, Evidence, and Sources loop works on desktop and mobile, with account connection introduced in context. |
-| Potential impact | The audience is specific: developers overseeing agent-generated work across repositories. Baxtori reduces comprehension debt rather than adding another notification or review queue. |
-| Quality of the idea | It treats code understanding as an edited, longitudinal publication. The novelty is selection plus continuity: what the human understood, questioned, or watched changes what Codex reviews next. |
+| Technological implementation | Codex sits between bounded Git collection and strict edition, evidence, selection, and map validation. The receipt protocol records the inputs, source heads, model/runtime, feedback, human edits, output, and validation result for a finalized run. |
+| Design | The public link opens directly into a complete editorial reader. Now, System, Memory, Evidence, and Sources work across desktop and mobile. |
+| Potential impact | Baxtori serves developers overseeing agent-generated work across multiple repositories and gives them a recurring way to rebuild their working knowledge. |
+| Quality of the idea | The product combines editorial selection, exact code evidence, and reader memory so each review can respond to what the developer already understands and still cares about. |
 
-## Account, automation, and cost boundary
+## Current product boundary
 
-The hackathon product uses one domain. Anonymous and connected readers share the same journal; authentication changes available evidence, source controls, and account memory rather than sending the user to a second product.
+The public and connected experiences share one journal. Authentication adds
+GitHub evidence access, source controls, and synchronized reader memory. The
+owner's local Codex automation compiles the public example and commits validated
+edition files for deployment. The hosted application handles normal web and
+database traffic and fetches exact code only when the reader requests it.
 
-The hosted web app does not call a model API. The owner's local Codex automation compiles the published example using the owner's Codex usage, then commits validated edition files for normal deployment. OpenAI documents that Codex usage is included across ChatGPT plans with plan-dependent limits and optional additional credits, and that local scheduled automations work best while the machine is awake and Codex is running:
+Source choices and reader memory already support multiple accounts. Scheduled
+compilation currently uses one configured GitHub login. Repositories outside
+`baxtori.sources.json` can be authorized and selected, then become eligible for
+exact claims once an installation-token collector creates an isolated source
+cache. A newly connected repository displays its current map status until a
+completed review produces a map.
 
-- https://help.openai.com/en/articles/11369540-using-codex-with-your-chatgpt-plan
-- https://openai.com/academy/codex-automations/
+The next milestone is one personalized cycle from repository change to Codex
+selection to reader feedback to a visibly responsive follow-up edition. That
+work requires installation-token collection, isolated temporary caches,
+per-account scheduling, and an explicit usage and consent model.
 
-That means the current demo has ordinary hosting and database costs but no separate per-reader inference bill. It does **not** mean unlimited personalized editions are free. A real multi-tenant compiler must choose one explicit model:
+## Verification
 
-1. bring your own Codex automation and usage;
-2. manual compilation in a user's own workspace; or
-3. hosted inference with quotas and paid usage.
-
-Do not add billing for the hackathon. First prove that people want recurring comprehension enough to connect repositories and return. If they do, charge for dependable hosted compilation and team continuity—not for prettier access to GitHub metadata.
-
-## Honest current limits
-
-- Account source choices and memory are multi-user; scheduled compilation is still pinned to one explicit GitHub login.
-- A repository outside `baxtori.sources.json` can be authorized and selected but cannot produce exact code claims until an unattended GitHub App installation-token collector can create an isolated source cache.
-- A newly connected repository is shown as “not mapped” until a reviewed map exists. Baxtori never invents coverage.
-- The GitHub App is read-only. Repository context export and write-back remain explicit future actions.
-- Users can export or permanently delete Baxtori's account data. GitHub installation access remains separately controlled in GitHub.
-- Authenticated route limits are process-local burst protection; GitHub and the backing data service remain the distributed enforcement layers.
-
-## CI
-
-Verification runs for every pull request and main-branch push. It uses Blacksmith when the repository variable `BLACKSMITH_ENABLED=true` and falls back to a GitHub-hosted Ubuntu runner otherwise. Both paths run lint, type-check, build, tests, validators, and desktop/mobile browser checks; browser reports are retained as workflow artifacts.
-
-## After the hackathon
-
-The next proof is one complete personalized loop: a user's repository changes, Codex selects one consequence, the user watches or questions it, and the following edition visibly responds to that decision. The implementation requirement is unattended GitHub App installation-token access, isolated temporary caches, and per-account compiler scheduling. Only after that should Baxtori add teams, hosted billing, app subdomains, generic integrations, or a broad all-in-one review surface.
+Pull requests and main-branch pushes run lint, type-checking, builds, unit tests,
+edition and map validators, and desktop/mobile browser checks. Blacksmith runs
+the jobs when enabled, with GitHub-hosted runners available as the configured
+fallback.

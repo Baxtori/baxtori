@@ -72,7 +72,7 @@ export type ReviewScope = {
 };
 
 // These stories are fixtures for explicit component previews. Published reader
-// data always comes from EDITION, including a valid quiet edition with no stories.
+// data always comes from EDITION, including a valid zero-story edition.
 export const DEMO_STORIES: Story[] = [
   {
     id: "checkout",

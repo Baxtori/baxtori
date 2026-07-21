@@ -1186,13 +1186,13 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
           <h1>{view === "repositories" ? "Review sources." : view === "map" ? "Know the system." : view === "history" ? "Working memory." : view === "timeline" ? "This edition, in order." : "What deserves attention."}</h1>
           <p className="dek">
             {view === "repositories"
-              ? "Choose what the compiler may inspect and what should stay quiet."
+              ? "Choose what the compiler may inspect and which repositories to exclude."
               : view === "map"
                 ? "Evidence-backed bearings, uncertainty, and what to study next."
                 : view === "history"
                   ? "Return to unresolved intent and reopen the exact evidence that shaped earlier understanding."
                   : view === "timeline"
-                    ? "The selected changes, quiet repositories, and literal reasons behind this review."
+                    ? "The selected changes, repositories without a story, and literal reasons behind this review."
                     : `${continuePlan.plannedMinutes} minutes planned from the attention window you chose.`}
           </p>
 

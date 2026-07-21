@@ -78,7 +78,7 @@ export function EditionSelectionLedger({ edition }: { edition: EditionLedgerInpu
               ))}
             </LedgerSection>
 
-            <RepositorySection title="Left quiet" items={ledger.selection.quiet} empty="No repository was recorded as quiet." />
+            <RepositorySection title="No story selected" items={ledger.selection.quiet} empty="Every repository produced a recorded outcome." />
             <RepositorySection title="Inaccessible" items={ledger.selection.inaccessible} empty="No requested source was recorded as inaccessible." />
           </div>
         ) : (

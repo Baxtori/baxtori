@@ -16,7 +16,7 @@ Baxtori should own the editorial continuity after those systems work:
 > that should affect the next review.
 
 The durable object is maintained comprehension, not another review comment.
-The interface can therefore stay supplemental: a quiet, finite edition for a
+The interface can therefore stay supplemental: a finite edition for a
 solo developer or small team that already uses GitHub and coding agents.
 
 ## What the application does today
