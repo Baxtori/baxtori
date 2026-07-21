@@ -1,7 +1,10 @@
-import { canonicalRepository, isValidRepositoryName } from "./repository-identity.ts";
-
-const COMMIT_PATTERN = /^[0-9a-f]{7,40}$/i;
-const SAFE_PATH_SEGMENT = /^[^\0/]+$/;
+import { canonicalRepository } from "./repository-identity.ts";
+import {
+  isValidCommitReference,
+  parseEvidencePathRange,
+  parseEvidenceRepository,
+  type EvidenceRange,
+} from "./evidence-request.ts";
 
 export type DiffLine = {
   kind: "addition" | "context" | "deletion" | "hunk" | "meta";
@@ -10,10 +13,7 @@ export type DiffLine = {
   text: string;
 };
 
-type DiffRange = {
-  endLine: number;
-  startLine: number;
-};
+type DiffRange = EvidenceRange;
 
 type ParsedHunk = {
   lines: DiffLine[];
@@ -22,17 +22,13 @@ type ParsedHunk = {
 };
 
 export function parseCodeDiffRequest(url: URL) {
-  const repository = canonicalRepository(url.searchParams.get("repo")?.trim() ?? "");
+  const repository = parseEvidenceRepository(url);
   const base = url.searchParams.get("base")?.trim() ?? "";
   const head = url.searchParams.get("head")?.trim() ?? "";
-  const path = url.searchParams.get("path")?.trim() ?? "";
-  const startLine = Number(url.searchParams.get("start"));
-  const endLine = Number(url.searchParams.get("end"));
-
-  if (!isValidRepositoryName(repository)) throw new Error("Invalid repository name.");
-  if (!COMMIT_PATTERN.test(base) || !COMMIT_PATTERN.test(head) || base === head) throw new Error("Invalid comparison.");
-  if (!isSafeRepositoryPath(path)) throw new Error("Invalid file path.");
-  if (!isValidCodeRange({ endLine, startLine })) throw new Error("Invalid line range.");
+  if (!isValidCommitReference(base) || !isValidCommitReference(head) || base === head) {
+    throw new Error("Invalid comparison.");
+  }
+  const { endLine, path, startLine } = parseEvidencePathRange(url);
 
   return { base, endLine, head, path, repository, startLine };
 }
@@ -92,14 +88,4 @@ function parseHunks(patch: string) {
   }
 
   return hunks;
-}
-
-function isSafeRepositoryPath(path: string) {
-  if (!path || path.startsWith("/") || path.length > 500) return false;
-  const segments = path.split("/");
-  return segments.every((segment) => segment !== "." && segment !== ".." && SAFE_PATH_SEGMENT.test(segment));
-}
-
-function isValidCodeRange({ endLine, startLine }: DiffRange) {
-  return Number.isInteger(startLine) && Number.isInteger(endLine) && startLine >= 1 && endLine >= startLine && endLine - startLine < 160;
 }
