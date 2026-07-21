@@ -1,10 +1,13 @@
 import { createQuestionFeedback, feedbackIsConfigured, updateQuestionFeedback } from "@/lib/feedback-store";
 import { parseThreadQuestion, parseThreadQuestionUpdate } from "@/lib/topic-contract";
 import { getGitHubIdentitySession, withSessionCookie } from "@/lib/github-auth";
+import { guardMutationRequest } from "@/lib/request-security";
 
 export async function POST(request: Request) {
   const { session, setCookie } = await getGitHubIdentitySession(request);
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to save a question." }, { status: 401 }), setCookie);
+  const mutationError = guardMutationRequest(request, { requireJson: true });
+  if (mutationError) return withSessionCookie(mutationError, setCookie);
   if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ error: "Account questions are not configured." }, { status: 503 }), setCookie);
 
   let question;
@@ -30,6 +33,8 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   const { session, setCookie } = await getGitHubIdentitySession(request);
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to update a question." }, { status: 401 }), setCookie);
+  const mutationError = guardMutationRequest(request, { requireJson: true });
+  if (mutationError) return withSessionCookie(mutationError, setCookie);
   if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ error: "Account questions are not configured." }, { status: 503 }), setCookie);
 
   let update;
