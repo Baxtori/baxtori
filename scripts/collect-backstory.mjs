@@ -1,13 +1,16 @@
-import { execFileSync } from "node:child_process";
+import { execFile } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
+import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import { buildAuthorizedSourcePlan } from "./lib/authorized-source-plan.mjs";
 import { buildRepositoryReviewLedger, EDITION_SELECTION_PRIORITIES } from "./lib/edition-selection.mjs";
 import { buildFollowUpCandidates } from "./lib/follow-up-candidates.mjs";
 import { buildMapImpacts } from "./lib/map-impact.mjs";
+import { repositoryLogPlan, repositoryReviewCursor } from "./lib/repository-range.mjs";
 import { sourceReviewRef } from "./lib/source-ref.mjs";
 
+const execFileAsync = promisify(execFile);
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const config = JSON.parse(await readFile(resolve(root, "baxtori.sources.json"), "utf8"));
 const mapRegistry = JSON.parse(await readFile(resolve(root, "data/repository-maps.json"), "utf8"));
@@ -20,31 +23,73 @@ try {
 } catch {
   // Collection still works before account-backed feedback is configured.
 }
-const since = new Date(Date.now() - config.windowDays * 86_400_000).toISOString();
+const collectedAt = new Date();
+const since = new Date(collectedAt.getTime() - config.windowDays * 86_400_000).toISOString();
+const GIT_TIMEOUT_MS = 20_000;
+const GIT_FETCH_TIMEOUT_MS = 60_000;
+const INVENTORY_STALE_AFTER_MS = 36 * 60 * 60 * 1000;
 
-function git(repositoryPath, args) {
-  return execFileSync("git", ["-C", repositoryPath, ...args], {
+async function git(repositoryPath, args, { timeout = GIT_TIMEOUT_MS } = {}) {
+  const { stdout } = await execFileAsync("git", ["-C", repositoryPath, ...args], {
     encoding: "utf8",
     maxBuffer: 10 * 1024 * 1024,
     stdio: ["ignore", "pipe", "pipe"],
-  }).trim();
+    timeout,
+    windowsHide: true,
+  });
+  return stdout.trim();
 }
 
-function collectRepository(source) {
+function commandError(error, fallback) {
+  if (error && typeof error === "object") {
+    if (error.killed) return "Git command timed out.";
+    if (typeof error.stderr === "string" && error.stderr.trim()) return error.stderr.trim().split("\n")[0];
+    if (error instanceof Error && error.message) return error.message.split("\n")[0];
+  }
+  return fallback;
+}
+
+async function gitObjectExists(repositoryPath, revision) {
+  try {
+    await git(repositoryPath, ["cat-file", "-e", `${revision}^{commit}`]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function gitIsAncestor(repositoryPath, ancestor, descendant) {
+  try {
+    await git(repositoryPath, ["merge-base", "--is-ancestor", ancestor, descendant]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function collectRepository(source) {
   const repositoryPath = resolve(root, source.path);
+  const cursor = repositoryReviewCursor(repositoryMaps, source.fullName);
   try {
     const { branch, reviewRef } = sourceReviewRef(source);
     let fetchError = null;
     try {
-      git(repositoryPath, ["fetch", "--quiet", "origin", branch]);
+      await git(repositoryPath, ["fetch", "--quiet", "origin", branch], { timeout: GIT_FETCH_TIMEOUT_MS });
     } catch (error) {
-      fetchError = error instanceof Error ? error.message.split("\n")[0] : "GitHub fetch failed.";
+      fetchError = commandError(error, "GitHub fetch failed.");
     }
     try {
-      git(repositoryPath, ["rev-parse", "--verify", reviewRef]);
+      await git(repositoryPath, ["rev-parse", "--verify", reviewRef]);
     } catch {
       return {
         additions: 0,
+        collection: {
+          baseSha: cursor?.sha ?? null,
+          headSha: null,
+          historyRewritten: false,
+          mode: "unavailable",
+          reviewedAt: cursor?.reviewedAt ?? null,
+        },
         commits: [],
         deletions: 0,
         empty: true,
@@ -52,23 +97,29 @@ function collectRepository(source) {
         fetchError,
         fullName: source.fullName,
         name: source.name,
-        repositoryPath,
         routineOnly: false,
         sourceMode: "github-origin",
         testFiles: [],
         touchedFiles: [],
       };
     }
-    const commits = git(repositoryPath, [
-      "log",
-      reviewRef,
-      `--since=${since}`,
+
+    const headSha = await git(repositoryPath, ["rev-parse", reviewRef]);
+    const cursorAvailable = cursor ? await gitObjectExists(repositoryPath, cursor.sha) : false;
+    const cursorIsAncestor = cursorAvailable
+      ? await gitIsAncestor(repositoryPath, cursor.sha, reviewRef)
+      : false;
+    const plan = repositoryLogPlan({ cursor, cursorAvailable, cursorIsAncestor, reviewRef, since });
+    const logArgs = ["log", plan.logTarget];
+    if (plan.since) logArgs.push(`--since=${plan.since}`);
+    logArgs.push(
       "--no-merges",
       "--date=iso-strict",
       "--pretty=format:__COMMIT__%n%H%n%h%n%aI%n%an%n%s",
       "--numstat",
       "--",
-    ]);
+    );
+    const commits = await git(repositoryPath, logArgs);
     const entries = commits
       .split("__COMMIT__\n")
       .filter(Boolean)
@@ -103,14 +154,20 @@ function collectRepository(source) {
 
     return {
       additions,
+      collection: {
+        baseSha: plan.baseSha,
+        headSha,
+        historyRewritten: plan.historyRewritten,
+        mode: plan.mode,
+        reviewedAt: plan.reviewedAt,
+      },
       commits: entries,
       deletions,
       error: null,
       fetchError,
       fullName: source.fullName,
-      headSha: git(repositoryPath, ["rev-parse", reviewRef]),
+      headSha,
       name: source.name,
-      repositoryPath,
       routineOnly,
       sourceMode: "github-origin",
       testFiles,
@@ -118,12 +175,18 @@ function collectRepository(source) {
     };
   } catch (error) {
     return {
+      collection: {
+        baseSha: cursor?.sha ?? null,
+        headSha: null,
+        historyRewritten: false,
+        mode: "error",
+        reviewedAt: cursor?.reviewedAt ?? null,
+      },
       commits: [],
-      error: error instanceof Error ? error.message.split("\n")[0] : "Repository could not be read.",
+      error: commandError(error, "Repository could not be read."),
       fetchError: null,
       fullName: source.fullName,
       name: source.name,
-      repositoryPath,
       sourceMode: "github-origin",
       touchedFiles: [],
     };
@@ -133,6 +196,13 @@ function collectRepository(source) {
 const requestedRepositories = readerFeedback?.readerState?.payload?.selectedRepositories;
 const repositoryModes = readerFeedback?.readerState?.payload?.repositoryModes ?? {};
 const repositoryInventory = readerFeedback?.repositoryInventory ?? null;
+const inventoryUpdatedAt = repositoryInventory?.updatedAt ? Date.parse(repositoryInventory.updatedAt) : NaN;
+const inventoryAgeMs = Number.isFinite(inventoryUpdatedAt) ? Math.max(0, collectedAt.getTime() - inventoryUpdatedAt) : null;
+const inventoryFreshness = repositoryInventory === null
+  ? "unavailable"
+  : inventoryAgeMs !== null && inventoryAgeMs > INVENTORY_STALE_AFTER_MS
+    ? "stale"
+    : "fresh";
 const sourcePlan = buildAuthorizedSourcePlan({
   configuredSources: config.repositories,
   inventoryAvailable: repositoryInventory !== null,
@@ -142,7 +212,7 @@ const sourcePlan = buildAuthorizedSourcePlan({
 });
 const configuredSources = sourcePlan.sourcesToCollect;
 const unconfiguredSelections = sourcePlan.unconfiguredSelections;
-const repositories = configuredSources.map(collectRepository);
+const repositories = await Promise.all(configuredSources.map(collectRepository));
 const reviewLedger = buildRepositoryReviewLedger({ repositories, repositoryModes, unconfiguredSelections });
 const mapImpact = buildMapImpacts(repositoryMaps, repositories);
 const followUpCandidates = buildFollowUpCandidates({
@@ -152,7 +222,7 @@ const followUpCandidates = buildFollowUpCandidates({
   topicThreads: readerFeedback?.topicThreads ?? [],
 });
 const output = {
-  collectedAt: new Date().toISOString(),
+  collectedAt: collectedAt.toISOString(),
   instructions: {
     budgetRule: "Estimate reading time only after a finding has been reviewed and can be explained. Pack qualifying findings by priority into the target budget; do not impose a story-count ceiling. If the highest-priority finding exceeds the target, publish it alone rather than hiding it.",
     evidenceRule: "Every claim must be supported by the listed commits and files. Do not infer unobserved behavior.",
@@ -178,15 +248,18 @@ const output = {
     counts: sourcePlan.counts,
     entries: sourcePlan.entries,
     inventory: repositoryInventory ? {
+      ageHours: inventoryAgeMs === null ? null : Math.round((inventoryAgeMs / 3_600_000) * 10) / 10,
+      freshness: inventoryFreshness,
       repositoryCount: repositoryInventory.repositoryCount,
       revision: repositoryInventory.revision,
       truncated: repositoryInventory.truncated,
       updatedAt: repositoryInventory.updatedAt,
     } : null,
     inventoryIsCurrent: sourcePlan.inventoryIsCurrent,
+    inventoryIsFresh: inventoryFreshness === "fresh",
     requestedRepositories: sourcePlan.requestedRepositories,
   },
-  periodEnd: new Date().toISOString().slice(0, 10),
+  periodEnd: collectedAt.toISOString().slice(0, 10),
   periodStart: since.slice(0, 10),
   repositories,
   windowDays: config.windowDays,
@@ -196,6 +269,7 @@ await mkdir(resolve(root, "data"), { recursive: true });
 await writeFile(resolve(root, "data/candidates.json"), `${JSON.stringify(output, null, 2)}\n`);
 
 console.log(`Source plan: ${sourcePlan.counts["configured-cache"]} configured caches; ${sourcePlan.counts["metadata-only"]} metadata-only; ${sourcePlan.counts["authorization-missing"]} missing authorization; ${sourcePlan.counts.muted} not scheduled.`);
+console.log(`Authorized inventory: ${inventoryFreshness}${inventoryAgeMs === null ? "" : ` (${Math.round(inventoryAgeMs / 3_600_000)}h old)`}.`);
 console.log(`Collected ${reviewLedger.inspectedCount} configured repositories from ${reviewLedger.requestedCount} requested sources.`);
 console.log(`Review ledger: ${reviewLedger.counts["review-candidate"]} candidates; ${reviewLedger.counts.quiet} quiet; ${reviewLedger.counts.inaccessible} inaccessible.`);
 console.log(`Map impact: ${mapImpact.affectedAreas.length} affected areas; ${mapImpact.unmappedFiles.length} changed files remain unmapped.`);
