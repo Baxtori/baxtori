@@ -9,9 +9,15 @@ function collectBrowserErrors(page: Page) {
   return errors;
 }
 
-async function capture(page: Page, testInfo: TestInfo, name: string) {
+async function capture(
+  page: Page,
+  testInfo: TestInfo,
+  name: string,
+  fullPage = true,
+  animations: "allow" | "disabled" = "disabled",
+) {
   const path = testInfo.outputPath(`${name}.png`);
-  await page.screenshot({ animations: "disabled", fullPage: true, path });
+  await page.screenshot({ animations, fullPage, path });
   await testInfo.attach(name, { contentType: "image/png", path });
 }
 
@@ -45,12 +51,63 @@ test("the published demo exposes a calm briefing and exact evidence", async ({ p
   expect(errors).toEqual([]);
 });
 
+test("the trail turns the same review into a finite field journal", async ({ page }, testInfo) => {
+  const errors = collectBrowserErrors(page);
+  await page.goto("/?demo=1&reader=trail");
+
+  const reveal = page.locator("[data-botanical-reveal]");
+  const revealInset = () => reveal.evaluate((element) => {
+    const match = getComputedStyle(element).clipPath.match(/inset\(([-\d.]+)/);
+    return Number.parseFloat(match?.[1] ?? "0");
+  });
+  const progressSpecimen = page.locator("[data-botanical-progress]");
+  await expect(progressSpecimen).toBeVisible();
+  const progressBox = await progressSpecimen.boundingBox();
+  expect(progressBox).not.toBeNull();
+  expect(progressBox?.width ?? 0).toBeGreaterThan(480);
+  await expect(page.locator("[data-botanical-plate]")).toHaveAttribute("src", "/art/male-fern-nature-print.png");
+  const openingRevealInset = await revealInset();
+  await expect(page.getByRole("heading", { name: "Stay close to the code without living inside it." })).toBeVisible();
+  await expect(page.getByRole("button", { name: /First on the trail/ })).toBeVisible();
+  await page.getByRole("button", { name: /First on the trail/ }).click();
+
+  await expect(page.getByRole("heading", { name: "Repository access and reader attention became explicit plans." })).toBeVisible();
+  const storySpecimen = page.locator("[data-botanical-detail]").first();
+  await expect(storySpecimen).toBeVisible();
+  const storySpecimenBox = await storySpecimen.boundingBox();
+  expect(storySpecimenBox).not.toBeNull();
+  expect(storySpecimenBox?.width ?? 0).toBeGreaterThan(180);
+  expect(storySpecimenBox?.height ?? 0).toBeGreaterThan(200);
+  await expect.poll(revealInset).toBeLessThan(openingRevealInset);
+  await page.getByRole("button", { name: "Evidence", exact: true }).first().click();
+  await expect(page.getByText("Code evidence 1/3")).toBeVisible();
+  await expect(page.locator(".diff-line.is-addition").first()).toBeVisible();
+  await capture(page, testInfo, "field-journal-trail", true, "allow");
+
+  await page.locator("#trail-end").scrollIntoViewIfNeeded();
+  await expect(page.getByRole("heading", { name: "You reached the end of this walk." })).toBeVisible();
+  await expect(page.getByText("Quiet repositories")).toBeVisible();
+  await expect(page.getByText("5 of 5")).toBeVisible();
+  await capture(page, testInfo, "field-journal-clearing", false, "allow");
+  expect(errors).toEqual([]);
+});
+
+test("the botanical trail becomes a complete static specimen with reduced motion", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?demo=1&reader=trail");
+
+  const reveal = page.locator("[data-botanical-reveal]");
+  await expect(page.locator("[data-botanical-progress]")).toBeVisible();
+  expect(await reveal.evaluate((element) => getComputedStyle(element).clipPath)).toMatch(/^inset\(0(px|%|\b)/);
+  expect(await page.locator("[data-botanical-plate]").evaluate((element) => getComputedStyle(element).transform)).toBe("none");
+});
+
 test("memory makes a concern legible across real editions", async ({ page }, testInfo) => {
   const errors = collectBrowserErrors(page);
   await page.goto("/?demo=1");
   await page.getByRole("button", { name: /Memory/ }).click();
 
-  await expect(page.getByRole("heading", { name: "3 archived editions" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "4 archived editions" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Longest living thread · 3 editions/ })).toBeVisible();
   await expect(page.getByText("Thread · 3 editions").first()).toBeVisible();
   await capture(page, testInfo, "working-memory");

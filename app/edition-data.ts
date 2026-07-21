@@ -1,3 +1,5 @@
+import archivedEdition20260710 from "@/data/editions/2026-07-10.json";
+import archivedEdition20260712 from "@/data/editions/2026-07-12.json";
 import archivedEdition20260713 from "@/data/editions/2026-07-13.json";
 import latestEdition from "@/data/latest.json";
 import ourchivalMap from "@/data/maps/ourchival.json";
@@ -124,7 +126,11 @@ export const DEMO_STORIES: Story[] = [
 
 export const EDITION = latestEdition as Edition;
 export const STORIES: Story[] = EDITION.stories.length ? EDITION.stories : DEMO_STORIES;
-export const ARCHIVED_EDITIONS = [archivedEdition20260713 as ArchiveEdition];
+export const ARCHIVED_EDITIONS = [
+  archivedEdition20260713,
+  archivedEdition20260712,
+  archivedEdition20260710,
+] as ArchiveEdition[];
 export const HISTORY_EDITIONS = [EDITION, ...ARCHIVED_EDITIONS] as unknown as readonly ArchiveEdition[];
 export const HISTORY_EDITION_COUNT = new Set((HISTORY_EDITIONS as readonly HistoricalEdition[]).map((edition) => edition.id)).size;
 export const REPOSITORY_MAP = repositoryMap as RepoMapData;

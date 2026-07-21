@@ -112,19 +112,22 @@ A quiet edition can open directly on a quiet scene. This preserves the strongest
 
 Nature can give Baxtori warmth and authorship without weakening technical precision.
 
-Use it as atmosphere and punctuation:
+The visual source should be **botanical study, not scenic photography**. A detached landscape or arbitrary nature photograph turns the reader into a generic travel blog. A nature-printed plate, herbarium specimen, or careful botanical drawing has the same evidentiary character as Baxtori: a real subject, isolated, labeled, and preserved closely enough to inspect.
 
-- a restrained botanical image for the edition opening;
-- subtle branch, leaf, seed, water, stone, or field motifs between chapters;
-- a small bloom or unfurling motion when the reader completes a meaningful unit;
-- falling leaves or a clearing at the edition end;
+Use that material structurally:
+
+- one large, complete specimen in a reserved folio margin;
+- a bottom-to-top reveal tied to reading progress, so the specimen appears to grow with the walk;
+- large, inspectable crops of a second plate beside each synopsis—not detached leaf icons or thumbnail ornaments;
+- plate number, historical species name, printer, and date as real caption information;
+- serif editorial type, ruled paper, generous margins, and restrained accession-label typography;
 - still imagery for reduced-motion readers.
 
-Keep code, evidence claims, and status language literal. A leaf should never imply test success, risk, confidence, or code quality unless the interface also states that meaning in text. The visual language can carry mood while the technical layer carries proof.
+Avoid synthetic sprigs assembled from repeated leaf shapes, arbitrary stock photography, decorative image cards, distressed scrapbook effects, and fake taxonomic labels. They imitate the category without carrying its authority. Keep code, evidence claims, and status language literal. A fern should never imply test success, risk, confidence, or code quality unless the interface also states that meaning in text. The visual language carries pace and atmosphere while the technical layer carries proof.
 
-Store curated assets locally with an explicit manifest containing source, creator, license, alt text, focal point, and crop guidance. Prefer public-domain, CC0, commissioned, or clearly licensed work. Use `next/image`, responsive sizes, AVIF/WebP output, and lazy loading after the opening scene. Remote hotlinks would add privacy, reliability, and visual-consistency problems.
+The first implementation uses Henry Bradbury's public-domain nature prints from Thomas Moore's *The Ferns of Great Britain and Ireland*: the male fern plate supplies the full reading-progress specimen and its naturally curled juvenile frond; the bracken plate supplies a substantial specimen study for each story. The reference is the scale of a botanical atlas or herbarium sheet: the plant occupies most of its allotted plate and metadata stays in a compact factual label. Preserve the original scan pixels locally, record the source and public-domain status beside the files, and do cropping, blending, and reveal in CSS. Remote hotlinks would add privacy, reliability, and visual-consistency problems.
 
-The first implementation should use one strong image per edition plus a few reusable SVG or CSS botanical motions. A large asset library can follow once the reading interaction proves itself.
+The motion is progressive disclosure rather than a literal biological simulation: CSS scroll-driven animation reveals the real plate from its base upward while subtly settling its scale and ink tone. A requestAnimationFrame fallback supports browsers without scroll timelines, and reduced-motion mode presents the complete static specimen. This keeps the morphology credible and makes the animation subordinate to scrolling.
 
 ## Implementation sequence
 
@@ -249,26 +252,26 @@ This is the most valuable recurring moment in the product and deserves its own s
 
 ### Phase 6 — Add the nature system
 
-Create an edition-art manifest and a small motion library after the trail interaction works with plain surfaces.
+Treat this phase as an editorial art system, not an asset gallery. Start with a tiny set of source-backed botanical plates and reuse them through scale, crop, and reveal. Add variety only when a new plate serves a distinct structural role.
 
 Suggested files:
 
 ```text
-data/edition-art.json
-public/edition-art/
-app/reader/edition-art.tsx
-app/reader/botanical-motion.tsx
-app/reader/art.module.css
+public/art/README.md
+public/art/male-fern-nature-print.png
+public/art/bracken-nature-print.png
+app/botanical-progress.tsx
+app/trail-reader.module.css
 ```
 
 Start with:
 
-- one opening image;
-- one chapter-divider motif;
-- one completion motion;
-- one end-of-edition image or illustration.
+- one viewport-scale specimen that grows with the whole reading trail;
+- one secondary plate for large, scene-level specimen studies;
+- factual captions and provenance recorded in the repository;
+- native scroll-timeline animation, a small JavaScript fallback, and a complete reduced-motion state.
 
-Set an explicit media budget and verify the first recommendation remains readable before imagery completes loading.
+Set an explicit media budget and verify the first recommendation remains readable before imagery completes loading. The reading column must never move when a plate arrives, and mobile crops must stay faint enough that text remains primary.
 
 ## Interaction and accessibility rules
 

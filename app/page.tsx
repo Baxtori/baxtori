@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { mapWithConcurrency } from "@/lib/async-pool";
 import { buildContinueQueue, planContinueQueue, type ContinueItem, type ContinueItemKind } from "@/lib/continue-queue";
+import { buildReaderTrail, type TrailStory } from "@/lib/reader-trail";
 import type { GitHubUser } from "@/lib/github-auth";
 import type { RepositoryLibraryEntry } from "@/lib/github-repository-library";
 import { focusTargetFor, planStoryOpening, shouldClearReviewMarker, type FocusTarget } from "@/lib/reader-navigation";
@@ -44,8 +45,10 @@ import repositoryModeStyles from "./repository-modes.module.css";
 import { RepositoryMaps } from "./repository-maps";
 import { type QuestionDisposition, type RepoArea, type RepoQuestion, type UnderstandingState } from "./repo-map";
 import { StoryCode } from "./story-code";
+import { TrailReader } from "./trail-reader";
 
 type View = "briefing" | "history" | "map" | "timeline" | "repositories";
+type ReaderMode = "classic" | "trail";
 
 type StoryState = ReaderStoryState;
 
@@ -126,6 +129,7 @@ export default function Home() {
   const [demoMode, setDemoMode] = useState(false);
   const [authMessage, setAuthMessage] = useState("");
   const [view, setView] = useState<View>("briefing");
+  const [readerMode, setReaderMode] = useState<ReaderMode>("classic");
   const [states, setStates] = useState<Record<string, StoryState>>({});
   const [hideUnderstood, setHideUnderstood] = useState(false);
   const [mapStates, setMapStates] = useState<Record<string, UnderstandingState>>({});
@@ -173,6 +177,7 @@ export default function Home() {
     const result = search.get("github");
     queueMicrotask(() => {
       if (search.get("demo") === "1") setDemoMode(true);
+      if (search.get("reader") === "trail") setReaderMode("trail");
       if (result === "connected") setAuthMessage("GitHub connected. Now choose the repositories that matter.");
       else if (result) setAuthMessage("GitHub sign-in could not be completed. Please try again.");
     });
@@ -521,6 +526,15 @@ export default function Home() {
   }), [effectiveStoryStates, mapStates, questionStates, reviewRequests]);
   const continuePlan = useMemo(() => planContinueQueue(continueQueue, continueBudget), [continueBudget, continueQueue]);
   const nextContinueItem = continuePlan.items[0];
+  const trailSession = useMemo(() => buildReaderTrail({
+    budgetMinutes: continueBudget,
+    editionId: EDITION.id,
+    items: continuePlan.items,
+    plannedMinutes: continuePlan.plannedMinutes,
+    quietRepositories: EDITION.quietRepositories,
+    stories: STORIES,
+    totalItemCount: continueQueue.length,
+  }), [continueBudget, continuePlan, continueQueue.length]);
 
   const selectedRepositoryData = sortRepositoriesByMode(repositories.filter((repository) =>
     selectedRepositories.includes(repository.fullName),
@@ -822,7 +836,17 @@ export default function Home() {
     setActivity({});
   };
 
+  const setReaderExperience = (mode: ReaderMode) => {
+    setReaderMode(mode);
+    const url = new URL(window.location.href);
+    if (mode === "trail") url.searchParams.set("reader", "trail");
+    else url.searchParams.delete("reader");
+    url.searchParams.delete("item");
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  };
+
   useEffect(() => {
+    if (readerMode === "trail") return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setShowHelp(false);
@@ -860,7 +884,7 @@ export default function Home() {
     return () => window.removeEventListener("keydown", onKeyDown);
     // The handler intentionally rebinds when the reading queue or story state changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focusedStoryId, states, visibleStories]);
+  }, [focusedStoryId, readerMode, states, visibleStories]);
 
   const renderSourceBanner = () => {
     if (demoMode) {
@@ -897,6 +921,65 @@ export default function Home() {
 
   if (!auth.authenticated && !demoMode) {
     return <SignedOutShell authMessage={authMessage} configured={auth.configured} onExploreDemo={() => setDemoMode(true)} />;
+  }
+
+  if (hasHydrated && readerMode === "trail" && view === "briefing") {
+    const actualStory = (trailStory: TrailStory) => STORIES.find((story) => story.id === trailStory.id);
+    const renderTrailEvidence = (trailStory: TrailStory) => {
+      const story = actualStory(trailStory);
+      if (!story?.repository || !story.codeEvidence?.length) {
+        return <div className="code-state">This published note does not include an exact excerpt.</div>;
+      }
+      if (demoMode && story.repository !== "teamleaderleo/baxtori") {
+        return <div className="code-state">Sign in to inspect this repository&apos;s exact comparison. The published summary remains available in the trail.</div>;
+      }
+      return (
+        <StoryCode
+          demoMode={demoMode}
+          defaultQuestionLens={REVIEW_POLICY.defaultLens}
+          editionId={EDITION.id}
+          evidence={story.codeEvidence}
+          feedbackConfigured={feedbackConfigured}
+          onQuestionSaved={saveThreadQuestion}
+          onQuestionUpdated={updateThreadQuestion}
+          questionLenses={REVIEW_POLICY.lenses}
+          questions={threadQuestions}
+          repository={story.repository}
+          storyId={story.id}
+          storyTitle={story.title}
+          topicId={story.topicId}
+          topicThread={topicThreadFor(topicThreads, story)}
+        />
+      );
+    };
+
+    return (
+      <TrailReader
+        edition={EDITION}
+        notice={notice}
+        onExit={() => setReaderExperience("classic")}
+        onOpenContinueItem={openContinueItem}
+        onOpenMemory={() => setView("history")}
+        onOpenSystem={() => setView("map")}
+        onUnderstand={(trailStory) => {
+          const story = actualStory(trailStory);
+          if (story) markUnderstood(story);
+        }}
+        onWatch={(trailStory) => {
+          const story = actualStory(trailStory);
+          if (story) void toggleWatch(story);
+        }}
+        renderEvidence={renderTrailEvidence}
+        session={trailSession}
+        sourceLabel={demoMode ? "published demo" : `${selectedRepositories.length} ${selectedRepositories.length === 1 ? "repository" : "repositories"}`}
+        storyState={(trailStory) => {
+          const story = actualStory(trailStory);
+          return story
+            ? { understood: storyState(story.id).understood, watching: isStoryWatching(story) }
+            : { understood: false, watching: false };
+        }}
+      />
+    );
   }
 
   return (
@@ -952,6 +1035,7 @@ export default function Home() {
                     : `Current edition · ${formatEditionDate(EDITION.periodStart)}–${formatEditionDate(EDITION.periodEnd)}`}
             </span>
             <div>
+              {view === "briefing" && <button onClick={() => setReaderExperience("trail")} type="button">Trail reader</button>}
               <button aria-pressed={focusMode} onClick={() => setFocusMode((current) => !current)} type="button">
                 {focusMode ? "Exit focus" : "Focus"}
               </button>
