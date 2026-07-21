@@ -9,6 +9,7 @@ import reviewPolicy from "@/data/review-policy.json";
 import reviewScope from "@/data/review-scope.json";
 import type { EditionSelectionRecord } from "@/lib/edition-ledger";
 import type { HistoricalEdition } from "@/lib/edition-history";
+import { storiesForEdition } from "@/lib/edition-stories";
 import type { TopicThreadRecord } from "@/lib/story-topics";
 import type { ArchiveEdition } from "./edition-history";
 import type { RepoMapData } from "./repo-map";
@@ -127,7 +128,7 @@ export const DEMO_STORIES: Story[] = [
 ];
 
 export const EDITION = latestEdition as Edition;
-export const STORIES: Story[] = EDITION.stories;
+export const STORIES: Story[] = storiesForEdition(EDITION.stories);
 export const ARCHIVED_EDITIONS = [
   archivedEdition20260713,
   archivedEdition20260712,
