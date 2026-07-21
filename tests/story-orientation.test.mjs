@@ -49,7 +49,7 @@ test("places an exact excerpt inside its canonical repository map area", () => {
     story,
   });
 
-  assert.equal(orientation.repository, "teamleaderleo/baxtori");
+  assert.equal(orientation.repository, "Baxtori/baxtori");
   assert.equal(orientation.area?.id, "feedback-loop");
   assert.equal(orientation.area?.position, 1);
   assert.equal(orientation.area?.totalAreas, 2);
