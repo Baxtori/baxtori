@@ -1,6 +1,8 @@
 # Product landscape: where Baxtori belongs
 
-Reviewed 2026-07-18 against current first-party product material.
+Reviewed 2026-07-22 against current first-party product material. The account,
+security, and memory decision is recorded in
+[`proposals/2026-07-22-account-memory-and-product-boundary.md`](proposals/2026-07-22-account-memory-and-product-boundary.md).
 
 ## The opening
 
@@ -22,8 +24,9 @@ but not a direct substitute for any of them.
 | --- | --- | --- |
 | Agent-maintained knowledge | [Mintlify's agent](https://www.mintlify.com/docs/agent) researches, plans, writes, validates, and opens documentation PRs. Its [AI-native guidance](https://www.mintlify.com/docs/ai-native) treats documentation as infrastructure for people and agents. | Export grounded context to documentation agents; do not make “generate a wiki” the primary experience. |
 | Conversational repository orientation | [DeepWiki](https://deepwiki.com/) turns repositories into indexed, conversational wikis. | The System surface should provide durable bearings and cited uncertainty, then hand off to exact code. |
-| Context-aware incremental review | [CodeRabbit](https://docs.coderabbit.ai/guides/code-review-overview) emphasizes incremental review, code graphs, severity, and conversation. [Graphite](https://graphite.com/docs/get-started) organizes focused, stack-aware review around GitHub. | Baxtori should remember which review findings actually changed understanding and suppress repeated noise. |
-| Whole-codebase intelligence | [Greptile](https://www.greptile.com/) builds a code graph for review and testing. [Cursor](https://cursor.com/blog/secure-codebase-indexing) describes semantic indexing as a material input to agent performance. | Repository indexing is an input. The reader-facing output must still distinguish evidence, inference, confidence, and human memory. |
+| Context-aware incremental review | [CodeRabbit](https://docs.coderabbit.ai/guides/code-review-overview) reviews pull requests, supports incremental passes, and now preserves editable review learnings. [Graphite](https://graphite.com/docs/get-started) organizes focused, stack-aware review around GitHub. | Baxtori should remember which accepted findings actually changed understanding and suppress repeated review noise. |
+| Whole-codebase intelligence | [Greptile](https://www.greptile.com/docs/introduction) builds a repository graph for contextual PR review and routes findings into coding agents. [CodeGraph](https://www.getcodegraph.com/) focuses on change-impact intelligence for AI-written code. | Graph retrieval is an input, not the reader experience. Baxtori must turn structure into attributable bearings, uncertainty, and maintained comprehension. |
+| General coding agents | [Codex](https://openai.com/index/introducing-upgrades-to-codex/) can review against stated intent, reason over a codebase, and run tests; the [Codex app](https://openai.com/index/introducing-the-codex-app/) also provides a dedicated agent-change review flow. | Do not recreate an on-demand coding or review agent. Give agents explicit human memory and select what the human should understand after they finish. |
 | Human-approved memory | [Cursor's background agent memory](https://cursor.com/changelog/1-2) exposes a plan and asks for approval before creating memories. [GitHub Copilot code review](https://docs.github.com/en/copilot/concepts/agents/code-review) stresses validating AI feedback and supports repository instructions. | Watches, questions, and corrections must come from explicit reader actions; weak inferred relationships never become durable memory silently. |
 | Purpose-built calm | [Linear's method](https://linear.app/method/introduction) argues for meaningful direction, manageable backlogs, cadence, and purpose-built workflows. [Raycast's interface API](https://developers.raycast.com/api-reference/user-interface) uses a consistent action model and keyboard shortcuts. | Show only what fits the current attention window, keep one obvious next action, and make the whole reading loop keyboard fluent. |
 

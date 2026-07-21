@@ -43,7 +43,7 @@ type TrailReaderProps = {
 };
 
 function formatDay(value: string) {
-  return new Intl.DateTimeFormat("en", { day: "numeric", month: "short" }).format(new Date(`${value}T12:00:00`));
+  return new Intl.DateTimeFormat("en", { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${value}T12:00:00Z`));
 }
 
 function formatGenerated(value: string) {
@@ -52,6 +52,8 @@ function formatGenerated(value: string) {
     hour: "numeric",
     minute: "2-digit",
     month: "short",
+    timeZone: "UTC",
+    timeZoneName: "short",
   }).format(new Date(value));
 }
 
@@ -80,6 +82,7 @@ export function TrailReader({
   const [activeIndex, setActiveIndex] = useState(0);
   const [openEvidence, setOpenEvidence] = useState<Record<string, boolean>>({});
   const restoredItem = useRef(false);
+  const shell = useRef<HTMLDivElement>(null);
 
   const readingScenes = session.scenes.filter((scene) => scene.kind === "story" || scene.kind === "study");
   const storyScenes = session.scenes.filter((scene) => scene.kind === "story");
@@ -95,6 +98,10 @@ export function TrailReader({
       block: "start",
     });
   }, [session]);
+
+  useEffect(() => {
+    shell.current?.setAttribute("data-reader-ready", "true");
+  }, []);
 
   useEffect(() => {
     if (activeView !== "briefing") return;
@@ -172,7 +179,7 @@ export function TrailReader({
   const endScene = session.scenes.find((scene) => scene.kind === "end");
 
   return (
-    <div className={styles.trailShell}>
+    <div className={styles.trailShell} data-reader-ready="false" ref={shell}>
       <a className={styles.skipLink} href="#trail-reading">Skip to the journal</a>
       <BotanicalProgress />
 
@@ -218,13 +225,11 @@ export function TrailReader({
           {onOpenRepositories && <button onClick={onOpenRepositories} type="button">Review sources <small>{repositoryCount}</small></button>}
         </nav>
 
-        <details className={styles.mobileTools}>
-          <summary aria-label="Open edition and source tools">More</summary>
-          <div>
-            <button onClick={onOpenEditionRecord} type="button">Edition record</button>
-            {onOpenRepositories && <button onClick={onOpenRepositories} type="button">Review sources <small>{repositoryCount}</small></button>}
-          </div>
-        </details>
+        {onOpenRepositories && (
+          <button className={styles.mobileSources} onClick={onOpenRepositories} type="button">
+            Sources <small>{repositoryCount}</small>
+          </button>
+        )}
 
         <p className={styles.railEdition}>Current edition<br />{formatDay(edition.periodStart)}–{formatDay(edition.periodEnd)}<br />{sourceLabel}</p>
       </aside>
@@ -272,7 +277,7 @@ export function TrailReader({
           </div>
           <footer className={styles.issueFooter}>
             <span>Generated {formatGenerated(edition.generatedAt)}</span>
-            <span>Evidence available inside each story</span>
+            <button onClick={onOpenEditionRecord} type="button">Edition record</button>
           </footer>
         </section>
 

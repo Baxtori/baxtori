@@ -1659,6 +1659,15 @@ kbd {
   font-size: 0.68rem;
 }
 
+.repo-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.8rem;
+}
+
+.repo-meta span { white-space: nowrap; }
+.repo-mode { min-width: 0; }
+
 .repo-row button[aria-pressed="true"] {
   color: var(--paper-light);
   background: var(--green);
@@ -2483,7 +2492,14 @@ kbd {
 
   .repo-toolbar input { width: 100%; }
 
-  .repo-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .repo-row {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 0.7rem;
+    padding-block: 1rem;
+  }
+  .repo-main strong { overflow: visible; white-space: normal; overflow-wrap: anywhere; }
+  .repo-mode { display: grid; gap: 0.25rem; width: 100%; }
   .review-preview-heading { grid-template-columns: 1fr; }
   .review-preview-metrics { min-width: 0; }
   .scope-drift { align-items: flex-start; flex-direction: column; }

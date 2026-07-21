@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 test("the reader presents Now, System, and Memory as its three primary jobs", async () => {
-  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const page = await readFile(new URL("../app/baxtori-app.tsx", import.meta.url), "utf8");
   const primaryStart = page.indexOf('<nav className="primary-nav"');
   const primaryEnd = page.indexOf("</nav>", primaryStart);
   const primary = page.slice(primaryStart, primaryEnd);
@@ -16,7 +16,7 @@ test("the reader presents Now, System, and Memory as its three primary jobs", as
 });
 
 test("edition mechanics remain available as supporting tools", async () => {
-  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const page = await readFile(new URL("../app/baxtori-app.tsx", import.meta.url), "utf8");
   const secondaryStart = page.indexOf('<nav className="secondary-nav"');
   const secondaryEnd = page.indexOf("</nav>", secondaryStart);
   const secondary = page.slice(secondaryStart, secondaryEnd);
@@ -25,6 +25,16 @@ test("edition mechanics remain available as supporting tools", async () => {
   assert.match(secondary, /Edition record/);
   assert.match(secondary, /Review sources/);
   assert.equal(page.match(/<EditionSelectionLedger edition=\{EDITION\} \/>/g)?.length, 1);
+});
+
+test("the journal does not wait for account hydration before replacing the retired reader", async () => {
+  const page = await readFile(new URL("../app/baxtori-app.tsx", import.meta.url), "utf8");
+  const serverPage = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+
+  assert.doesNotMatch(page, /hasHydrated && \(view === "briefing"/);
+  assert.doesNotMatch(page, /parsed\.view.*setView\(parsed\.view\)/);
+  assert.match(serverPage, /readGitHubSession/);
+  assert.match(serverPage, /initialAuth=\{initialAuth\}/);
 });
 
 test("the product contract preserves progressive evidence density", async () => {

@@ -119,6 +119,21 @@ async function openSession(value: string) {
   return (await openValue(value)) as GitHubSession | null;
 }
 
+/**
+ * Reads a valid session for server-rendering without rotating credentials.
+ * Token refresh belongs to route handlers, where the replacement cookie can
+ * be attached to the response. A Server Component must never consume a
+ * single-use refresh token and then discard the new cookie.
+ */
+export async function readGitHubSession(request: Request) {
+  const value = parseCookies(request).get(SESSION_COOKIE);
+  if (!value || !githubIsConfigured()) return null;
+  const session = await openSession(value);
+  if (!session) return null;
+  if (session.accessTokenExpiresAt && session.accessTokenExpiresAt <= Date.now()) return null;
+  return session;
+}
+
 export async function createGitHubOAuthState(now = Date.now()) {
   return sealValue({ issuedAt: now, nonce: crypto.randomUUID(), version: 1 });
 }

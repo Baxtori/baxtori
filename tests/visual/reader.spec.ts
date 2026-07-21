@@ -21,6 +21,10 @@ async function capture(
   await testInfo.attach(name, { contentType: "image/png", path });
 }
 
+async function waitForReader(page: Page) {
+  await expect(page.locator("[data-reader-ready='true']")).toBeVisible();
+}
+
 test("the public entrance explains the product before asking for trust", async ({ page }, testInfo) => {
   const errors = collectBrowserErrors(page);
   await page.goto("/");
@@ -36,16 +40,59 @@ test("the published demo opens directly into the calm reading trail", async ({ p
   await page.goto("/?demo=1");
 
   await expect(page.getByRole("heading", { name: "Notes from the repositories." })).toBeVisible();
+  await waitForReader(page);
   await expect(page.getByRole("complementary", { name: "Baxtori navigation" })).toBeVisible();
   await expect(page.getByLabel("Attention window")).toHaveCount(0);
   await expect(page.getByRole("list", { name: "In this edition" })).toBeVisible();
   await capture(page, testInfo, "published-briefing");
 
   await page.getByRole("list", { name: "In this edition" }).getByRole("button", { name: /Repository access and reader attention became explicit plans\./ }).click();
-  await page.getByRole("button", { name: "Evidence", exact: true }).first().click();
+  await expect(page.getByRole("heading", { name: "Repository access and reader attention became explicit plans." })).toBeVisible();
+  const evidence = page.getByRole("button", { name: "Evidence", exact: true }).first();
+  await evidence.scrollIntoViewIfNeeded();
+  await evidence.click();
   await expect(page.getByText("Code evidence 1/3")).toBeVisible();
   await expect(page.locator(".diff-line.is-addition").first()).toBeVisible();
   expect(errors).toEqual([]);
+});
+
+test("account hydration never exposes the retired dashboard", async ({ page }) => {
+  await page.addInitScript(() => {
+    const trackedWindow = window as unknown as { __sawRetiredReader: boolean };
+    trackedWindow.__sawRetiredReader = false;
+    const inspect = () => {
+      if (document.body?.innerText.includes("What deserves attention.")) trackedWindow.__sawRetiredReader = true;
+    };
+    new MutationObserver(inspect).observe(document.documentElement, { childList: true, subtree: true });
+  });
+  await page.route("**/api/auth/github/status", (route) => route.fulfill({
+    body: JSON.stringify({
+      appSlug: "baxtori-test",
+      authenticated: true,
+      configured: true,
+      user: { avatarUrl: "", id: 42, login: "reader", name: "Reader" },
+    }),
+    contentType: "application/json",
+  }));
+  await page.route("**/api/feedback/state", async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    await route.fulfill({
+      body: JSON.stringify({ configured: false, reviewRequests: [], revision: 0, state: null, threadQuestions: [], topicThreads: [] }),
+      contentType: "application/json",
+    });
+  });
+  await page.route("**/api/github/repos", (route) => route.fulfill({
+    body: JSON.stringify({ repositories: [], truncated: false }),
+    contentType: "application/json",
+  }));
+
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Notes from the repositories." })).toBeVisible();
+  await waitForReader(page);
+  await waitForReader(page);
+  await page.waitForTimeout(900);
+  expect(await page.evaluate(() => (window as unknown as { __sawRetiredReader: boolean }).__sawRetiredReader)).toBe(false);
+  await expect(page.getByText("More", { exact: true })).toHaveCount(0);
 });
 
 test("repository modes persist and newly selected sources enter the system honestly", async ({ page }) => {
@@ -98,10 +145,8 @@ test("repository modes persist and newly selected sources enter the system hones
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Notes from the repositories." })).toBeVisible();
   const reviewSources = page.getByRole("button", { name: /Review sources/ });
-  if (!await reviewSources.isVisible()) {
-    await page.locator("summary[aria-label='Open edition and source tools']").click();
-  }
-  await reviewSources.click();
+  if (await reviewSources.isVisible()) await reviewSources.click();
+  else await page.getByRole("button", { name: /Sources/ }).click();
   const modeControl = page.getByRole("group", { name: `Review mode for ${repository.fullName}` }).first();
   await expect(modeControl).toBeVisible();
   await modeControl.getByRole("button", { name: "Pinned" }).click();
@@ -121,6 +166,7 @@ test("repository modes persist and newly selected sources enter the system hones
 test("the default reader turns the review into a finite field journal", async ({ page }, testInfo) => {
   const errors = collectBrowserErrors(page);
   await page.goto("/?demo=1");
+  await waitForReader(page);
 
   const progressSpecimen = page.locator("[data-botanical-progress]");
   const fernGrowth = () => page.evaluate(() => {
@@ -205,6 +251,7 @@ test("the default reader turns the review into a finite field journal", async ({
 test("the botanical trail becomes a complete static specimen with reduced motion", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?demo=1");
+  await waitForReader(page);
 
   const specimen = page.locator("[data-botanical-progress]");
   await expect(specimen).toBeVisible();
@@ -217,6 +264,7 @@ test("the botanical trail becomes a complete static specimen with reduced motion
 test("memory makes a concern legible across real editions", async ({ page }, testInfo) => {
   const errors = collectBrowserErrors(page);
   await page.goto("/?demo=1");
+  await waitForReader(page);
   await page.getByLabel("Primary").getByRole("button", { name: "Memory", exact: true }).click();
 
   await expect(page.getByRole("heading", { name: "4 archived editions" })).toBeVisible();

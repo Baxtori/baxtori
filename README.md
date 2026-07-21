@@ -12,6 +12,8 @@ The product and information-density contract lives in
 [`docs/NORTH_STAR.md`](docs/NORTH_STAR.md).
 The current competitive and integration thesis lives in
 [`docs/PRODUCT_LANDSCAPE.md`](docs/PRODUCT_LANDSCAPE.md).
+The current account, security, and repository-memory decision lives in
+[`docs/proposals/2026-07-22-account-memory-and-product-boundary.md`](docs/proposals/2026-07-22-account-memory-and-product-boundary.md).
 
 The product started as **Glimpse** and is being rebranded around
 [baxtori.com](https://baxtori.com).
@@ -59,10 +61,15 @@ Configure the app with:
 - Repository permissions: **Contents: Read-only** and **Metadata: Read-only**
 - User-to-server token expiration: enabled
 
-The GitHub App lets each person select the repositories Baxtori may read. User
+The GitHub App installation lets a user select the repositories Baxtori may read. User
 access and refresh tokens are encrypted inside an HttpOnly cookie and never
 sent to browser JavaScript. Use a random value of at least 32 bytes for
 `GITHUB_SESSION_SECRET`.
+
+The deployed GitHub App is currently private, and the scheduled compiler is
+explicitly pinned to one `FEEDBACK_GITHUB_LOGIN`. Account records are isolated
+by numeric GitHub user ID, but public multi-user installation and per-account
+compilation remain deliberate roadmap work rather than implied capabilities.
 
 ## Validate a production build
 

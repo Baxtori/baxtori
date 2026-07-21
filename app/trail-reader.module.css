@@ -118,7 +118,7 @@
 .trailSecondaryNav button:hover { color: var(--trail-ink); }
 .trailSecondaryNav small { font-size: inherit; }
 
-.mobileTools { display: none; }
+.mobileSources { display: none; }
 
 .railEdition { margin: auto 0 0; color: var(--trail-muted); font-size: 0.52rem; font-weight: 710; letter-spacing: 0.06em; line-height: 1.7; text-transform: uppercase; }
 
@@ -382,6 +382,17 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+.issueFooter button {
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+.issueFooter button:hover { color: var(--trail-ink); text-decoration: underline; text-underline-offset: 0.18em; }
 
 .sceneNumber {
   position: absolute;
@@ -594,39 +605,20 @@
   .trailPrimaryNav button[aria-current="page"]::after { display: none; }
   .trailSecondaryNav,
   .railSection { display: none; }
-  .mobileTools { position: relative; display: block; margin-left: 0.1rem; }
-  .mobileTools summary {
+  .mobileSources {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-left: 0.05rem;
+    padding: 0;
     color: var(--trail-muted);
+    background: transparent;
+    border: 0;
     cursor: pointer;
     font-size: 0.58rem;
     font-weight: 740;
-    list-style: none;
   }
-  .mobileTools summary::-webkit-details-marker { display: none; }
-  .mobileTools > div {
-    position: absolute;
-    z-index: 30;
-    top: calc(100% + 1rem);
-    right: -0.25rem;
-    display: grid;
-    width: 10.5rem;
-    padding: 0.45rem;
-    background: rgb(244 239 229 / 98%);
-    border: 1px solid var(--trail-line);
-    box-shadow: 0 0.8rem 2rem rgb(25 36 29 / 12%);
-  }
-  .mobileTools button {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.7rem;
-    color: var(--trail-ink);
-    background: transparent;
-    border: 0;
-    border-bottom: 1px solid var(--trail-line);
-    font-size: 0.64rem;
-    text-align: left;
-  }
-  .mobileTools button:last-child { border-bottom: 0; }
+  .mobileSources small { font-size: 0.5rem; }
   .railProgress { position: absolute; right: 0; bottom: -1px; left: 0; display: block; margin: 0; }
   .railProgress span { display: none; }
   .railProgress progress { display: block; width: 100%; height: 2px; }
