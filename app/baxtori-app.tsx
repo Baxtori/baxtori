@@ -47,6 +47,7 @@ import {
 } from "./edition-data";
 import { EditionSelectionLedger } from "./edition-selection-ledger";
 import { EditionHistory } from "./edition-history";
+import { EditionTimeline } from "./edition-timeline";
 import { BrandMark } from "./brand-mark";
 import { formatEditionDate, formatGeneratedAt, formatRelativeDate } from "./format";
 import { RepositoryModeControl } from "./repository-mode-control";
@@ -748,10 +749,10 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
   const updateUnderstanding = (repository: string, area: RepoArea, state: UnderstandingState) => {
     setMapStates((current) => ({ ...current, [`${repository}:${area.id}`]: state }));
     const messages: Record<UnderstandingState, string> = {
-      introduced: `${area.name} is now your comprehension frontier.`,
-      revisit: `${area.name} will come back with more depth.`,
-      skipped: `${area.name} is out of your learning denominator.`,
-      understood: `${area.name} added to your understood map.`,
+      introduced: `${area.name} opened for study.`,
+      revisit: `${area.name} marked Study again.`,
+      skipped: `${area.name} hidden.`,
+      understood: `${area.name} marked Understood.`,
       unexplored: `${area.name} reset.`,
     };
     setNotice(messages[state]);
@@ -1000,7 +1001,7 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
     );
   };
 
-  if ((["briefing", "map", "history", "repositories"] as View[]).includes(view)) {
+  if ((["briefing", "map", "history", "repositories", "timeline"] as View[]).includes(view)) {
     const primaryContent = view === "map" ? (
       <RepositoryMaps
         activeRepository={activeMapRepository}
@@ -1059,12 +1060,14 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
         showAllRepositories={showAllRepositories}
         userLogin={auth.user?.login}
       />
+    ) : view === "timeline" ? (
+      <EditionTimeline edition={EDITION} onOpenStory={openStory} stories={STORIES} />
     ) : undefined;
 
     return (
       <TrailReader
         accountLabel={auth.authenticated ? `@${auth.user?.login}` : undefined}
-        activeView={view as "briefing" | "history" | "map" | "repositories"}
+        activeView={view as "briefing" | "history" | "map" | "repositories" | "timeline"}
         connectHref={!auth.authenticated && auth.configured ? "/api/auth/github/start" : undefined}
         edition={EDITION}
         notice={notice || authMessage}
@@ -1085,16 +1088,20 @@ export default function BaxtoriApp({ initialAuth, initialDemoMode = false }: {
         }}
         primaryContent={primaryContent}
         primaryDescription={view === "map"
-          ? "A reviewed map of repository areas, evidence, and open questions—not a code-quality score."
+          ? "Browse reviewed repository areas, source files, and open questions."
           : view === "repositories"
-            ? "Choose what Baxtori may inspect for the next edition. This never rewrites the published archive."
-            : "Your private reading record: prior editions, watches, open questions, and their exact evidence."}
-        primaryHeading={view === "map" ? "Know the system." : view === "repositories" ? "Sources." : "Working memory."}
+            ? "Choose which repositories Baxtori may read during the next review."
+            : view === "timeline"
+              ? "See what was published, what was left out, and why."
+            : "Search prior editions, watched stories, and open questions."}
+        primaryHeading={view === "map" ? "System." : view === "repositories" ? "Sources." : view === "timeline" ? "Edition record." : "Memory."}
         primaryKicker={view === "map"
           ? `${systemSources.length} ${systemSources.length === 1 ? "repository" : "repositories"}`
           : view === "repositories"
             ? `${selectedRepositories.length} selected · ${repositories.length} available`
-            : `${HISTORY_EDITION_COUNT} immutable ${HISTORY_EDITION_COUNT === 1 ? "edition" : "editions"}`}
+            : view === "timeline"
+              ? `${STORIES.length} ${STORIES.length === 1 ? "story" : "stories"}`
+            : `${HISTORY_EDITION_COUNT} ${HISTORY_EDITION_COUNT === 1 ? "edition" : "editions"}`}
         renderEvidence={renderTrailEvidence}
         repositoryCount={selectedRepositories.length}
         session={trailSession}

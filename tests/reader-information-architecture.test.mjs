@@ -48,9 +48,8 @@ test("the published journal is not silently truncated by the attention budget", 
 test("the product contract preserves progressive evidence density", async () => {
   const contract = await readFile(new URL("../docs/NORTH_STAR.md", import.meta.url), "utf8");
 
-  assert.match(contract, /Low-density orientation, high-density inspection, zero density when nothing/);
-  assert.match(contract, /30 seconds/);
-  assert.match(contract, /10 minutes/);
+  assert.match(contract, /Keep code, selection records, and repository administration behind explicit controls/);
+  assert.match(contract, /Publish no story when no change is worth reading/);
   assert.match(contract, /Published editions remain immutable/);
-  assert.match(contract, /time to trustworthy understanding/i);
+  assert.match(contract, /identify the important change without reading every commit/i);
 });

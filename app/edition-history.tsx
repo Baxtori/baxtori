@@ -165,10 +165,10 @@ export function EditionHistory({
     <section className="history-view" aria-labelledby="history-heading">
       <div className="section-heading">
         <div>
-          <span>Immutable evidence</span>
-          <h2 id="history-heading">{new Set(history.map((entry) => entry.edition.id)).size} archived edition{new Set(history.map((entry) => entry.edition.id)).size === 1 ? "" : "s"}</h2>
+          <span>Archive</span>
+          <h2 id="history-heading">{new Set(history.map((entry) => entry.edition.id)).size} edition{new Set(history.map((entry) => entry.edition.id)).size === 1 ? "" : "s"}</h2>
         </div>
-        <p>Reading state stays live; published explanations and commit ranges do not change.</p>
+        <p>Published stories stay fixed. Watches and questions remain editable.</p>
       </div>
 
       {longestThread && longestThread.count > 1 && (
@@ -180,9 +180,9 @@ export function EditionHistory({
           }}
           type="button"
         >
-          <span>Longest living thread · {longestThread.count} editions</span>
+          <span>Appears in {longestThread.count} editions</span>
           <strong>{longestThread.entry.story.title}</strong>
-          <small>Follow how one concern became a product capability <span aria-hidden="true">→</span></small>
+          <small>Filter to this topic <span aria-hidden="true">→</span></small>
         </button>
       )}
 
@@ -268,7 +268,7 @@ export function EditionHistory({
                             onClick={() => setOpenEntry(isOpen ? null : key)}
                             type="button"
                           >
-                            {isOpen ? "Close evidence" : evidenceAvailable ? "Reopen exact diff" : demoMode ? "Sign in for exact diff" : "Evidence unavailable"}
+                            {isOpen ? "Close diff" : evidenceAvailable ? "Open diff" : demoMode ? "Sign in to open diff" : "Diff unavailable"}
                           </button>
                         </div>
                         {isOpen && entry.story.repository && entry.story.codeEvidence?.length ? (

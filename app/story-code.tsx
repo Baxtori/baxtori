@@ -265,15 +265,15 @@ export function StoryCode({
 
       <div aria-labelledby={evidence.length > 1 ? activeTabId : headingId} id={panelId} role="tabpanel">
         {orientation && (
-          <section className={styles.bearings} aria-label="Repository bearings">
+          <section className={styles.bearings} aria-label="Code context">
             <div className={styles.bearingsHeading}>
               <div>
-                <span>Repository bearings</span>
-                <strong>{orientation.area?.name ?? "Outside the current repository map"}</strong>
+                <span>Code context</span>
+                <strong>{orientation.area?.name ?? "Not in the current repository map"}</strong>
                 <p>{orientation.repositorySummary ?? `Current evidence in ${orientation.repository}.`}</p>
               </div>
               <button aria-expanded={showBearings} onClick={() => setShowBearings((current) => !current)} type="button">
-                {showBearings ? "Hide bearings" : "Show bearings"}
+                {showBearings ? "Hide context" : "Show context"}
               </button>
             </div>
 
@@ -294,9 +294,9 @@ export function StoryCode({
                 <section className={styles.locationCard}>
                   <span className={styles.sectionLabel}>Where this sits</span>
                   <h5 className={orientation.area ? undefined : styles.unmapped}>
-                    {orientation.area ? `${orientation.area.kind} · ${orientation.area.name}` : "Unmapped in the current repository model"}
+                    {orientation.area ? `${orientation.area.kind} · ${orientation.area.name}` : "Not mapped yet"}
                   </h5>
-                  <p>{orientation.area?.purpose ?? "The exact file remains inspectable, while the current repository map has no reviewed area claiming this path yet."}</p>
+                  <p>{orientation.area?.purpose ?? "This file is available, but it has not been assigned to a reviewed map area."}</p>
                   {orientation.area && (
                     <>
                       <div className={styles.metrics}>
@@ -307,10 +307,6 @@ export function StoryCode({
                         <div>
                           <strong>{orientation.area.evidencePosition ?? "—"}/{orientation.area.evidenceCount}</strong>
                           <span>File in area evidence</span>
-                        </div>
-                        <div>
-                          <strong>{orientation.area.coverageEstimate}%</strong>
-                          <span>Map coverage estimate</span>
                         </div>
                       </div>
                       <ul className={styles.conceptList} aria-label="Area concepts">
@@ -343,9 +339,7 @@ export function StoryCode({
                   </section>
                 )}
 
-                <p className={styles.modelNote}>
-                  Map position and coverage describe Baxtori&apos;s reviewed knowledge model. They are bearings for reading, not a literal count of repository files or lines.
-                </p>
+                <p className={styles.modelNote}>Map areas come from the last completed repository review.</p>
               </div>
             )}
           </section>

@@ -260,7 +260,8 @@
 .primaryContent { padding-block: clamp(2rem, 5vw, 4rem) 10vh; }
 .primaryContent :global(.history-view),
 .primaryContent :global(.map-view),
-.primaryContent :global(.repositories-view) { padding-top: 0; }
+.primaryContent :global(.repositories-view),
+.primaryContent :global(.timeline-view) { padding-top: 0; }
 
 .scene {
   position: relative;

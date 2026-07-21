@@ -101,10 +101,10 @@ export function buildContinueQueue({
         minutes: Math.max(3, Math.min(5, story.learningValue)),
         priority: 100 + story.learningValue * 4 + (stories.length - storyIndex) + (state.locked ? 12 : 0) + (state.watching ? 8 : 0),
         reason: state.locked
-          ? "You locked this backstory in the briefing."
+          ? "You pinned this story."
           : state.watching
             ? "This watched thread is still unread."
-            : `${story.learningValue}/5 learning value and not yet understood.`,
+            : "Unread story from the current edition.",
         repository,
         targetId: story.id,
         title: story.title,
@@ -143,10 +143,10 @@ export function buildContinueQueue({
         minutes: Math.min(5, area.walkthrough?.estimatedMinutes ?? 5),
         priority: statePriority + area.importance * 3 + Math.round(area.freshness / 10),
         reason: state === "revisit"
-          ? `You asked to go deeper here. ${description}`
+          ? `Marked for another look. ${description}`
           : state === "introduced"
-            ? `This is already on your comprehension frontier. ${description}`
-            : `High-value map area to introduce next. ${description}`,
+            ? `Already started. ${description}`
+            : `Unreviewed map area. ${description}`,
         repository,
         targetId: area.id,
         title: area.name,

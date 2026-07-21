@@ -65,7 +65,7 @@ test("ranks one deterministic queue across stories, map areas, and questions", (
     "question:owner/repo:session-expiry",
     "area:owner/repo:cache",
   ]);
-  assert.equal(queue[0].reason, "5/5 learning value and not yet understood.");
+  assert.equal(queue[0].reason, "Unread story from the current edition.");
   assert.equal(queue.find((item) => item.kind === "area")?.minutes, 5);
 });
 
@@ -93,7 +93,7 @@ test("honors dismiss, lock, understanding, and question dispositions", () => {
   });
 
   assert.deepEqual(queue.map((item) => item.id), ["story:cache-story"]);
-  assert.match(queue[0].reason, /locked/i);
+  assert.match(queue[0].reason, /pinned/i);
 });
 
 test("surfaces queued re-reviews only when they still need context", () => {

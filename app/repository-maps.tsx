@@ -81,12 +81,12 @@ export function RepositoryMaps({
           />
         ) : (
           <div className="map-unavailable">
-            <span className="eyebrow">{activeSource?.mapStatus === "empty" ? "Empty repository" : "Comprehension pending"}</span>
+            <span className="eyebrow">{activeSource?.mapStatus === "empty" ? "Empty repository" : "Map not ready"}</span>
             <h2>{activeSource?.fullName}</h2>
             <p>{activeSource?.mapStatus === "empty"
               ? "There are no commits or files to study yet. This map will begin when code exists."
-              : "This repository is scheduled, but it does not have enough reviewed evidence for a trustworthy map yet."}</p>
-            <strong>No invented coverage.</strong>
+              : "This repository has not been mapped in a completed review yet."}</p>
+            <strong>Awaiting review.</strong>
           </div>
         )}
       </div>

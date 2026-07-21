@@ -30,7 +30,7 @@ test("server-renders the Baxtori briefing", async () => {
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>Baxtori — The backstory behind your code<\/title>/i);
+  assert.match(html, /<title>Baxtori — Notes from your repositories<\/title>/i);
   assert.match(html, /Notes from the repositories/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });

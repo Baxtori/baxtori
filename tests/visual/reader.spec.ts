@@ -47,8 +47,14 @@ test("the published demo opens directly into the calm reading trail", async ({ p
   await expect(page.getByRole("list", { name: "In this edition" })).toBeVisible();
   await capture(page, testInfo, "published-briefing");
 
-  await page.getByRole("list", { name: "In this edition" }).getByRole("button", { name: /Repository access and reader attention became explicit plans\./ }).click();
-  await expect(page.getByRole("heading", { name: "Repository access and reader attention became explicit plans." })).toBeVisible();
+  await page.getByRole("button", { name: "Edition record", exact: true }).last().click();
+  await expect(page.getByRole("heading", { name: "Edition record." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Stories in this edition" })).toBeVisible();
+  await expect(page.getByText("What deserves attention.", { exact: true })).toHaveCount(0);
+  await page.getByLabel("Primary").getByRole("button", { name: /^Now/ }).click();
+
+  await page.getByRole("list", { name: "In this edition" }).getByRole("button", { name: /Repository scope is now explicit\./ }).click();
+  await expect(page.getByRole("heading", { name: "Repository scope is now explicit." })).toBeVisible();
   const evidence = page.getByRole("button", { name: "Evidence", exact: true }).first();
   await evidence.scrollIntoViewIfNeeded();
   await evidence.click();
@@ -151,9 +157,9 @@ test("repository modes persist and newly selected sources enter the system hones
 
   await page.getByLabel("Primary").getByRole("button", { name: /^Now/ }).click();
   await page.getByLabel("Primary").getByRole("button", { name: "System", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Know the system." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "System." })).toBeVisible();
   await expect(page.getByRole("tab", { name: /new-garden Not mapped/ })).toBeVisible();
-  await expect(page.getByText("No invented coverage.")).toBeVisible();
+  await expect(page.getByText("Awaiting review.")).toBeVisible();
   await capture(page, testInfo, "system-and-sources", true, "allow");
 });
 
@@ -219,9 +225,9 @@ test("the default reader turns the review into a finite field journal", async ({
   const openingLowerPinna = await fernStage(0);
   const openingMiddlePinna = await fernStage(3);
   await expect(page.getByRole("heading", { name: "Notes from the repositories." })).toBeVisible();
-  await page.getByRole("list", { name: "In this edition" }).getByRole("button", { name: /Repository access and reader attention became explicit plans\./ }).click();
+  await page.getByRole("list", { name: "In this edition" }).getByRole("button", { name: /Repository scope is now explicit\./ }).click();
 
-  await expect(page.getByRole("heading", { name: "Repository access and reader attention became explicit plans." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Repository scope is now explicit." })).toBeVisible();
   const scrolledFernBox = await fernPlate.boundingBox();
   expect(Math.abs((scrolledFernBox?.x ?? 0) - (fernBox?.x ?? 0))).toBeLessThan(1);
   expect(Math.abs((scrolledFernBox?.y ?? 0) - (fernBox?.y ?? 0))).toBeLessThan(1);
@@ -266,8 +272,8 @@ test("memory makes a concern legible across real editions", async ({ page }, tes
   await waitForReader(page);
   await page.getByLabel("Primary").getByRole("button", { name: "Memory", exact: true }).click();
 
-  await expect(page.getByRole("heading", { name: "4 archived editions" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Longest living thread · 3 editions/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "4 editions" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Appears in 3 editions/ })).toBeVisible();
   await expect(page.getByText("Thread · 3 editions").first()).toBeVisible();
   await capture(page, testInfo, "working-memory");
   expect(errors).toEqual([]);

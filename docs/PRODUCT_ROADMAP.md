@@ -1,216 +1,77 @@
-# Baxtori product roadmap
+# Baxtori roadmap
 
-The roadmap is governed by the [north-star and information-density contract](NORTH_STAR.md):
-direct attention, deepen understanding through exact evidence, preserve that
-understanding over time, and turn reader intent into better future agent work.
+The current product contract is in [NORTH_STAR.md](NORTH_STAR.md).
 
-## Product thesis
+## Working now
 
-Baxtori helps a person keep up with agent-produced code by turning repository changes into a small, evidence-backed reading habit.
+- Scroll-first current edition
+- Commit-addressed diffs and current code
+- Read-only GitHub App access
+- Per-account repository modes and reader state
+- Watches and questions tied to code evidence
+- Repository maps, walkthroughs, and study queues
+- Searchable edition history
+- Edition selection records
+- Scheduled collection and validation scripts
 
-The core promise is simple:
+## Next priorities
 
-> Open Baxtori and immediately know the most valuable thing to understand next.
+### 1. Complete the review loop
 
-Baxtori already has the difficult ingredients: exact diffs, concise backstories, repository maps, walkthroughs, persistent questions, time-boxed study queues, repository selection, and a feedback path into the scheduled compiler. The next phase should make those ingredients feel like one continuous loop.
+- Export each account's selected repositories and queued review requests safely.
+- Show which requests a published review considered.
+- Keep inaccessible or unhandled requests queued.
+- Report failed fetches, stale cursors, and invalid evidence before publication.
 
-## Product principles
+### 2. Improve repository maps
 
-1. **One recommended next action.** The reader can always continue without deciding which subsystem to inspect first.
-2. **Evidence before prose.** Explanations stay attached to exact repositories, commits, files, and line ranges.
-3. **Memory across editions.** Watches, questions, and unfinished learning survive publication of a new weekly review.
-4. **Quiet stays quiet.** Baxtori publishes and prompts only when useful context exists.
-5. **Reader intent changes future review.** Watching, revisiting, dismissing, and asking questions become explicit compiler input.
-6. **Every estimate explains itself.** Queue priority, map freshness, and related-topic matching expose their reasons.
+- Flag map areas whose source files changed after their reviewed commit.
+- Show the commits that triggered a map re-review.
+- Remove remaining internal confidence scores from reader-facing copy.
+- Add an explicit reset for hidden or understood areas.
 
-## P0 — Reliability and identity
+### 3. Make watches useful
 
-### Canonical repository identities
+- Match later changes by exact retained paths or reviewed map areas.
+- Explain why a new story belongs to a watched topic.
+- Support active, resolved, and snoozed watch states in Memory.
+- Keep weak matches out of the published edition.
 
-Finish the `glimpse` to `baxtori` repository migration across:
+### 4. Finish account behavior
 
-- scheduled review scope
-- collector source configuration
-- repository-map registry
-- current edition data
-- saved reading state
-- map and question keys
-- queued re-review requests
+- Verify multi-account isolation in production.
+- Make local-only state and account-synced state visually distinct.
+- Add clear recovery when an account revision changes on another device.
+- Test download and deletion of account data end to end.
 
-Legacy keys should continue to load, while all new writes use `teamleaderleo/baxtori`.
+### 5. Reduce the root component
 
-### Automation health
+- Move the remaining state persistence into focused hooks.
+- Remove the retired dashboard markup once migration tests no longer need it.
+- Keep repository ranking and identity conversion in pure tested modules.
+- Avoid rerendering the full reader when a code excerpt loads.
 
-Add a compact validation report that confirms:
+## Later
 
-- every scheduled repository can be fetched
-- every mapped repository resolves to a collector source
-- review cursors point to reachable commits
-- current code evidence still intersects the stated diff
-- stale aliases stay outside active configuration
+- Direct links to stories, excerpts, walkthroughs, and questions
+- Browser history for primary views
+- Resume the last open excerpt and scroll position
+- Edit a queued review request before the scheduled run
+- Copy selected evidence with repository and commit context
+- Better wrapping and horizontal-position recovery for dense diffs
 
-## P1 — Unified Continue queue
+## Not planned for the hackathon
 
-**Implemented:** a deterministic cross-surface queue now ranks unread stories,
-watched follow-ups, map frontiers, revisit work, open questions, and re-review
-requests that still need reader context. The reader gets one primary action,
-an explicit reason, direct focus navigation, and a persistent reader-chosen time window.
+- Billing
+- Team administration
+- Repository write access
+- A general chat interface
+- Replacing GitHub, code review, or an IDE
 
-Create one queue across:
+## Release checks
 
-- unread briefing stories
-- watched follow-ups
-- repository-map frontiers
-- revisit areas
-- open questions
-- queued re-reviews needing more reader context
-
-The landing view should show:
-
-- one primary Continue action
-- why it was selected
-- estimated time
-- a compact next-up list
-- a reader-chosen attention window
-
-The queue must be deterministic for the same state and jump directly to the relevant story, excerpt, walkthrough, or question.
-
-Tracked in #18.
-
-## P1 — Cross-edition memory
-
-Turn Watch into a durable topic thread.
-
-A watched topic should retain:
-
-- repository and mapped area
-- files and prior commit range
-- the reader's prior verdict or question
-- later stories that provide a follow-up
-- resolved, snoozed, or still-watching state
-
-A later edition should explain why it matched the watched topic. Weak filename-only matches should remain review input and stay out of the reader-facing feed.
-
-**Implemented foundation:** Watch and evidence questions now share durable topic identities, and the deterministic collector proposes follow-up candidates only for exact retained paths or explicitly mapped areas. Every candidate remains compiler scratch input until review confirms the relationship and publishes new exact evidence.
-
-Tracked in #19.
-
-## P1 — Questions attached to evidence
-
-Let the reader ask a question beside an exact code excerpt.
-
-Store:
-
-- repository
-- base and head commits
-- file path
-- selected line range
-- question text
-- optional review lens
-
-Questions can remain private reading notes or become explicit input to the next scheduled re-review.
-
-## P2 — Edition archive and repository history
-
-**Implemented:** immutable editions are assembled into a newest-first reader
-history, deduplicated when the current edition is also in the archive, and
-filtered by canonical repository identity, durable topic, search text, watched
-threads, or unresolved questions. Archived stories reopen their exact published
-commit ranges in the authenticated diff reader while personal state remains
-separate from the evidence record. The archive now includes three authentic
-Baxtori editions and makes recurring topics visible as cross-edition threads.
-Showing mapped-area change across several reviews remains the next history
-refinement.
-
-Add a history view that can:
-
-- browse prior editions
-- filter by repository and topic
-- find unresolved questions and watched threads
-- show how one mapped area changed across reviews
-- reopen exact historical diffs
-
-Historical editions remain immutable evidence records. Personal reading state lives separately.
-
-## P2 — Map freshness review
-
-Surface mapped areas touched after their last reviewed commit.
-
-Each affected area should show:
-
-- changed evidence files
-- relevant commits
-- previous confidence and freshness
-- whether an explanation needs review
-- a one-action re-review request
-
-Git can trigger review. Human or model judgment updates meaning and confidence.
-
-## P2 — Compiler preview
-
-Turn the current candidate-commit preview into a useful preflight report:
-
-- proposed related-change clusters
-- likely routine changes filtered out
-- watched topics touched
-- maps needing freshness review
-- queued reader questions and re-review lenses
-- explicit reasons for publishing nothing
-
-This preview should remain deterministic and free of generated conclusions.
-
-## Polish backlog
-
-### Navigation
-
-- command palette for view changes and story actions
-- one-handed mobile navigation
-- direct resume links into stories, excerpts, walkthroughs, and questions
-- browser history integration for major views and selected items
-
-### Reading
-
-- remember the active excerpt and scroll position
-- clearer watched and revisit states
-- compact completion animation with reduced-motion support
-- better dense-diff wrapping and horizontal position recovery
-- copy selected evidence with repository and commit context
-
-### Feedback
-
-- show saved, queued, processed, canceled, and superseded re-review history
-- let readers edit a queued request before Monday
-- explain which requests the compiler considered in the published edition
-
-### Empty and error states
-
-- distinguish no new commits, no selected changes, unavailable access, stale map, and empty repository
-- give every recoverable state one primary action
-- preserve useful cached reading when GitHub is temporarily unavailable
-
-### Performance and code health
-
-- split `app/baxtori-app.tsx` into focused view and state modules
-- isolate queue ranking and repository identity logic into pure tested modules
-- reduce root rerenders while code excerpts load
-- add interaction tests for hydration, keyboard reading, repository rename migration, and cross-edition carry-forward
-
-## Suggested delivery order
-
-1. Canonical repository identity migration and validation.
-2. Pure Continue-queue ranking module with tests.
-3. Continue panel in the briefing view.
-4. Durable watch-topic model and cross-edition follow-ups.
-5. Evidence-attached questions.
-6. Edition archive and repository history.
-7. Map freshness review and compiler preview.
-8. Command palette, mobile navigation, and root reader decomposition.
-
-## Success signals
-
-- a reader reaches useful code from the landing view in one action
-- unfinished work survives edition changes
-- watched topics receive clear follow-ups
-- repository renames preserve selections, map progress, and queued requests
-- quiet weeks produce no artificial reading work
-- every surfaced conclusion remains inspectable through exact evidence
+- Lint, build, data validators, and unit tests pass.
+- Signed-out and connected flows pass on mobile and desktop.
+- Every published story has valid commit-addressed evidence.
+- Empty or inaccessible repositories do not show fabricated map coverage.
+- Reader actions remain reversible.

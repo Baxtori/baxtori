@@ -85,9 +85,9 @@ type StudyTask = {
 } & ({ kind: "area"; area: RepoArea } | { kind: "question"; area?: RepoArea; question: RepoQuestion });
 
 const STATE_LABELS: Record<UnderstandingState, string> = {
-  introduced: "Introduced",
-  revisit: "Revisit",
-  skipped: "Not worth it",
+  introduced: "Started",
+  revisit: "Study again",
+  skipped: "Hidden",
   understood: "Understood",
   unexplored: "Unexplored",
 };
@@ -172,12 +172,12 @@ export function RepoMap({ attentionBudget, data, onAttentionBudgetChange, onQues
           <div><strong>{understood}/{includedAreas.length}</strong><span>confirmed</span></div>
         </div>
         <div>
-          <span className="eyebrow">Repository understanding</span>
+          <span className="eyebrow">Repository map</span>
           <h2 id="map-heading">{data.repository}</h2>
           <p>{data.summary}</p>
           <div className="coverage-legend">
             <span>{understood}/{data.areas.length} areas confirmed</span>
-            <span>Personal reading state · not a quality score</span>
+            <span>Your reading state</span>
           </div>
         </div>
       </div>
@@ -209,12 +209,12 @@ export function RepoMap({ attentionBudget, data, onAttentionBudgetChange, onQues
       <section className="study-session" aria-labelledby="study-session-heading">
         <div className="study-session-heading">
           <div>
-            <span className="eyebrow">Low-effort study mode</span>
-            <h2 id="study-session-heading">Your next {attentionBudget} minutes</h2>
-            <p>{frontier ? `${frontier.name} is the current frontier. ` : "Your mapped areas are settled. "}The queue fits the time you actually have.</p>
+            <span className="eyebrow">Study queue</span>
+            <h2 id="study-session-heading">{attentionBudget} minutes</h2>
+            <p>{frontier ? `Starts with ${frontier.name}.` : "No unfinished map areas."}</p>
           </div>
           <label className="budget-picker" htmlFor="study-budget">
-            <span>Attention window</span>
+            <span>Time limit</span>
             <input
               id="study-budget"
               max="60"
@@ -236,7 +236,7 @@ export function RepoMap({ attentionBudget, data, onAttentionBudgetChange, onQues
               </li>
             ))}
           </ol>
-        ) : <div className="study-complete"><strong>No study queue right now.</strong><span>You have understood or deliberately skipped every mapped area and cleared its questions.</span></div>}
+        ) : <div className="study-complete"><strong>Nothing queued.</strong><span>Every map area is understood or hidden, and no questions remain open.</span></div>}
       </section>
 
       <div className="map-list" aria-label="Mapped repository areas">
@@ -317,9 +317,9 @@ export function RepoMap({ attentionBudget, data, onAttentionBudgetChange, onQues
 
       <section className="question-ledger" aria-labelledby="question-ledger-heading">
         <div>
-          <span className="eyebrow">Preserved uncertainty</span>
-          <h2 id="question-ledger-heading">Question ledger</h2>
-          <p>{openQuestions.length} open {openQuestions.length === 1 ? "question" : "questions"}. Baxtori keeps ambiguity visible instead of inventing an answer.</p>
+          <span className="eyebrow">From the last review</span>
+          <h2 id="question-ledger-heading">Questions</h2>
+          <p>{openQuestions.length} open {openQuestions.length === 1 ? "question" : "questions"}.</p>
         </div>
         <div className="question-list">
           {data.questions.map((question) => {
@@ -343,7 +343,7 @@ export function RepoMap({ attentionBudget, data, onAttentionBudgetChange, onQues
         </div>
       </section>
 
-      <p className="coverage-note">This map records what you have chosen to understand, revisit, or hide. Changed evidence can still return a confirmed area to your frontier.</p>
+      <p className="coverage-note">Reading states are private and editable. A later review may reopen an area when its source files change.</p>
     </section>
   );
 }

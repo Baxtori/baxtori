@@ -12,7 +12,7 @@ test("legacy editions label missing selection information as unknown", () => {
   assert.equal(view.recorded, false);
   assert.equal(view.headline, "2 published findings");
   assert.equal(view.metrics.find((metric) => metric.label === "Omission record")?.value, "Unavailable");
-  assert.ok(view.description.includes("were not recorded"));
+  assert.ok(view.description.includes("not every review decision"));
   assert.ok(view.unknownFields.includes("Qualifying findings deferred"));
 });
 
@@ -90,5 +90,5 @@ test("an oversized first finding explains the target overrun", () => {
     stories: stories.slice(0, 1),
   });
 
-  assert.match(view.description, /highest-priority finding was larger/);
+  assert.match(view.description, /first story exceeded/);
 });

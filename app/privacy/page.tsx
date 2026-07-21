@@ -13,13 +13,13 @@ export default function PrivacyPage() {
     <main className={styles.page}>
       <header className={styles.header}>
         <Link className={styles.brand} href="/"><BrandMark /><span>Baxtori</span></Link>
-        <span>Privacy field note · July 2026</span>
+        <span>Privacy · July 2026</span>
       </header>
 
       <article className={styles.article}>
-        <p className={styles.kicker}>A small, read-only footprint</p>
+        <p className={styles.kicker}>Read-only GitHub access</p>
         <h1>Your repositories remain yours.</h1>
-        <p className={styles.dek}>Baxtori connects to GitHub to help you remember consequential changes. It does not ask for write access, and the hosted app does not run a model over your private source code.</p>
+        <p className={styles.dek}>Baxtori reads repositories you select. It does not ask for write access, and the hosted app does not run a model over private source code.</p>
 
         <section>
           <h2>What GitHub shares</h2>

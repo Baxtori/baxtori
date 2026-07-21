@@ -5,7 +5,7 @@ import styles from "./edition-selection-ledger.module.css";
 const PRIORITY_LABELS = {
   "reader-directed": "Reader-directed",
   "significant-change": "Significant change",
-  "useful-comprehension": "Useful comprehension",
+  "useful-comprehension": "Useful context",
   optional: "Optional",
 } as const;
 
@@ -16,8 +16,8 @@ export function EditionSelectionLedger({ edition }: { edition: EditionLedgerInpu
     <section className={styles.ledger} aria-labelledby="edition-selection-heading">
       <div className={styles.heading}>
         <div>
-          <span>Edition selection</span>
-          <h2 id="edition-selection-heading">Why these findings are here</h2>
+          <span>Selection record</span>
+          <h2 id="edition-selection-heading">What was published</h2>
           <p>{ledger.description}</p>
         </div>
         <strong>{ledger.headline}</strong>
@@ -33,7 +33,7 @@ export function EditionSelectionLedger({ edition }: { edition: EditionLedgerInpu
       </div>
 
       <details className={styles.details}>
-        <summary>{ledger.recorded ? "See inclusion and omission reasons" : "See what this edition did not record"}</summary>
+        <summary>{ledger.recorded ? "Show publication decisions" : "Show missing record fields"}</summary>
         {ledger.selection ? (
           <div className={styles.sections}>
             <LedgerSection title="Published" empty="No finding met the publication threshold.">
@@ -87,7 +87,7 @@ export function EditionSelectionLedger({ edition }: { edition: EditionLedgerInpu
             <ul>
               {ledger.unknownFields.map((field) => <li key={field}>{field}</li>)}
             </ul>
-            <p>Future editions retain literal inclusion, deferral, exclusion, quiet, and access reasons.</p>
+            <p>Later editions record these decisions.</p>
           </div>
         )}
       </details>

@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import "./globals.css";
 
-const title = "Baxtori — The backstory behind your code";
+const title = "Baxtori — Notes from your repositories";
 const description =
-  "A calm, private briefing that explains what changed across your repositories and why it matters.";
+  "A concise record of what changed, why it matters, and the code behind it.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
@@ -27,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       title,
       description,
-      images: [{ url: image, width: 1536, height: 1024, alt: "Baxtori — The backstory behind your code." }],
+      images: [{ url: image, width: 1536, height: 1024, alt: "Baxtori — Notes from your repositories." }],
     },
     twitter: {
       card: "summary_large_image",

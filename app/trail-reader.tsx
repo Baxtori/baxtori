@@ -21,7 +21,7 @@ type TrailEdition = {
 
 type TrailReaderProps = {
   accountLabel?: string;
-  activeView: "briefing" | "history" | "map" | "repositories";
+  activeView: "briefing" | "history" | "map" | "repositories" | "timeline";
   connectHref?: string;
   edition: TrailEdition;
   notice: string;
@@ -192,7 +192,7 @@ export function TrailReader({
       <aside className={styles.trailRail} aria-label="Baxtori navigation">
         <button className={styles.brand} onClick={() => activeView === "briefing" ? moveTo(0) : onOpenNow()} type="button">
           <BrandMark className={styles.brandMark} />
-          <span><strong>Baxtori</strong><small>Stay the author</small></span>
+          <span><strong>Baxtori</strong><small>Repository notes</small></span>
         </button>
 
         <nav className={styles.trailPrimaryNav} aria-label="Primary">
@@ -207,7 +207,7 @@ export function TrailReader({
             <progress max={session.scenes.length} value={activeIndex + 1} />
           </div>
         ) : (
-          <p className={styles.railSection}>{activeView === "map" ? "Repository bearings" : activeView === "repositories" ? "Review sources" : "Immutable editions"}</p>
+          <p className={styles.railSection}>{activeView === "map" ? "Repository map" : activeView === "repositories" ? "Sources" : activeView === "timeline" ? "Edition record" : "Edition archive"}</p>
         )}
 
         {activeView === "briefing" && (
@@ -227,7 +227,7 @@ export function TrailReader({
         )}
 
         <nav className={styles.trailSecondaryNav} aria-label="Edition and source tools">
-          <button onClick={onOpenEditionRecord} type="button">Edition record</button>
+          <button aria-current={activeView === "timeline" ? "page" : undefined} onClick={onOpenEditionRecord} type="button">Edition record</button>
           {onOpenRepositories && <button aria-current={activeView === "repositories" ? "page" : undefined} onClick={onOpenRepositories} type="button">Review sources <small>{repositoryCount}</small></button>}
           {connectHref && <a href={connectHref}>Connect GitHub</a>}
         </nav>
@@ -271,8 +271,8 @@ export function TrailReader({
               <h1>Notes from the repositories.</h1>
               <p className={styles.openingDek}>
                 {readingScenes.length
-                  ? `${readingScenes.length} ${readingScenes.length === 1 ? "story" : "stories"}, edited into about ${session.plannedMinutes} minutes of reading.`
-                  : "No meaningful change needs a reader this time."}
+                  ? `${readingScenes.length} ${readingScenes.length === 1 ? "story" : "stories"} · about ${session.plannedMinutes} minutes.`
+                  : "No stories in this edition."}
               </p>
             </div>
             {readingScenes.length > 0 && (

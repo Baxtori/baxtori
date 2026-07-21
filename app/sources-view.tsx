@@ -127,7 +127,7 @@ export function SourcesView({
           <div>
             <span className="eyebrow">Next scheduled review · {REVIEW_SCOPE.schedule}</span>
             <h2 id="review-preview-heading">Next edition scope</h2>
-            <p>Pinned sources are always checked. Automatic sources join only when their activity earns attention. Muted sources remain outside scheduled reviews.</p>
+            <p>Pinned sources are always checked. Automatic sources are checked when they change. Muted sources are skipped.</p>
             <label className="capture-window" htmlFor="capture-window">
               <span>Look back</span>
               <select id="capture-window" onChange={(event) => onCaptureWindowChange(event.target.value as CaptureWindow)} value={captureWindow}>
@@ -187,7 +187,7 @@ export function SourcesView({
           {repositoryLoading && <div className="scope-empty"><strong>Checking the scheduled scope…</strong><span>Reading repository access and activity from GitHub.</span></div>}
           {!repositoryLoading && !selectedRepositories.length && !inaccessibleScheduledRepositories.length && <div className="scope-empty"><strong>No sources selected.</strong><span>Add a source below or restore the published scope.</span></div>}
         </div>
-        <p className="scope-boundary"><span className={`sync-status is-${feedbackStatus}`}>{feedbackStatus === "loading" ? "Loading state" : feedbackStatus === "saving" ? "Saving modes" : feedbackStatus === "saved" ? "Modes saved to account" : "Modes saved on this device"}</span>{" · "}Changes affect future collection only. Baxtori needs source access before it can publish code claims or a trustworthy system map.</p>
+        <p className="scope-boundary"><span className={`sync-status is-${feedbackStatus}`}>{feedbackStatus === "loading" ? "Loading state" : feedbackStatus === "saving" ? "Saving modes" : feedbackStatus === "saved" ? "Modes saved to account" : "Modes saved on this device"}</span>{" · "}Changes apply to the next review. Code excerpts and maps appear only after review.</p>
       </section>
 
       <div className="repo-toolbar">

@@ -82,14 +82,14 @@ export function EvidenceQuestion({
           editionId,
           "question",
         );
-        if (!topicInput) throw new Error("This evidence cannot start a durable question thread.");
+        if (!topicInput) throw new Error("This excerpt cannot hold a question.");
         const response = await fetch("/api/feedback/topics", {
           body: JSON.stringify(topicInput),
           headers: { "Content-Type": "application/json" },
           method: "POST",
         });
         const payload = (await response.json()) as { error?: string; topic?: TopicThreadRecord };
-        if (!response.ok || !payload.topic) throw new Error(payload.error ?? "The question thread could not be created.");
+        if (!response.ok || !payload.topic) throw new Error(payload.error ?? "The question could not be created.");
         thread = payload.topic;
       }
 
@@ -164,13 +164,13 @@ export function EvidenceQuestion({
           <strong>{visibleQuestions.filter((item) => item.status === "open").length} open on this excerpt</strong>
         </div>
         <button aria-expanded={open} onClick={() => setOpen((current) => !current)} type="button">
-          {open ? "Close" : "Ask about this evidence"}
+          {open ? "Close" : "Ask a question"}
         </button>
       </div>
 
       {open && (
         <form className="evidence-question-form" onSubmit={(event) => { event.preventDefault(); void saveQuestion(); }}>
-          <p>Keep the question attached to <code>{evidence.path}</code> and the reviewed commit range.</p>
+          <p>The question will remain linked to <code>{evidence.path}</code> and these lines.</p>
           <label>
             Question
             <textarea
@@ -208,7 +208,7 @@ export function EvidenceQuestion({
             </label>
           </fieldset>
           <fieldset className="question-disposition">
-            <legend>Use this question</legend>
+            <legend>Save as</legend>
             <label>
               <input checked={reviewState === "private"} onChange={() => setReviewState("private")} type="radio" />
               Keep private
@@ -232,7 +232,7 @@ export function EvidenceQuestion({
               </label>
             </div>
           )}
-          {!feedbackConfigured && <p className="question-sync-note">Private questions save on this device. Account sync enables scheduled review.</p>}
+          {!feedbackConfigured && <p className="question-sync-note">Private questions save on this device. Sign in to include one in a scheduled review.</p>}
           <div className="evidence-question-actions">
             <button className="primary" disabled={saving} type="submit">{saving ? "Saving…" : "Save question"}</button>
             <button onClick={resetComposer} type="button">Cancel</button>

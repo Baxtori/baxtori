@@ -1,50 +1,31 @@
 # Baxtori
 
-**Stay the author of your code.**
+Baxtori turns repository changes into a short reading edition. Each story says
+what changed, why it matters, and which code supports the explanation.
 
-Baxtori is a durable, evidence-backed working memory for software built with
-agents. It decides what is worth understanding, opens on the exact code, and
-remembers the questions, watches, and system knowledge that should shape later
-reviews. It is designed for a world where agents can produce more code than a
-person can continuously absorb.
+Readers can mark a story understood, watch it for later changes, or leave a
+question on an exact code range. System maps reviewed repository areas. Memory
+searches earlier editions and reader notes.
 
-The product and information-density contract lives in
-[`docs/NORTH_STAR.md`](docs/NORTH_STAR.md).
-The current competitive and integration thesis lives in
-[`docs/PRODUCT_LANDSCAPE.md`](docs/PRODUCT_LANDSCAPE.md).
-The current account, security, and repository-memory decision lives in
-[`docs/proposals/2026-07-22-account-memory-and-product-boundary.md`](docs/proposals/2026-07-22-account-memory-and-product-boundary.md).
+[Open Baxtori](https://www.baxtori.com)
 
-The product started as **Glimpse** and is being rebranded around
-[baxtori.com](https://baxtori.com).
+## What works
 
-## Current capabilities
+- A finite, scroll-first edition on the home page
+- Commit-addressed diffs and current-code excerpts
+- Read-only GitHub App access to selected repositories
+- Per-account repository choices, reading state, watches, questions, and review requests
+- Repository maps with reviewed areas, source files, walkthroughs, and open questions
+- Search and filters across prior editions
+- A configurable look-back window for the next review
+- A signed-out demo that does not require GitHub access
+- Desktop and mobile browser tests
 
-- A deliberately concise weekly briefing with details on demand
-- Separate signals for learning value, code quality, and deliberate tradeoffs
-- Mark-understood, watch, dismiss-project, focus, and keyboard-reading flows
-- A deterministic, reader-sized Continue queue across stories, watches, map frontiers, questions, and re-review context
-- A chronological activity view without notification or inbox behavior
-- Account-backed reading state with an instant device fallback
-- GitHub account sign-in with an encrypted, HttpOnly server session
-- Fine-grained GitHub App access to repositories the user explicitly chooses
-- Recent commit activity for selected private or public repositories
-- Responsive layouts for desktop, tablet, and mobile
-- A living Repo Map with an evidence-backed comprehension frontier
-- Exact, commit-addressed code excerpts attached to every published explanation
-- Guided execution-path walkthroughs with an invariant at every step
-- A durable question ledger that preserves uncertainty instead of guessing
-- An append-only map review history anchored to exact commits
-- A reader-chosen study window assembled from walkthroughs, frontiers, and open questions
-- A review scope chosen in the app and consumed by the weekly compiler
-- Candidate-versus-no-new-commits signals measured from the last completed rundown cursor
-- Independent Repo Maps and learning state for every repository with enough reviewed evidence
-- An explicit no-code-yet state instead of fabricated coverage for empty repositories
-- Lock, dismiss, and re-review controls with versioned review lenses, custom guidance, and a durable review queue
-- A credential-free published demo with an allowlisted, exact Baxtori evidence path
-- Desktop and mobile Playwright checks that capture the entrance, briefing, evidence, and cross-edition memory
+Baxtori does not write to connected repositories. The hosted app fetches code
+from GitHub only when a reader opens an excerpt. It does not run a model over a
+connected user's private code.
 
-## Run it locally
+## Run locally
 
 ```bash
 npm install
@@ -52,131 +33,66 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Create a GitHub App, then copy the values in `.env.example` to `.env.local`.
-Configure the app with:
+Create a GitHub App and add the values described in `.env.example`. Configure:
 
-- Homepage URL: your Baxtori deployment
+- Homepage URL: your deployment URL
 - Callback URL: `<deployment>/api/auth/github/callback`
-- Setup URL (after installation): your Baxtori deployment
+- Setup URL: your deployment URL
 - Repository permissions: **Contents: Read-only** and **Metadata: Read-only**
 - User-to-server token expiration: enabled
 
-The GitHub App installation lets a user select the repositories Baxtori may read. User
-access and refresh tokens are encrypted inside an HttpOnly cookie and never
-sent to browser JavaScript. Use a random value of at least 32 bytes for
-`GITHUB_SESSION_SECRET`.
+Use a random value of at least 32 bytes for `GITHUB_SESSION_SECRET`.
 
-The signed-out home opens the published field journal immediately. Connecting
-GitHub adds read-only source controls and account-scoped memory in context; it
-does not imply that a personalized edition has already been compiled. Account
-records are isolated by numeric GitHub user ID, while the scheduled compiler is
-still explicitly pinned to one `FEEDBACK_GITHUB_LOGIN`.
+The GitHub App installation controls which repositories Baxtori can see.
+Authentication tokens remain in an encrypted, HttpOnly cookie. Account records
+are keyed by numeric GitHub user ID. Readers can download or delete their stored
+Baxtori data from Sources; GitHub App access is managed separately on GitHub.
 
-Connected readers can download or permanently delete Baxtori's account record
-from Sources. Deletion removes repository inventory, reader state, questions,
-watches, and review requests; GitHub App installation access remains separately
-controlled in GitHub. The complete hackathon narrative and demo script live in
-[`docs/HACKATHON_DEMO.md`](docs/HACKATHON_DEMO.md).
-
-## Validate a production build
+## Validate
 
 ```bash
-npm run build
-```
-
-## Inspect the reader in a browser
-
-```bash
-npx playwright install chromium
+npm run lint
+npm test
 npm run test:visual
 ```
 
-The visual suite starts the real Vinext development server, exercises the
-signed-out journal and connected reader at desktop and mobile sizes, fails on
-browser exceptions, and attaches full-page screenshots to the Playwright test
-artifacts. CI retains the screenshots, report, and failure traces for 14 days.
+The visual suite runs the signed-out and connected flows at desktop and mobile
+sizes and fails on browser exceptions.
 
-## Direction
+## How editions are produced
 
-```text
-Selected GitHub or local repositories
-  → incremental commit-range collection
-  → related-change clustering
-  → evidence-backed explanations
-  → a concise Baxtori briefing
-```
-
-The next compiler layer is per-repository Git cursors and related-change
-clustering: cite exact files and hunks, connect changes to existing map areas,
-and publish nothing when a project has no meaningful new context.
-
-## Weekly compiler
-
-Baxtori keeps model inference outside the hosted app. A local Codex automation
-uses the owner's plan-dependent Codex usage to run the judgment-heavy review,
-while the
-repository supplies a deterministic evidence pre-pass:
+The hosted app does not call a model. A scheduled local Codex task reviews the
+configured repositories and writes versioned edition data to this repository.
+The deterministic part of that workflow is available as:
 
 ```bash
 npm run backstory:collect
 npm run backstory:validate
-```
-
-`baxtori.sources.json` defines the GitHub repositories and default branches in scope.
-Its local paths are fetch caches only: collection fetches each remote and reads
-`origin/<branch>`, so dirty worktrees and unpushed commits never enter a rundown.
-Published stories also retain one to four exact code ranges in `codeEvidence`,
-including the reviewed head and base commits. The reader opens on the matching
-unified diff through authenticated GitHub routes, with the current implementation
-one toggle away. GitHub credentials remain server-side and every line stays
-anchored to an exact comparison. The full file and comparison remain one link away.
-`data/review-scope.json` is the safe, client-visible half of that configuration:
-it names the scheduled repositories, priorities, map coverage, review cursor, and
-schedule without exposing local checkout paths. `npm run scope:validate` prevents
-the visible scope and deterministic collector from drifting apart.
-`data/candidates.json` is ignored scratch evidence. The automation writes a
-concise, validated `data/latest.json` and archives the same edition under
-`data/editions/`. Committing that edition updates the deployed app without any
-separate model API billing. The reader assembles those versioned files into a
-newest-first History view with repository, topic, question, watch, and text
-filters. Opening an archived story uses its retained base commit, head commit,
-path, and line range, so historical diffs remain inspectable even after the
-current briefing moves on.
-
-`data/review-policy.json` versions the available re-review lenses and rules that
-must survive prompt changes. Convex stores each GitHub account's reading state,
-repository choices, and queued re-review requests. The browser talks only to
-authenticated Baxtori routes; the Convex URL and bridge secret remain server-side.
-Before collection, the Monday automation exports that state into ignored scratch
-input. Repository choices narrow the configured fetch caches, while review lenses
-and custom guidance become explicit compiler input. Successfully considered
-requests are marked processed after the review. Published editions and Repo Maps
-remain versioned in Git rather than the application database.
-`FEEDBACK_GITHUB_LOGIN` explicitly selects the account the local compiler may
-consume, so another signed-in account can never silently become its input.
-The completion command accepts only explicit request IDs from that export, which
-keeps inaccessible or unhandled requests in the queue instead of discarding them.
-
-The same prepass now compares changed files with every registered Repo Map area's evidence.
-Its `mapImpact` output stays attributable by repository while naming affected areas, exact commits, and unmapped files.
-The scheduled review must inspect those changes before adjusting confidence,
-freshness, concepts, walkthroughs, or questions; a filename match alone never
-rewrites repository knowledge.
-
-## Progressive repository comprehension
-
-`data/repository-maps.json` registers the evidence-backed dossiers under
-`data/repo-map.json` and `data/maps/`. Each Repo Map combines breadth, depth, confidence, and
-freshness into an explicitly estimated coverage score, then uses the reader's
-understood, revisit, and not-worth-it feedback to choose a comprehension
-frontier independently per repository. Review events retain the exact through-commit and files that were
-classified, while the study queue packs unfinished walkthroughs and questions
-into a reader-selected time budget. Validate it with:
-
-```bash
 npm run map:validate
+npm run scope:validate
+npm run policy:validate
 ```
 
-The hosted application remains a standard Next.js app. `vercel.json` selects a
-native Next.js build on Vercel, while the existing Sites build scripts remain
-available during the hosting transition.
+`baxtori.sources.json` lists the repositories and branches available to the
+collector. `data/review-scope.json` contains the safe, client-visible review
+scope. `data/candidates.json` is ignored scratch input. Published editions live
+in `data/latest.json` and `data/editions/`; repository maps live in
+`data/repo-map.json` and `data/maps/`.
+
+Published code evidence retains repository, base commit, head commit, file, and
+line range. Old editions can therefore reopen the same comparison after the
+current edition changes.
+
+Repository choices and reader feedback are exported before a scheduled review.
+They narrow the collection scope and provide review instructions. They do not
+change an already published edition.
+
+## Project notes
+
+- [Product definition](docs/NORTH_STAR.md)
+- [Roadmap](docs/PRODUCT_ROADMAP.md)
+- [Security and account boundaries](docs/proposals/2026-07-22-account-memory-and-product-boundary.md)
+- [Hackathon demo](docs/HACKATHON_DEMO.md)
+- [Legacy repository aliases](docs/REPOSITORY_IDENTITY.md)
+
+The app runs as Next.js on Vercel and as a Vinext build on Sites.

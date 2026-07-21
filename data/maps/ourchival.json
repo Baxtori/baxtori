@@ -1,7 +1,7 @@
 {
   "repository": "teamleaderleo/ourchival",
   "generatedAt": "2026-07-20T01:21:58.386Z",
-  "summary": "Ourchival is a private visual-reference system whose paired browser Clipper feeds reviewable capture sessions into a Convex catalog, while Google Drive remains the preferred original-file home and derived media, organization, search, and enrichment support retrieval.",
+  "summary": "Ourchival is a private reference archive with browser capture, Convex metadata, Drive originals, and generated previews.",
   "reviews": [
     {
       "id": "review-2026-07-20-origin-main",
@@ -179,7 +179,7 @@
       "confidence": 96,
       "freshness": 100,
       "changed": "Expanded through origin/main at 93229ca",
-      "verdict": "The core loop is now resilient and attributable; direct session accounting is the next integrity boundary",
+      "verdict": "Batch capture resumes after interruption. Session totals are still reconstructed from saved references.",
       "evidence": [
         "apps/extension/src/content.ts",
         "apps/extension/src/background.ts",
@@ -237,7 +237,7 @@
       "confidence": 95,
       "freshness": 100,
       "changed": "Expanded through origin/main at 93229ca",
-      "verdict": "The catalog now represents capture, reuse, retrieval, enrichment, and review explicitly; several relationship operations still favor personal-scale scans over stronger indexed uniqueness",
+      "verdict": "The data model covers the main archive objects. Some relationship queries still scan at personal-library scale.",
       "evidence": [
         "convex/schema.ts",
         "convex/lib/referenceCatalog.ts",
@@ -266,7 +266,7 @@
       "confidence": 94,
       "freshness": 100,
       "changed": "Secured and connected to derived media through origin/main",
-      "verdict": "Original portability and browsing performance are now separate concerns, at the cost of operating a second derived-file plane in Convex Storage",
+      "verdict": "Originals remain portable, while previews add a second storage path to operate.",
       "evidence": [
         "convex/lib/drive.ts",
         "convex/http.ts",
@@ -293,7 +293,7 @@
       "confidence": 94,
       "freshness": 100,
       "changed": "Recomposed into focused panels and hooks through origin/main",
-      "verdict": "Reliquary has become an operational archive rather than a gallery; its next UX risk is feature density across many adjacent panels",
+      "verdict": "The vault supports the full archive workflow, but its adjacent panels are becoming crowded.",
       "evidence": [
         "apps/web/app/ReferenceVault.tsx",
         "apps/web/app/useReferenceVault.ts",
@@ -321,7 +321,7 @@
       "confidence": 94,
       "freshness": 100,
       "changed": "Rich metadata and the X parser landed through origin/main",
-      "verdict": "The intended parser seam is now proven for X; other platforms still degrade through the generic snapshot contract",
+      "verdict": "X has a dedicated parser. Other sites still use the generic page snapshot.",
       "evidence": [
         "packages/shared/src/index.ts",
         "packages/parsers/src/index.ts",
@@ -348,7 +348,7 @@
       "confidence": 94,
       "freshness": 100,
       "changed": "Implemented and reviewed through origin/main at 93229ca",
-      "verdict": "The personal single-owner threat model is now enforced; identity, rotation, and finer device scopes remain deliberately outside it",
+      "verdict": "Owner and capture credentials are separated. Rotation and narrower device scopes are not implemented.",
       "evidence": [
         "convex/lib/privateAccess.ts",
         "convex/http.ts",
@@ -407,7 +407,7 @@
       "confidence": 92,
       "freshness": 100,
       "changed": "New durable area reviewed through origin/main at 93229ca",
-      "verdict": "The reuse model is coherent and retrieval is unusually transparent; full-archive search scalability remains intentionally unresolved",
+      "verdict": "References can be reused across projects and searches show match reasons. Full-archive search still uses bounded scans.",
       "evidence": [
         "convex/projects.ts",
         "convex/boards.ts",
@@ -436,7 +436,7 @@
       "confidence": 90,
       "freshness": 100,
       "changed": "New durable area reviewed through origin/main at 93229ca",
-      "verdict": "The human-review boundary is strong; heuristic versioning and scan limits should stay visible as the archive grows",
+      "verdict": "Suggested tags require approval. Heuristic versions and scan limits still need to be exposed.",
       "evidence": [
         "convex/enrichmentJobs.ts",
         "convex/lib/suggestedTags.ts",
@@ -465,7 +465,7 @@
       "confidence": 93,
       "freshness": 100,
       "changed": "New durable area reviewed through origin/main at 93229ca",
-      "verdict": "The worker cleanly separates archival storage from browsing assets; retry policy and orphan cleanup are the remaining operational boundaries",
+      "verdict": "The worker creates browsing assets without moving originals. Retry and orphan cleanup are still missing.",
       "evidence": [
         "convex/mediaDerivatives.ts",
         "convex/mediaDerivativesNode.ts",

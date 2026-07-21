@@ -15,9 +15,9 @@ export const REPOSITORY_MODE_LABELS: Readonly<Record<RepositoryMode, string>> = 
 };
 
 export const REPOSITORY_MODE_DESCRIPTIONS: Readonly<Record<RepositoryMode, string>> = {
-  automatic: "Check recent activity and review only when the evidence clears the publication threshold.",
-  muted: "Keep this repository in the library without checking it during scheduled reviews.",
-  pinned: "Check this repository first and give meaningful candidates priority when attention is limited.",
+  automatic: "Check when it has new commits.",
+  muted: "Skip during scheduled reviews.",
+  pinned: "Always check first.",
 };
 
 export function initializeRepositoryModes({

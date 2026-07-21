@@ -54,7 +54,6 @@ test("places an exact excerpt inside its canonical repository map area", () => {
   assert.equal(orientation.area?.position, 1);
   assert.equal(orientation.area?.totalAreas, 2);
   assert.equal(orientation.area?.evidencePosition, 1);
-  assert.equal(orientation.area?.coverageEstimate, 70);
 });
 
 test("shows connected mapped areas through exact shared paths", () => {
@@ -89,7 +88,7 @@ test("keeps same filenames in other directories outside the map match", () => {
   assert.deepEqual(orientation.connections, []);
 });
 
-test("explains selection as editorial judgment instead of codebase percentage", () => {
+test("explains selection without exposing internal scores", () => {
   const orientation = buildStoryOrientation({
     active: story.codeEvidence[0],
     maps,
@@ -97,11 +96,10 @@ test("explains selection as editorial judgment instead of codebase percentage", 
     story,
   });
 
-  assert.match(orientation.selection.explanation, /editorial judgment/i);
-  assert.match(orientation.selection.explanation, /does not measure the percentage/i);
+  assert.match(orientation.selection.explanation, /included in the edition/i);
+  assert.doesNotMatch(orientation.selection.explanation, /score|percentage/i);
   assert.deepEqual(orientation.selection.signals, [
-    "5/5 editorial learning value",
-    "1 exact excerpt",
-    "Account-backed review feedback loop map area",
+    "1 code excerpt",
+    "Mapped to Account-backed review feedback loop",
   ]);
 });

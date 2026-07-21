@@ -1,7 +1,7 @@
 {
   "repository": "teamleaderleo/one-more-legend",
   "generatedAt": "2026-07-13T09:19:11+08:00",
-  "summary": "One More Legend is a deterministic text roguelite whose headless engine powers a browser game, simulation harnesses, and a stateless ChatGPT MCP app.",
+  "summary": "One More Legend is a deterministic text roguelite with a shared engine for the browser game, simulations, and ChatGPT MCP app.",
   "reviews": [
     {
       "id": "review-2026-07-13-origin-pressure-provenance",
@@ -73,7 +73,7 @@
       "confidence": 94,
       "freshness": 98,
       "changed": "This week",
-      "verdict": "Excellent architectural center; the explicit replay invariant makes every client and simulation easier to trust",
+      "verdict": "One engine owns the rules for every client and simulation.",
       "evidence": ["src/engine.ts", "engine.js", "HANDOFF.md"],
       "walkthrough": {
         "title": "Follow one choice through a reproducible run",
@@ -119,7 +119,7 @@
       "confidence": 88,
       "freshness": 97,
       "changed": "This week",
-      "verdict": "Thin in rules and rich in feedback—the right trade for this game",
+      "verdict": "The browser handles display and input while the engine owns game rules.",
       "evidence": ["src/ui.ts", "index.template.html", "manifest.webmanifest"],
       "concepts": ["thin client", "decision-time odds", "local run legacy", "progressive combat feedback"]
     },
@@ -134,7 +134,7 @@
       "confidence": 93,
       "freshness": 100,
       "changed": "Reviewed today from origin/main",
-      "verdict": "Unusually strong for a small game; balance intent is executable instead of anecdotal",
+      "verdict": "Balance checks are repeatable because simulations use seeded runs and named strategies.",
       "evidence": ["sim.js", "pressure-sim.js", "pressure-report.test.js", ".github/workflows/pressure-report.yml"],
       "concepts": ["deterministic Monte Carlo", "strategy baselines", "dead-turn metric", "target-priority audit"]
     },
@@ -149,7 +149,7 @@
       "confidence": 89,
       "freshness": 92,
       "changed": "This week",
-      "verdict": "Elegant stateless adapter; engine-version compatibility is the main boundary to watch",
+      "verdict": "The adapter is stateless. Saved run tokens still depend on engine-version compatibility.",
       "evidence": ["mcp-app/src/game.ts", "mcp-app/src/server.ts", "mcp-app/src/widget.ts", "api/mcp.js"],
       "concepts": ["stateless run token", "choice replay", "structured tool output", "MCP Apps widget"]
     },
@@ -164,7 +164,7 @@
       "confidence": 86,
       "freshness": 91,
       "changed": "This week",
-      "verdict": "Pragmatic and legible, with deliberate generated-artifact duplication",
+      "verdict": "One project deploys both surfaces, with some generated files duplicated between builds.",
       "evidence": ["build.js", "index.template.html", "vercel.json", "mcp-app/scripts/build.mjs", ".github/workflows/mcp-app.yml"],
       "concepts": ["single-file browser build", "shared engine artifact", "Vercel rewrite", "generated deploy surface"]
     },
@@ -179,7 +179,7 @@
       "confidence": 88,
       "freshness": 100,
       "changed": "Reviewed today from origin/main",
-      "verdict": "Useful first slice; intentionally transitional until FightResult becomes an engine contract",
+      "verdict": "Telemetry is derived from logs until FightResult exposes these fields directly.",
       "evidence": ["pressure-report.js", "pressure-report.test.js", "pressure-sim.js", "HANDOFF.md"],
       "concepts": ["observational telemetry", "log-derived schema", "combat grade", "non-invasive instrumentation"]
     }

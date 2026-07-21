@@ -47,7 +47,6 @@ export type StoryOrientation = {
     breadth: number;
     concepts: string[];
     confidence: number;
-    coverageEstimate: number;
     depth: number;
     evidenceCount: number;
     evidencePosition: number | null;
@@ -73,15 +72,6 @@ export type StoryOrientation = {
 
 function normalizePath(path: string) {
   return path.trim().replace(/^\.\//, "").replace(/\/$/, "");
-}
-
-function areaCoverageEstimate(area: OrientationArea) {
-  return Math.round(
-    area.breadth * 0.35 +
-    area.depth * 0.35 +
-    area.confidence * 0.2 +
-    area.freshness * 0.1,
-  );
 }
 
 function intersectPaths(left: Set<string>, right: string[]) {
@@ -131,9 +121,8 @@ export function buildStoryOrientation({
     : -1;
   const excerptCount = story.codeEvidence?.length ?? 0;
   const signals = [
-    `${story.learningValue}/5 editorial learning value`,
-    `${excerptCount} exact ${excerptCount === 1 ? "excerpt" : "excerpts"}`,
-    primary ? `${primary.area.name} map area` : "outside the current repository map",
+    `${excerptCount} code ${excerptCount === 1 ? "excerpt" : "excerpts"}`,
+    primary ? `Mapped to ${primary.area.name}` : "Not yet assigned to a map area",
   ];
 
   return {
@@ -141,7 +130,6 @@ export function buildStoryOrientation({
       breadth: primary.area.breadth,
       concepts: primary.area.concepts,
       confidence: primary.area.confidence,
-      coverageEstimate: areaCoverageEstimate(primary.area),
       depth: primary.area.depth,
       evidenceCount: primary.area.evidence.length,
       evidencePosition: evidencePosition >= 0 ? evidencePosition + 1 : null,
@@ -164,7 +152,7 @@ export function buildStoryOrientation({
     repository: canonical,
     repositorySummary: repositoryMap?.summary ?? null,
     selection: {
-      explanation: `The scheduled review selected this story through editorial judgment, assigned it ${story.learningValue}/5 learning value, and attached inspectable evidence. The score describes the edition's reading priority; it does not measure the percentage or absolute importance of the codebase.`,
+      explanation: `This story was included in the edition with ${excerptCount} linked code ${excerptCount === 1 ? "excerpt" : "excerpts"}.`,
       headline: story.verdict,
       signals,
     },

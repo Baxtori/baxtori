@@ -60,7 +60,7 @@ export type EditionLedgerView = {
 export function buildEditionLedgerView(edition: EditionLedgerInput): EditionLedgerView {
   if (!edition.selection) {
     return {
-      description: "This edition predates the selection ledger. Published and explicitly quiet repositories are known; inspected, deferred, excluded, and inaccessible candidates were not recorded.",
+      description: "This edition records published and quiet repositories, but not every review decision.",
       headline: `${edition.stories.length} published ${edition.stories.length === 1 ? "finding" : "findings"}`,
       metrics: [
         { label: "Published", value: edition.stories.length },
@@ -81,8 +81,8 @@ export function buildEditionLedgerView(edition: EditionLedgerInput): EditionLedg
   const candidateCount = selection.included.length + selection.deferred.length + selection.excluded.length;
   return {
     description: selection.plannedMinutes > selection.readingBudgetMinutes
-      ? `${selection.plannedMinutes} minutes planned against a ${selection.readingBudgetMinutes}-minute target because the highest-priority finding was larger than the target.`
-      : `${selection.plannedMinutes} of ${selection.readingBudgetMinutes} target reading minutes planned.`,
+      ? `${selection.plannedMinutes} minutes published; the first story exceeded the ${selection.readingBudgetMinutes}-minute target.`
+      : `${selection.plannedMinutes} of ${selection.readingBudgetMinutes} reading minutes published.`,
     headline: `${selection.included.length} of ${candidateCount} reviewed ${candidateCount === 1 ? "finding" : "findings"} published`,
     metrics: [
       { label: "Repositories inspected", value: selection.inspectedRepositories },
