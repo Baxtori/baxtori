@@ -1,6 +1,7 @@
 import { feedbackIsConfigured, getReaderFeedback, saveReaderFeedback } from "@/lib/feedback-store";
 import { parseReaderState } from "@/lib/feedback-contract";
 import { canonicalRepository } from "@/lib/repository-identity";
+import { guardMutationRequest } from "@/lib/request-security";
 import { canonicalizeEvidenceAddress } from "@/lib/topic-contract";
 import { getGitHubIdentitySession, withSessionCookie } from "@/lib/github-auth";
 
@@ -41,6 +42,8 @@ export async function GET(request: Request) {
 export async function PUT(request: Request) {
   const { session, setCookie } = await getGitHubIdentitySession(request);
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to save your reading state." }, { status: 401 }), setCookie);
+  const mutationError = guardMutationRequest(request, { requireJson: true });
+  if (mutationError) return withSessionCookie(mutationError, setCookie);
   if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ configured: false }, { status: 503 }), setCookie);
 
   let payload;
