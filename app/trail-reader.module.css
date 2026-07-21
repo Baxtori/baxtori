@@ -79,14 +79,8 @@
   text-align: left;
 }
 .trailPrimaryNav button[aria-current="page"] { color: var(--trail-ink); font-weight: 780; }
-.trailPrimaryNav button[aria-current="page"]::after {
-  width: 1rem;
-  height: 1rem;
-  background: url("/botanical/brand-fiddlehead.png") center / contain no-repeat;
-  content: "";
-  opacity: 0.55;
-  transform: rotate(8deg);
-}
+.navGlyph { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 1.1; }
+.navGlyph circle { fill: currentColor; stroke: none; }
 .trailPrimaryNav small { font-size: 0.58rem; }
 
 .railProgress { display: grid; gap: 0.55rem; margin-top: 1.5rem; }
@@ -188,7 +182,7 @@
 @supports (animation-timeline: scroll()) {
   @media (prefers-reduced-motion: no-preference) {
     .fernPinnaGrowth {
-      animation: fern-native-unfurl 1ms cubic-bezier(0.33, 0, 0.15, 1) both;
+      animation: fern-native-unfurl 1ms linear both;
       animation-timeline: scroll(root block);
       animation-range: var(--fern-range-start) var(--fern-range-end);
     }
@@ -233,7 +227,7 @@
   height: 10rem;
   background: url("/botanical/marginalia-flourish.png") center / contain no-repeat;
   content: "";
-  opacity: 0.12;
+  opacity: 0.07;
   pointer-events: none;
   transform: rotate(-5deg);
 }
@@ -335,7 +329,9 @@
 
 .openingLead { align-self: center; }
 .openingMeta {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   margin-bottom: 1.25rem;
   color: var(--trail-green);
   font-size: 0.62rem;
@@ -343,6 +339,8 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
+.openingMeta svg { width: 0.85rem; height: 0.85rem; fill: none; stroke: currentColor; stroke-width: 1.1; }
+.openingMeta svg circle { fill: currentColor; stroke: none; }
 
 .openingDek {
   max-width: 31rem;
@@ -431,7 +429,8 @@
 .botanicalDetail[data-specimen="2"] { transform: rotate(3deg); }
 .botanicalDetail[data-specimen="2"] .detailSpecimen { top: -64%; right: -26%; width: 138%; transform: scaleX(-1) rotate(8deg); }
 .storyMeta { justify-content: flex-start; color: var(--trail-green); font-size: 0.6rem; font-weight: 820; letter-spacing: 0.09em; text-transform: uppercase; }
-.storyMeta span + span::before { margin-right: 1rem; color: rgb(49 95 70 / 35%); content: "·"; }
+.storyMeta svg { width: 0.72rem; height: 0.72rem; flex: 0 0 auto; fill: none; opacity: 0.46; stroke: currentColor; stroke-width: 1.1; }
+.storyMeta svg circle { fill: currentColor; stroke: none; }
 
 .storyBrief {
   max-width: 45rem;
@@ -451,19 +450,6 @@
   margin-top: 1.35rem;
   padding: 1rem 0;
   border-top: 1px solid var(--trail-line);
-}
-
-.meaning::after {
-  position: absolute;
-  top: -1.7rem;
-  right: -0.5rem;
-  width: 8.5rem;
-  height: 3.2rem;
-  background: url("/botanical/marginalia-flourish.png") center / contain no-repeat;
-  content: "";
-  opacity: 0.12;
-  pointer-events: none;
-  transform: rotate(-4deg);
 }
 
 .meaning > span,
@@ -505,11 +491,6 @@
 .studyScene .primaryAction {
   color: var(--trail-paper-light);
   background-color: var(--trail-green);
-  background-image: url("/botanical/marginalia-flourish.png");
-  background-position: calc(100% + 2.3rem) center;
-  background-repeat: no-repeat;
-  background-size: 9.5rem auto;
-  background-blend-mode: soft-light;
   border-color: var(--trail-green);
 }
 .storyActions button:nth-child(2) { color: #285f88; background: rgb(225 235 241 / 58%); border-color: rgb(40 95 136 / 26%); }
@@ -680,7 +661,7 @@
   .primaryFern { left: 5vw; height: 118vh; opacity: 0.17; }
   .primaryJournal { padding-top: 6.4rem; }
   .primaryMasthead h1 { font-size: clamp(3.2rem, 14.4vw, 4.45rem); }
-  .primaryMasthead::after { right: -8rem; width: 21rem; opacity: 0.1; }
+  .primaryMasthead::after { right: -8rem; width: 21rem; opacity: 0.06; }
   .endSummary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .endSummary > div { border-bottom: 1px solid var(--trail-line); }
   .endSummary > div:nth-child(2) { border-right: 0; }

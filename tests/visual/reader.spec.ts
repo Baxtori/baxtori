@@ -143,7 +143,7 @@ test("the default reader turns the review into a finite field journal", async ({
   expect(fernFrameBox?.width ?? 0).toBeGreaterThanOrEqual(viewportWidth - 20);
   const fernPlate = progressSpecimen.locator("[data-botanical-plate]");
   await expect(fernPlate).toBeVisible();
-  await expect(progressSpecimen).toHaveAttribute("data-growth-mode", /native-scroll|frame-synced/);
+  await expect(progressSpecimen).toHaveAttribute("data-growth-mode", /native-scroll|direct-scroll/);
   const fernBox = await fernPlate.boundingBox();
   expect(fernBox).not.toBeNull();
   expect(fernBox?.x ?? 0).toBeLessThan(0);
@@ -173,7 +173,7 @@ test("the default reader turns the review into a finite field journal", async ({
   const navigation = page.getByRole("complementary", { name: "Baxtori navigation" });
   const navigationBox = await navigation.boundingBox();
   expect(navigationBox?.x ?? -1).toBe(0);
-  await expect(navigation.locator(".botanical-brand-mark img")).toHaveAttribute("src", "/botanical/brand-fiddlehead.png");
+  await expect(navigation.locator(".botanical-brand-mark svg")).toHaveCount(1);
   const openingGrowth = await fernGrowth();
   const openingLowerPinna = await fernStage(0);
   const openingMiddlePinna = await fernStage(3);

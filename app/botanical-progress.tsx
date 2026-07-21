@@ -9,11 +9,6 @@ import {
 import { BotanicalUnfurl } from "./botanical-unfurl";
 import styles from "./trail-reader.module.css";
 
-function smoothstep(value: number) {
-  const clamped = Math.max(0, Math.min(1, value));
-  return clamped * clamped * (3 - 2 * clamped);
-}
-
 export function BotanicalProgress() {
   const rootRef = useRef<HTMLElement>(null);
 
@@ -22,8 +17,6 @@ export function BotanicalProgress() {
     if (!root) return;
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let frame = 0;
-
     const readProgress = () => {
       const scrollRange = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
       return Math.max(0, Math.min(1, window.scrollY / scrollRange));
@@ -36,7 +29,7 @@ export function BotanicalProgress() {
 
       BRANCHLET_GROWTH.forEach(({ minimum, openingOpacity, start }, index) => {
         const duration = Math.min(BRANCHLET_REVEAL_DURATION, 1 - start);
-        const stage = smoothstep((progress - start) / duration);
+        const stage = Math.max(0, Math.min(1, (progress - start) / duration));
         const scale = minimum + (1 - minimum) * stage;
         const opacity = openingOpacity + stage * (1 - openingOpacity);
         root.style.setProperty(`--fern-stage-${index}`, scale.toFixed(5));
@@ -55,24 +48,18 @@ export function BotanicalProgress() {
       return;
     }
 
-    root.dataset.growthMode = "frame-synced";
+    root.dataset.growthMode = "direct-scroll";
 
     const draw = () => {
-      frame = 0;
       applyProgress(readProgress());
     };
 
-    const scheduleDraw = () => {
-      if (!frame) frame = window.requestAnimationFrame(draw);
-    };
-
     draw();
-    window.addEventListener("scroll", scheduleDraw, { passive: true });
-    window.addEventListener("resize", scheduleDraw);
+    window.addEventListener("scroll", draw, { passive: true });
+    window.addEventListener("resize", draw);
     return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", scheduleDraw);
-      window.removeEventListener("resize", scheduleDraw);
+      window.removeEventListener("scroll", draw);
+      window.removeEventListener("resize", draw);
     };
   }, []);
 

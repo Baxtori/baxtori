@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import type { ContinueItem } from "@/lib/continue-queue";
 import type { ReaderTrail, TrailStory } from "@/lib/reader-trail";
 import { BotanicalProgress } from "./botanical-progress";
+import { BotanicalGlyph } from "./botanical-glyph";
 import { BrandMark } from "./brand-mark";
 import styles from "./trail-reader.module.css";
 
@@ -182,9 +183,9 @@ export function TrailReader({
         </button>
 
         <nav className={styles.trailPrimaryNav} aria-label="Primary">
-          <button aria-current={activeView === "briefing" ? "page" : undefined} onClick={() => activeView === "briefing" ? moveTo(0) : onOpenNow()} type="button"><span>Now</span></button>
-          <button aria-current={activeView === "map" ? "page" : undefined} onClick={onOpenSystem} type="button"><span>System</span></button>
-          <button aria-current={activeView === "history" ? "page" : undefined} onClick={onOpenMemory} type="button"><span>Memory</span></button>
+          <button aria-current={activeView === "briefing" ? "page" : undefined} onClick={() => activeView === "briefing" ? moveTo(0) : onOpenNow()} type="button"><span>Now</span>{activeView === "briefing" && <BotanicalGlyph className={styles.navGlyph} />}</button>
+          <button aria-current={activeView === "map" ? "page" : undefined} onClick={onOpenSystem} type="button"><span>System</span>{activeView === "map" && <BotanicalGlyph className={styles.navGlyph} />}</button>
+          <button aria-current={activeView === "history" ? "page" : undefined} onClick={onOpenMemory} type="button"><span>Memory</span>{activeView === "history" && <BotanicalGlyph className={styles.navGlyph} />}</button>
         </nav>
 
         {activeView === "briefing" ? (
@@ -247,7 +248,7 @@ export function TrailReader({
           </header>
           <div className={styles.openingGrid}>
             <div className={styles.openingLead}>
-              <span className={styles.openingMeta}>Current edition</span>
+              <span className={styles.openingMeta}><BotanicalGlyph />Current edition</span>
               <h1>Notes from the repositories.</h1>
               <p className={styles.openingDek}>
                 {readingScenes.length
@@ -282,7 +283,7 @@ export function TrailReader({
             return (
               <section className={`${styles.scene} ${styles.studyScene}`} data-trail-scene id={scene.id} key={scene.id} tabIndex={-1}>
                 <div className={styles.sceneNumber} aria-hidden="true">{String(index).padStart(2, "0")}</div>
-                <div className={styles.storyMeta}><span>{scene.item.kind}</span><span>{scene.item.minutes} min</span></div>
+                <div className={styles.storyMeta}><span>{scene.item.kind}</span><BotanicalGlyph /><span>{scene.item.minutes} min</span></div>
                 <h2>{scene.item.title}</h2>
                 <p className={styles.storyBrief}>{scene.item.reason}</p>
                 <p className={styles.repositoryBearing}>{scene.item.repository}</p>
@@ -300,6 +301,7 @@ export function TrailReader({
                 <div className={styles.storyLead}>
                   <div className={styles.storyMeta}>
                     <span>{scene.story.project}</span>
+                    <BotanicalGlyph />
                     <span>{scene.item.minutes} min</span>
                   </div>
                   <h2>{scene.story.title}</h2>
