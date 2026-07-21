@@ -1,6 +1,8 @@
 import { buildGitHubCompareUrl, parseCodeDiffRequest, parseGitHubPatch } from "@/lib/code-diff";
 import { getGitHubSession, githubHeaders, withSessionCookie } from "@/lib/github-auth";
 import { demoDiffEvidence } from "@/lib/demo-evidence";
+import { matchPublishedDemoEvidence } from "@/lib/demo-evidence-match";
+import { guardRateLimit } from "@/lib/rate-limit";
 
 type GitHubCompareFile = {
   additions: number;
@@ -13,6 +15,8 @@ type GitHubCompareResponse = {
   files?: GitHubCompareFile[];
   html_url?: string;
 };
+
+const DIFF_LIMIT = { limit: 120, windowMs: 60_000 };
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -27,7 +31,7 @@ export async function GET(request: Request) {
         { status: 400 },
       );
     }
-    const published = demoDiffEvidence(evidence);
+    const published = matchPublishedDemoEvidence(evidence, demoDiffEvidence);
     return published
       ? Response.json(published, { headers: { "Cache-Control": "public, max-age=3600" } })
       : Response.json({ error: "This comparison is not part of the published demo." }, { status: 404 });
@@ -37,6 +41,8 @@ export async function GET(request: Request) {
   if (!session) {
     return withSessionCookie(Response.json({ error: "Sign in with GitHub to read this diff." }, { status: 401 }), setCookie);
   }
+  const rateLimitError = guardRateLimit("github:diff", String(session.user.id), DIFF_LIMIT);
+  if (rateLimitError) return withSessionCookie(rateLimitError, setCookie);
 
   let evidence;
   try {

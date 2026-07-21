@@ -1,10 +1,18 @@
 import { feedbackIsConfigured, updateTopicFeedback, upsertTopicFeedback } from "@/lib/feedback-store";
 import { parseTopicThread, parseTopicThreadUpdate } from "@/lib/topic-contract";
 import { getGitHubIdentitySession, withSessionCookie } from "@/lib/github-auth";
+import { guardRateLimit } from "@/lib/rate-limit";
+import { guardMutationRequest } from "@/lib/request-security";
+
+const ACCOUNT_MUTATION_LIMIT = { limit: 120, windowMs: 60_000 };
 
 export async function POST(request: Request) {
   const { session, setCookie } = await getGitHubIdentitySession(request);
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to save a topic." }, { status: 401 }), setCookie);
+  const mutationError = guardMutationRequest(request, { requireJson: true });
+  if (mutationError) return withSessionCookie(mutationError, setCookie);
+  const rateLimitError = guardRateLimit("feedback:mutation", String(session.user.id), ACCOUNT_MUTATION_LIMIT);
+  if (rateLimitError) return withSessionCookie(rateLimitError, setCookie);
   if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ error: "Account topics are not configured." }, { status: 503 }), setCookie);
 
   let topic;
@@ -30,6 +38,10 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   const { session, setCookie } = await getGitHubIdentitySession(request);
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to update a topic." }, { status: 401 }), setCookie);
+  const mutationError = guardMutationRequest(request, { requireJson: true });
+  if (mutationError) return withSessionCookie(mutationError, setCookie);
+  const rateLimitError = guardRateLimit("feedback:mutation", String(session.user.id), ACCOUNT_MUTATION_LIMIT);
+  if (rateLimitError) return withSessionCookie(rateLimitError, setCookie);
   if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ error: "Account topics are not configured." }, { status: 503 }), setCookie);
 
   let update;

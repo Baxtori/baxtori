@@ -12,6 +12,7 @@ import {
   validateGitHubOAuthState,
   type TokenResponse,
 } from "@/lib/github-auth";
+import { appUrl } from "@/lib/request-security";
 
 type GitHubProfile = {
   avatar_url: string;
@@ -21,7 +22,7 @@ type GitHubProfile = {
 };
 
 function redirectHome(request: Request, result: string, cookies: string[] = []) {
-  const location = new URL("/", request.url);
+  const location = appUrl(request);
   location.searchParams.set("github", result);
   const headers = new Headers({ Location: location.toString() });
   for (const cookie of cookies) headers.append("Set-Cookie", cookie);

@@ -96,10 +96,11 @@ test("reader state accepts and canonicalizes repository modes", () => {
     selectedRepositories: ["teamleaderleo/glimpse"],
   }));
   assert.deepEqual(parsed.repositoryModes, {
-    "teamleaderleo/baxtori": "pinned",
+    "Baxtori/baxtori": "pinned",
     "teamleaderleo/old": "muted",
   });
-  assert.deepEqual(parsed.selectedRepositories, ["teamleaderleo/baxtori"]);
+  assert.deepEqual(parsed.selectedRepositories, ["Baxtori/baxtori"]);
+  assert.equal(parsed.activeMapRepository, "Baxtori/baxtori");
 });
 
 test("reader state preserves the edition history destination", () => {
@@ -123,7 +124,7 @@ test("version-one reader state remains valid before repository modes existed", (
   delete legacy.repositoryModes;
   const parsed = parseReaderState(legacy);
   assert.deepEqual(parsed.repositoryModes, {});
-  assert.deepEqual(parsed.selectedRepositories, ["teamleaderleo/baxtori"]);
+  assert.deepEqual(parsed.selectedRepositories, ["Baxtori/baxtori"]);
 });
 
 test("reader state rejects unknown repository modes", () => {

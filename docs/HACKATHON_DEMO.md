@@ -18,11 +18,11 @@ Baxtori does not replace GitHub, Codex, CodeRabbit, Greptile, or a repository gr
 
 ### 0:00 — Enter without ceremony
 
-Open `https://www.baxtori.com`. The published edition is the home page; no login wall or product tour appears. Point out that it is finite, editorial, and scroll-first rather than an activity dashboard.
+Open `https://www.baxtori.com`. The published edition is the home page; no login wall or product tour appears. Point out that it is finite, editorial, and scroll-first rather than an activity dashboard. A valid review may publish zero stories.
 
 ### 0:25 — Show a consequential change
 
-Open the first story, read the brief and “Why it matters,” then open Evidence. The claim is tied to an exact repository, base commit, head commit, file, and line range. Baxtori can be tasteful without becoming hand-wavy.
+Open the first story, read the brief and “Why it matters,” then open Evidence. The claim is tied to an exact repository, full base commit, full head commit, file, and line range. Publication validation checks the Git objects, ancestry, changed path, file existence, and line bounds when the source cache is available.
 
 ### 0:55 — Show the human feedback loop
 
@@ -32,11 +32,11 @@ Mark a story Understood, Watch another, and open Memory. Explain that questions,
 
 Choose Connect GitHub, install the read-only GitHub App on selected repositories, and open Sources. Repository visibility, source modes, activity, reader state, and memory are isolated by numeric GitHub user ID. Select Pinned, Automatic, or Muted for one repository and refresh to show persistence.
 
-Be precise: the visible edition is a published example. Connecting an account does not pretend that a private edition has already been compiled. It proves safe multi-user source selection and memory; per-account compilation is the next boundary.
+Be precise: the visible edition is a published example. Connecting an account does not pretend that a private edition has already been compiled. It proves safe multi-user source selection and memory; unattended per-account source retrieval and compilation remain the next boundary.
 
 ### 2:00 — Show the Codex implementation
 
-Show the deterministic collection and validation scripts, `data/candidates.json` as ignored evidence input, and a published edition in `data/latest.json`. The scheduled Codex task performs the judgment-heavy work: clustering related changes, suppressing noise, checking exact evidence, incorporating human memory, and publishing nothing when no change deserves attention.
+Show `codex/review-instructions.md`, deterministic cursor-based collection, ignored `data/candidates.json`, ignored `data/review-run.json`, a published edition in `data/latest.json`, and immutable receipts in `data/review-runs/`. The scheduled Codex task performs the judgment-heavy work: clustering related changes, suppressing noise, checking exact evidence, incorporating human memory, and publishing nothing when no change deserves attention.
 
 Finish with: “Review agents help code get merged. Baxtori helps the author remain able to explain what the merged system became.”
 
@@ -44,7 +44,7 @@ Finish with: “Review agents help code get merged. Baxtori helps the author rem
 
 | Criterion | What the demo proves |
 | --- | --- |
-| Technological implementation | A non-trivial Codex workflow sits between deterministic Git evidence collection and strict edition/map validators. Claims retain commit-addressed evidence; account feedback becomes compiler input; bad or empty output cannot silently replace the last valid edition. |
+| Technological implementation | A non-trivial Codex workflow sits between deterministic Git evidence collection and strict edition/map validators. The versioned instruction contract and hashed run receipt identify inputs, source heads, model/runtime, processed feedback, human edits, output, and validation results. |
 | Design | Anonymous entry goes directly to a coherent botanical field journal. The same Now, System, Memory, Evidence, and Sources loop works on desktop and mobile, with account connection introduced in context. |
 | Potential impact | The audience is specific: developers overseeing agent-generated work across repositories. Baxtori reduces comprehension debt rather than adding another notification or review queue. |
 | Quality of the idea | It treats code understanding as an edited, longitudinal publication. The novelty is selection plus continuity: what the human understood, questioned, or watched changes what Codex reviews next. |
@@ -69,19 +69,16 @@ Do not add billing for the hackathon. First prove that people want recurring com
 ## Honest current limits
 
 - Account source choices and memory are multi-user; scheduled compilation is still pinned to one explicit GitHub login.
+- A repository outside `baxtori.sources.json` can be authorized and selected but cannot produce exact code claims until an unattended GitHub App installation-token collector can create an isolated source cache.
 - A newly connected repository is shown as “not mapped” until a reviewed map exists. Baxtori never invents coverage.
 - The GitHub App is read-only. Repository context export and write-back remain explicit future actions.
 - Users can export or permanently delete Baxtori's account data. GitHub installation access remains separately controlled in GitHub.
+- Authenticated route limits are process-local burst protection; GitHub and the backing data service remain the distributed enforcement layers.
 
-## CI handoff
+## CI
 
-The verification workflow is ready for Blacksmith, but Blacksmith only supports
-organization-owned GitHub repositories. After transferring the repository to an
-organization and installing the Blacksmith GitHub App, create the repository
-Actions variable `BLACKSMITH_ENABLED=true`. Until then, the Blacksmith jobs are
-skipped instead of waiting forever for a runner that cannot claim a personal
-repository.
+Verification runs for every pull request and main-branch push. It uses Blacksmith when the repository variable `BLACKSMITH_ENABLED=true` and falls back to a GitHub-hosted Ubuntu runner otherwise. Both paths run lint, type-check, build, tests, validators, and desktop/mobile browser checks; browser reports are retained as workflow artifacts.
 
 ## After the hackathon
 
-The next proof is one complete personalized loop: a user's repository changes, Codex selects one consequence, the user watches or questions it, and the following edition visibly responds to that decision. Only after that should Baxtori add teams, hosted billing, app subdomains, generic integrations, or a broad all-in-one review surface.
+The next proof is one complete personalized loop: a user's repository changes, Codex selects one consequence, the user watches or questions it, and the following edition visibly responds to that decision. The implementation requirement is unattended GitHub App installation-token access, isolated temporary caches, and per-account compiler scheduling. Only after that should Baxtori add teams, hosted billing, app subdomains, generic integrations, or a broad all-in-one review surface.

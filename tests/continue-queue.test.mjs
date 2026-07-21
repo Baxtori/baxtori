@@ -134,6 +134,6 @@ test("canonicalizes legacy Baxtori repository identities at the queue boundary",
     stories: [],
   });
 
-  assert.equal(queue[0].repository, "teamleaderleo/baxtori");
-  assert.match(queue[0].id, /teamleaderleo\/baxtori/);
+  assert.equal(queue[0].repository, "Baxtori/baxtori");
+  assert.match(queue[0].id, /Baxtori\/baxtori/);
 });

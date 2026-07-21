@@ -23,7 +23,7 @@ test("repository inventory canonicalizes, deduplicates, and sorts by recent push
     inventoryEntry({ fullName: "teamleaderleo/beta", id: 20, pushedAt: null, updatedAt: "2026-07-15T09:00:00Z" }),
   ]);
 
-  assert.deepEqual(parsed.map((entry) => entry.fullName), ["teamleaderleo/baxtori", "teamleaderleo/beta"]);
+  assert.deepEqual(parsed.map((entry) => entry.fullName), ["Baxtori/baxtori", "teamleaderleo/beta"]);
   assert.equal(parsed[0].pushedAt, "2026-07-17T09:00:00Z");
 });
 

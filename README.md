@@ -11,13 +11,14 @@ searches earlier editions and reader notes.
 
 ## What works
 
-- A finite, scroll-first edition on the home page
+- A finite, scroll-first edition on the home page, including valid quiet editions
 - Commit-addressed diffs and current-code excerpts
 - Read-only GitHub App access to selected repositories
 - Per-account repository choices, reading state, watches, questions, and review requests
 - Repository maps with reviewed areas, source files, walkthroughs, and open questions
 - Search and filters across prior editions
-- A configurable look-back window for the next review
+- Cursor-based collection from the last reviewed commit, with explicit history-rewrite fallback
+- Versioned Codex review instructions and immutable run receipts
 - A signed-out demo that does not require GitHub access
 - Desktop and mobile browser tests
 
@@ -41,7 +42,8 @@ Create a GitHub App and add the values described in `.env.example`. Configure:
 - Repository permissions: **Contents: Read-only** and **Metadata: Read-only**
 - User-to-server token expiration: enabled
 
-Use a random value of at least 32 bytes for `GITHUB_SESSION_SECRET`.
+Set `BAXTORI_APP_ORIGIN` to the canonical deployment origin and use a random
+value of at least 32 bytes for `GITHUB_SESSION_SECRET`.
 
 The GitHub App installation controls which repositories Baxtori can see.
 Authentication tokens remain in an encrypted, HttpOnly cookie. Account records
@@ -56,36 +58,45 @@ npm test
 npm run test:visual
 ```
 
-The visual suite runs the signed-out and connected flows at desktop and mobile
-sizes and fails on browser exceptions.
+CI runs lint, type-check, build, unit validation, and desktop/mobile browser tests.
+It uses Blacksmith when `BLACKSMITH_ENABLED=true`; otherwise it uses a GitHub-hosted
+Ubuntu runner, so verification never disappears because a runner variable is absent.
 
 ## How editions are produced
 
 The hosted app does not call a model. A scheduled local Codex task reviews the
 configured repositories and writes versioned edition data to this repository.
-The deterministic part of that workflow is available as:
+The versioned judgment contract lives in `codex/review-instructions.md`.
 
 ```bash
-npm run backstory:collect
-npm run backstory:validate
-npm run map:validate
-npm run scope:validate
-npm run policy:validate
+npm run feedback:export   # optional account-scoped reader input
+npm run edition:prepare  # collect evidence and create a hashed scratch manifest
+# review candidates and edit data/latest.json, its archive, maps, and review-run fields
+npm run edition:finalize # strict Git evidence checks and immutable run receipt
 ```
 
-`baxtori.sources.json` lists the repositories and branches available to the
-collector. `data/review-scope.json` contains the safe, client-visible review
-scope. `data/candidates.json` is ignored scratch input. Published editions live
-in `data/latest.json` and `data/editions/`; repository maps live in
-`data/repo-map.json` and `data/maps/`.
+`edition:prepare` collects configured origin branches concurrently with bounded
+Git commands. It prefers `last-reviewed-commit..origin/branch`, records history
+rewrites, falls back to the configured time window when necessary, and reports
+stale repository inventory. Local checkout paths never enter the candidate file.
 
-Published code evidence retains repository, base commit, head commit, file, and
-line range. Old editions can therefore reopen the same comparison after the
-current edition changes.
+`edition:finalize` refuses changed inputs or instructions, missing source caches,
+short or unavailable commit hashes, invalid ancestry, unchanged evidence paths,
+out-of-range lines, conflicting archives, and duplicate run IDs. Successful run
+receipts live under `data/review-runs/` with source heads, instruction and input
+hashes, model/runtime metadata, processed feedback IDs, human-edit notes, output
+hash, and validator results.
 
-Repository choices and reader feedback are exported before a scheduled review.
-They narrow the collection scope and provide review instructions. They do not
-change an already published edition.
+`baxtori.sources.json` lists repositories that have an inspectable source cache.
+`data/review-scope.json` contains the safe, client-visible review scope.
+`data/candidates.json`, `data/feedback-input.json`, and `data/review-run.json` are
+ignored scratch input. Published editions live in `data/latest.json` and
+`data/editions/`; repository maps live in `data/repo-map.json` and `data/maps/`.
+
+A connected repository outside `baxtori.sources.json` can currently be selected
+and retained as authorized metadata, but it cannot produce exact code claims in
+the scheduled review. Completing that loop requires unattended GitHub App
+installation-token access and an isolated temporary source cache per account.
 
 ## Project notes
 
@@ -93,6 +104,6 @@ change an already published edition.
 - [Roadmap](docs/PRODUCT_ROADMAP.md)
 - [Security and account boundaries](docs/proposals/2026-07-22-account-memory-and-product-boundary.md)
 - [Hackathon demo](docs/HACKATHON_DEMO.md)
-- [Legacy repository aliases](docs/REPOSITORY_IDENTITY.md)
+- [Repository identity history](docs/REPOSITORY_IDENTITY.md)
 
 The app runs as Next.js on Vercel and as a Vinext build on Sites.

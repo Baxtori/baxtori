@@ -59,7 +59,7 @@ test("canonicalizes legacy repository filters without rewriting evidence", () =>
   });
 
   assert.equal(matches.length, 1);
-  assert.equal(matches[0].repository, "teamleaderleo/baxtori");
+  assert.equal(matches[0].repository, "Baxtori/baxtori");
   assert.equal(matches[0].story.repository, "teamleaderleo/glimpse");
 });
 

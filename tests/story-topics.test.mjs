@@ -31,7 +31,7 @@ test("watch identity survives story IDs and repository aliases", () => {
   };
   assert.equal(
     storyTopicSourceKey(firstEditionStory),
-    "watch:teamleaderleo/baxtori:retry-policy",
+    "watch:Baxtori/baxtori:retry-policy",
   );
   assert.equal(
     storyTopicSourceKey(laterStory),
@@ -47,11 +47,11 @@ test("watch input preserves the exact originating evidence address", () => {
       endLine: 24,
       headCommit: "abcdef0",
       path: "src/retries.ts",
-      repository: "teamleaderleo/baxtori",
+      repository: "Baxtori/baxtori",
       startLine: 10,
     },
     origin: "watch",
-    sourceKey: "watch:teamleaderleo/baxtori:retry-policy",
+    sourceKey: "watch:Baxtori/baxtori:retry-policy",
     storyId: "edition-one-story",
     storyTitle: "Retries explain themselves.",
     title: "Retries explain themselves.",
@@ -67,7 +67,7 @@ test("active watch lookup ignores resolved and unrelated threads", () => {
     _id: "active",
     evidence: storyWatchInput(firstEditionStory, "2026-07-13").evidence,
     origin: "watch",
-    sourceKey: "watch:teamleaderleo/baxtori:retry-policy",
+    sourceKey: "watch:Baxtori/baxtori:retry-policy",
     status: "active",
   };
   const resolved = { ...active, _id: "resolved", status: "resolved" };

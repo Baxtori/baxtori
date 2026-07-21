@@ -21,7 +21,7 @@ const evidence = {
 test("evidence addresses canonicalize repository aliases and preserve exact history", () => {
   assert.deepEqual(parseEvidenceAddress(evidence), {
     ...evidence,
-    repository: "teamleaderleo/baxtori",
+    repository: "Baxtori/baxtori",
   });
 });
 
@@ -43,7 +43,7 @@ test("topic threads retain a stable source identity independent of an edition st
     title: "Retry exhaustion policy",
   });
   assert.equal(thread.sourceKey, "watch:retry-policy");
-  assert.equal(thread.evidence.repository, "teamleaderleo/baxtori");
+  assert.equal(thread.evidence.repository, "Baxtori/baxtori");
 });
 
 test("snoozed threads and questions require a wake date", () => {

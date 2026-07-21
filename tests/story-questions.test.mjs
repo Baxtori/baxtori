@@ -27,7 +27,7 @@ test("questions retain a selected range inside the active exact evidence", () =>
     endLine: 24,
     headCommit: "abcdef0",
     path: "src/retries.ts",
-    repository: "teamleaderleo/baxtori",
+    repository: "Baxtori/baxtori",
     startLine: 18,
   });
 });
