@@ -5,9 +5,6 @@ import { BRANCHLET_GROWTH, BRANCHLET_REVEAL_DURATION } from "./botanical-growth"
 import { BotanicalUnfurl } from "./botanical-unfurl";
 import styles from "./trail-reader.module.css";
 
-const PLAYHEAD_RESPONSE_MS = 92;
-const PLAYHEAD_EPSILON = 0.0001;
-
 function smoothstep(value: number) {
   const clamped = Math.max(0, Math.min(1, value));
   return clamped * clamped * (3 - 2 * clamped);
@@ -45,47 +42,34 @@ export function BotanicalProgress() {
     };
 
     if (reduceMotion) {
+      root.dataset.growthMode = "reduced-motion";
       applyProgress(1);
       return;
     }
 
-    let currentProgress = readProgress();
-    let targetProgress = currentProgress;
-    let previousTime = performance.now();
+    if (CSS.supports("animation-timeline: scroll()")) {
+      root.dataset.growthMode = "native-scroll";
+      return;
+    }
 
-    const followPlayhead = (time: number) => {
-      const elapsed = Math.min(64, Math.max(0, time - previousTime));
-      const blend = 1 - Math.exp(-elapsed / PLAYHEAD_RESPONSE_MS);
-      previousTime = time;
-      currentProgress += (targetProgress - currentProgress) * blend;
+    root.dataset.growthMode = "frame-synced";
 
-      if (Math.abs(targetProgress - currentProgress) <= PLAYHEAD_EPSILON) {
-        currentProgress = targetProgress;
-        frame = 0;
-      } else {
-        frame = window.requestAnimationFrame(followPlayhead);
-      }
-
-      applyProgress(currentProgress);
+    const draw = () => {
+      frame = 0;
+      applyProgress(readProgress());
     };
 
-    const updateTarget = () => {
-      targetProgress = readProgress();
-      root.dataset.growthTarget = targetProgress.toFixed(3);
-      if (!frame) {
-        previousTime = performance.now();
-        frame = window.requestAnimationFrame(followPlayhead);
-      }
+    const scheduleDraw = () => {
+      if (!frame) frame = window.requestAnimationFrame(draw);
     };
 
-    applyProgress(currentProgress);
-    root.dataset.growthTarget = targetProgress.toFixed(3);
-    window.addEventListener("scroll", updateTarget, { passive: true });
-    window.addEventListener("resize", updateTarget);
+    draw();
+    window.addEventListener("scroll", scheduleDraw, { passive: true });
+    window.addEventListener("resize", scheduleDraw);
     return () => {
       window.cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", updateTarget);
-      window.removeEventListener("resize", updateTarget);
+      window.removeEventListener("scroll", scheduleDraw);
+      window.removeEventListener("resize", scheduleDraw);
     };
   }, []);
 
@@ -94,7 +78,7 @@ export function BotanicalProgress() {
       aria-hidden="true"
       className={styles.botanicalProgress}
       data-botanical-progress
-      data-growth-mode="continuous"
+      data-growth-mode="initializing"
       ref={rootRef}
     >
       <div className={styles.fernFrame} data-fern-frame>

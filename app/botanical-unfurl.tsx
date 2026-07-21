@@ -1,4 +1,5 @@
-import { BRANCHLET_GROWTH } from "./botanical-growth";
+import type { CSSProperties } from "react";
+import { BRANCHLET_GROWTH, BRANCHLET_REVEAL_DURATION } from "./botanical-growth";
 
 type BotanicalUnfurlProps = {
   className?: string;
@@ -60,34 +61,45 @@ export function BotanicalUnfurl({
         <filter id="fern-mask-feather" colorInterpolationFilters="sRGB" x="-30%" y="-30%" width="160%" height="160%">
           <feGaussianBlur stdDeviation="13" />
         </filter>
-        {PINNA_BRANCHLETS.map(({ id, path, width }) => (
-          <mask
-            id={`fern-branchlet-mask-${id}`}
-            key={id}
-            maskUnits="userSpaceOnUse"
-            x="-120"
-            y="-120"
-            width="1264"
-            height="1776"
-          >
-            <path
-              d={path}
-              fill="none"
-              filter="url(#fern-mask-feather)"
-              opacity="0.72"
-              stroke="white"
-              strokeLinecap="round"
-              strokeWidth={width + 38}
-            />
-            <path
-              d={path}
-              fill="none"
-              stroke="white"
-              strokeLinecap="round"
-              strokeWidth={width}
-            />
-          </mask>
-        ))}
+        <mask id="fern-growth-mask" maskUnits="userSpaceOnUse" x="-120" y="-120" width="1264" height="1776">
+          {PINNA_BRANCHLETS.map(({ anchor, id, path, width }, index) => {
+            const [anchorX, anchorY] = anchor;
+            const { minimum, openingOpacity, start } = BRANCHLET_GROWTH[index];
+            const end = Math.min(1, start + BRANCHLET_REVEAL_DURATION);
+            const growthStyle = {
+              "--fern-minimum": minimum,
+              "--fern-opening-opacity": openingOpacity,
+              "--fern-range-start": `${start * 100}%`,
+              "--fern-range-end": `${end * 100}%`,
+              opacity: `var(--fern-stage-opacity-${index}, ${openingOpacity})`,
+              transform: `scale(var(--fern-stage-${index}, ${minimum}))`,
+            } as CSSProperties;
+
+            return (
+              <g key={id} transform={`translate(${anchorX} ${anchorY})`}>
+                <g
+                  className={pinnaGrowthClassName}
+                  data-fern-branchlet={id}
+                  data-fern-pinna={index}
+                  style={growthStyle}
+                >
+                  <g transform={`translate(${-anchorX} ${-anchorY})`}>
+                    <path
+                      d={path}
+                      fill="none"
+                      filter="url(#fern-mask-feather)"
+                      opacity="0.72"
+                      stroke="white"
+                      strokeLinecap="round"
+                      strokeWidth={width + 38}
+                    />
+                    <path d={path} fill="none" stroke="white" strokeLinecap="round" strokeWidth={width} />
+                  </g>
+                </g>
+              </g>
+            );
+          })}
+        </mask>
       </defs>
       <g transform="translate(1024 0) scale(-1 1)">
         <g transform={VERTICAL_FROND_TRANSFORM}>
@@ -101,6 +113,7 @@ export function BotanicalUnfurl({
           />
           <path
             className={growthStrokeClassName}
+            data-fern-growth-stroke
             d={RACHIS_PATH}
             fill="none"
             pathLength="1"
@@ -109,36 +122,15 @@ export function BotanicalUnfurl({
             strokeLinecap="round"
             strokeWidth="9"
           />
-          {PINNA_BRANCHLETS.map(({ anchor, id }, index) => {
-            const [anchorX, anchorY] = anchor;
-            const { minimum, openingOpacity } = BRANCHLET_GROWTH[index];
-            return (
-              <g key={id} transform={`translate(${anchorX} ${anchorY})`}>
-                <g
-                  className={pinnaGrowthClassName}
-                  data-fern-branchlet={id}
-                  data-fern-pinna={index}
-                  style={{
-                    opacity: `var(--fern-stage-opacity-${index}, ${openingOpacity})`,
-                    transform: `scale(var(--fern-stage-${index}, ${minimum}))`,
-                  }}
-                >
-                  <g
-                    mask={`url(#fern-branchlet-mask-${id})`}
-                    transform={`translate(${-anchorX} ${-anchorY})`}
-                  >
-                    <image
-                      filter="url(#fern-alpha-clean)"
-                      height="1536"
-                      href="/botanical/fern-frond.webp"
-                      preserveAspectRatio="xMidYMid meet"
-                      width="1024"
-                    />
-                  </g>
-                </g>
-              </g>
-            );
-          })}
+          <g mask="url(#fern-growth-mask)">
+            <image
+              filter="url(#fern-alpha-clean)"
+              height="1536"
+              href="/botanical/fern-frond.webp"
+              preserveAspectRatio="xMidYMid meet"
+              width="1024"
+            />
+          </g>
         </g>
       </g>
     </svg>

@@ -53,12 +53,18 @@ test("the default reader turns the review into a finite field journal", async ({
   await page.goto("/?demo=1");
 
   const progressSpecimen = page.locator("[data-botanical-progress]");
-  const fernGrowth = () => progressSpecimen.evaluate((element) => Number(element.getAttribute("data-growth") ?? 0));
-  const fernDash = () => progressSpecimen.evaluate((element) => Number(element.style.getPropertyValue("--fern-stem-dash") || 1));
-  const fernStage = (index: number) => progressSpecimen.evaluate(
-    (element, stageIndex) => Number(element.style.getPropertyValue(`--fern-stage-${stageIndex}`) || 0),
-    index,
+  const fernGrowth = () => page.evaluate(() => {
+    const range = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    return window.scrollY / range;
+  });
+  const fernDash = () => progressSpecimen.locator("[data-fern-growth-stroke]").evaluate(
+    (element) => Number.parseFloat(getComputedStyle(element).strokeDashoffset),
   );
+  const fernStage = (index: number) => progressSpecimen.locator(`[data-fern-pinna='${index}']`).evaluate((element) => {
+    const transform = getComputedStyle(element).transform;
+    if (transform === "none") return 1;
+    return Number.parseFloat(transform.match(/matrix\(([^,]+)/)?.[1] ?? "0");
+  });
   await expect(progressSpecimen).toBeVisible();
   const progressBox = await progressSpecimen.boundingBox();
   const viewportWidth = page.viewportSize()?.width ?? 0;
@@ -70,7 +76,7 @@ test("the default reader turns the review into a finite field journal", async ({
   expect(fernFrameBox?.width ?? 0).toBeGreaterThanOrEqual(viewportWidth - 20);
   const fernPlate = progressSpecimen.locator("[data-botanical-plate]");
   await expect(fernPlate).toBeVisible();
-  await expect(progressSpecimen).toHaveAttribute("data-growth-mode", "continuous");
+  await expect(progressSpecimen).toHaveAttribute("data-growth-mode", /native-scroll|frame-synced/);
   const fernBox = await fernPlate.boundingBox();
   expect(fernBox).not.toBeNull();
   expect(fernBox?.x ?? 0).toBeLessThan(0);
@@ -78,15 +84,15 @@ test("the default reader turns the review into a finite field journal", async ({
   const fernCenter = (fernBox?.x ?? 0) + (fernBox?.width ?? 0) / 2;
   expect(fernCenter).toBeLessThan(viewportWidth * (viewportWidth <= 760 ? 0.08 : 0.16));
   expect((fernBox?.x ?? 0) + (fernBox?.width ?? 0)).toBeGreaterThan(viewportWidth * 0.4);
-  await expect(fernPlate.locator("image").first()).toHaveAttribute("href", "/botanical/fern-frond.webp");
+  await expect(fernPlate.locator("image")).toHaveCount(1);
+  await expect(fernPlate.locator("image")).toHaveAttribute("href", "/botanical/fern-frond.webp");
   await expect(fernPlate.locator("[data-fern-pinna]")).toHaveCount(16);
-  await expect(fernPlate.locator("mask[id^='fern-branchlet-mask-']")).toHaveCount(16);
+  await expect(fernPlate.locator("#fern-growth-mask")).toHaveCount(1);
   await expect(fernPlate.locator("clipPath")).toHaveCount(0);
   await expect(fernPlate.locator("#fern-mask-feather feGaussianBlur")).toHaveAttribute("stdDeviation", "13");
-  await expect(fernPlate.locator("mask path[filter='url(#fern-mask-feather)']")).toHaveCount(16);
+  await expect(fernPlate.locator("#fern-growth-mask path[filter='url(#fern-mask-feather)']")).toHaveCount(16);
   await expect(fernPlate.locator("[data-fern-branchlet='lower-left']")).toHaveCount(1);
   await expect(fernPlate.locator("[data-fern-branchlet='crozier']")).toHaveCount(1);
-  await expect(fernPlate.locator("[data-fern-pinna='0']")).toBeVisible();
   await expect(fernPlate.locator("[data-fern-pinna='0']")).toHaveAttribute(
     "style",
     /var\(--fern-stage-opacity-0, 0\.66\).*var\(--fern-stage-0, 0\.38\)/,
