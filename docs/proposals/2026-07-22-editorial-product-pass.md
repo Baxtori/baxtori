@@ -64,7 +64,7 @@ payload. The session-encryption key is cached per server isolate.
 
 The blue Watch and red Evidence buttons looked like competing primary and
 destructive actions. Neither meaning was true. The reader now uses one green
-primary action and quiet ink-and-rule secondary actions. Destructive intent is
+primary action and ink-and-rule secondary actions. Destructive intent is
 expressed by confirmation and wording, not a permanent red control in the
 reading path.
 

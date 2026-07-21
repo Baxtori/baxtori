@@ -10,7 +10,7 @@ Turn **Now** into a finite, scroll-first reading trail.
 
 The reader should open Baxtori and move through a sequence of full, legible scenes with the wheel, trackpad, touch, arrow keys, or `J` / `K`. The first scene carries the single highest-value Continue choice. Later scenes carry the rest of the chosen attention window. Each story reveals its synopsis, selection reason, repository bearings, and available evidence without requiring a click to discover the next meaningful unit.
 
-Keep the trail finite. A satisfying end reinforces Baxtori's editorial promise: the product chooses what deserves attention and becomes quiet when the useful reading ends. The experience can feel as fluid as a social feed while serving comprehension instead of engagement.
+Keep the trail finite. A satisfying end reinforces Baxtori's editorial promise: the product chooses what deserves attention and ends when the useful reading ends. The experience can feel as fluid as a social feed while keeping the reader oriented around comprehension.
 
 Use horizontal movement inside a scene for adjacent evidence excerpts or clearly labeled reading layers. Every horizontal destination also needs visible controls and keyboard access. Durable actions such as Understand, Watch, Ask, Dismiss, and Re-review stay explicit buttons; swipes should move through content, never trigger an easy-to-miss destructive decision.
 
@@ -48,7 +48,7 @@ The vertical trail contains a small number of scene types:
 2. **Return scene** — an evidence-backed follow-up to a watched topic or open question.
 3. **Story scene** — one published backstory with its selection reason and exact evidence.
 4. **Study scene** — a map frontier or repository question selected by Continue.
-5. **Edition end** — caught up, deferred work, quiet repositories, and the next scheduled review.
+5. **Edition end** — caught up, deferred work, repositories with no selected story, and the next scheduled review.
 
 The current `ContinueItem` remains the ordering source. The first version can derive trail scenes from existing queue items and current edition stories, with no compiler schema change.
 
@@ -102,11 +102,11 @@ That scene can show:
 - understood stories;
 - watches and open questions created during the session;
 - deferred items outside the chosen attention window;
-- quiet repositories;
+- repositories with no selected story;
 - next review date;
 - a link into Memory or System.
 
-A quiet edition can open directly on a quiet scene. This preserves the strongest part of Baxtori's identity: selective silence.
+A zero-story edition can open directly on its completed-review scene. The same publication threshold applies even when every candidate is omitted.
 
 ## Nature as the visual language
 
@@ -284,7 +284,7 @@ The trail ships only when all of these hold:
 - Browser zoom and large text preserve readable scenes without fixed-height clipping.
 - Screen-reader order follows the visual reading order.
 - Understand, Watch, Ask, Dismiss, and Re-review announce state changes.
-- A quiet edition remains a complete and useful screen.
+- A zero-story edition remains a complete and useful screen.
 
 ## Test plan
 
@@ -296,7 +296,7 @@ Extend Playwright beyond screenshots into interaction coverage.
 - attention-window packing;
 - watched follow-up before ordinary story;
 - understood story removal;
-- quiet edition output;
+- zero-story edition output;
 - deferred items represented in the end scene;
 - repository alias preservation;
 - stable scene IDs across rerenders.
@@ -313,7 +313,7 @@ Extend Playwright beyond screenshots into interaction coverage.
 - reload and restore the active scene;
 - use browser Back and Forward across scene deep links;
 - verify reduced-motion mode;
-- verify the quiet end scene;
+- verify the zero-story end scene;
 - capture desktop and mobile visual artifacts.
 
 ## Comparison criteria

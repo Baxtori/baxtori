@@ -4,137 +4,134 @@
 
 ### Inspiration
 
-Coding agents changed the bottleneck in my work. I could make changes across
-several repositories much faster, but I was becoming less certain that I still
-understood the systems I owned. Pull-request review could tell me whether one
-change was safe to merge, and a coding agent could explain a file when asked,
-but neither preserved my mental model from one week to the next.
+I built Baxtori because I was getting an uncomfortable feeling from my own
+workflow. Coding agents were helping me ship changes across several repositories,
+and I could follow each task while it was happening. A few days later, I would
+open one of those projects and realize that I remembered the ticket or the pull
+request but had lost the larger shape of the system.
 
-I built Baxtori around a different question: after the code is merged, which few
-changes does the author actually need to understand?
+That felt like a real limit on agent-assisted development. More code was landing,
+yet the person responsible for it had less time to absorb what changed. I wanted
+a recurring review that could look across repositories, decide which changes
+actually affected my mental model, and give me a short reading session with the
+code attached.
 
-### What it does
+### What Baxtori does
 
-Baxtori turns accepted repository changes into a finite, evidence-backed reading
-edition. It is intentionally closer to a field journal than an activity feed.
-Each story explains what changed, why it matters, what to verify, and the
-tradeoff, then links the claim to an exact repository, base commit, head commit,
-file, and line range.
+Baxtori turns recent merged work into an evidence-backed reading edition. Codex
+reviews the collected changes and selects the ones that have a meaningful effect
+on architecture, behavior, security, operations, or an ongoing concern from an
+earlier edition. Each published story explains the change, why it matters, what
+to verify, and the tradeoff. The evidence panel links that explanation to the
+exact repository, base commit, head commit, file, and line range.
 
-The experience has three primary spaces:
+The product has three main views. **Now** contains the current edition and gives
+the reader a finite path through it. **System** organizes reviewed areas, source
+files, walkthroughs, and open questions by repository. **Memory** keeps earlier
+editions, watched topics, code questions, and the reader's own understanding
+available over time.
 
-- **Now** is the current edited edition. It may contain a few consequential
-  stories—or no stories when nothing clears the publication threshold.
-- **System** maps reviewed repository areas, source files, walkthroughs, and
-  unresolved questions without pretending that unmapped code is understood.
-- **Memory** carries watched concerns, questions, prior editions, and the
-  reader's own understanding forward over time.
-
-A reader can use the complete public example without signing in. Connecting
-GitHub uses a read-only GitHub App and adds account-scoped source controls and
-durable reader memory. The current journal stays clearly labeled as a public
-example; Baxtori does not pretend that connecting a repository has already
-compiled a private edition.
+The public link opens the complete example edition. A GitHub connection adds a
+read-only source library and synchronized reading state. Connected users can
+choose which repositories belong in the review scope and set each one to Pinned,
+Automatic, or Muted. The current journal remains the public example while
+personalized compilation is being built.
 
 ### How I built it
 
-I built Baxtori with Codex and GPT-5.6 as both an engineering partner and part of
-the review workflow.
+I built Baxtori with Codex and GPT-5.6. I used Codex throughout the project to
+inspect the repository, work through the product model, implement features,
+trace authentication and persistence flows, review security decisions, and run
+the application through its builds and tests. GPT-5.6 was especially useful when
+the work required judgment across several files or concerns at once. It helped me
+catch places where the interface implied more capability than the backend could
+support, and it pushed the source, account, and evidence boundaries into much
+clearer shapes.
 
-The compiler deliberately separates deterministic evidence work from model
-judgment:
+The review pipeline gives scripts and Codex separate jobs. Node.js scripts collect
+bounded Git evidence from configured branches. They resume from the last reviewed
+commit, record history rewrites, and use a limited date range when a cursor is no
+longer usable. A versioned instruction contract then gives Codex the candidates,
+repository maps, earlier selection history, and explicit reader feedback. Codex
+clusters related work, chooses the changes that deserve a story, and writes the
+structured edition data.
 
-1. Bounded Node.js scripts collect commits from configured repository branches.
-   They use the last reviewed commit as a cursor, record history rewrites, and
-   fall back to a limited time window when necessary.
-2. A versioned Codex instruction contract asks GPT-5.6 to cluster related
-   changes, suppress routine noise, incorporate explicit human watches and
-   questions, and select only findings that deserve publication.
-3. Strict validators check commit existence, ancestry, changed paths, source
-   availability, line bounds, edition archives, repository maps, and the
-   selection ledger before an edition can be finalized.
-4. An immutable receipt protocol records input and instruction hashes, source
-   heads, model/runtime metadata, processed feedback, human edits, output hashes,
-   and validation results for finalized review runs.
+Finalization runs strict checks over the result. The validators confirm commit
+existence, ancestry, changed paths, file contents, line bounds, selection records,
+archives, and repository maps. A receipt protocol can record the input and
+instruction hashes, source heads, model/runtime metadata, processed feedback,
+human edits, output hash, and validator results for each completed run. An
+edition with zero stories is also valid; its selection ledger still records what
+the review inspected and why each repository produced no story.
 
 The reader is a responsive Next.js and React application written in TypeScript.
-It uses a read-only GitHub App for authentication and on-demand evidence, Convex
-for account-scoped state, AES-GCM encrypted session material in secure HttpOnly
-cookies, and same-origin mutation checks. The public example is deployed on
-Vercel. The project also supports a Vinext build, and Playwright exercises the
-same reading experience on desktop and mobile.
-
-Codex and GPT-5.6 accelerated the work beyond code generation. I used them to
-inspect the repository as a whole, challenge the product boundary, trace OAuth
-and data-isolation risks, design the evidence contract, implement and refactor
-the reader, and repeatedly run builds, tests, and validators. Some of the most
-important decisions came from asking Codex to argue against the product: that
-led to clearer privacy language, a strict distinction between public evidence
-and personal memory, and a refusal to imply that an authorized repository had
-already been reviewed.
+It uses a read-only GitHub App for authentication and requested evidence, Convex
+for account-scoped state, encrypted HttpOnly cookies for session material, and
+same-origin checks for mutations. Vercel hosts the public application. The same
+repository also builds through Vinext, and Playwright runs the reader on desktop
+Chromium and a Pixel 7 mobile profile.
 
 ### Challenges
 
-The hardest challenge was selection. Summarizing every commit is easy but creates
-another inbox. Baxtori needed an explicit publication threshold, a reading-time
-budget, and a valid quiet edition so that omission became a trustworthy product
-behavior rather than an accident.
+Selection took the most thought. A summary of every commit would still leave me
+with a pile of material to process. The compiler needed a real publication
+threshold, a reading-time budget, and a record of every included, deferred,
+excluded, inaccessible, or story-free repository. That made omission part of the
+review result and gave me a way to inspect the model's editorial choices.
 
-The second challenge was provenance. AI-written explanations feel confident even
-when their evidence has drifted. Commit-addressed excerpts, changed-path checks,
-line-bound validation, immutable archives, and fail-closed evidence APIs were all
-necessary to make the journal inspectable.
+Evidence was the second hard problem. A good explanation can become misleading
+as soon as its code reference drifts. I ended up treating every claim as a
+bounded Git address and validating that address during publication. The browser
+uses the same boundaries when it fetches source or diff data, so the explanation
+and the code stay connected.
 
-The third challenge was drawing an honest multi-user boundary. The GitHub App can
-list authorized repositories and fetch exact code on demand, while personal
-reading state belongs to one numeric GitHub user ID. The owner's scheduled Codex
-task must not silently spend model usage on, or copy code from, a connected
-reader's private repositories. The demo therefore proves safe source selection
-and durable memory while treating unattended per-account compilation as the next
-boundary, not as a finished feature.
+The account boundary required just as much care. GitHub authorization, reader
+memory, and scheduled compilation have different privacy and cost implications.
+The current build supports real account-isolated source choices and memory. The
+owner's scheduled Codex task covers the configured public example. A future
+per-account compiler will need installation tokens, isolated source caches,
+scheduling, consent, and usage limits before it can process each reader's private
+repositories.
 
-Finally, the product had to remain calm while holding dense technical material.
-Progressive disclosure, a finite scroll trail, keyboard navigation, responsive
-evidence views, and a botanical editorial system kept the experience from
-collapsing into another engineering dashboard.
+The interface also had to make dense material readable. I worked through several
+dashboard-style versions before the field-journal structure clicked. The final
+reader uses a finite scroll path, progressive evidence disclosure, keyboard
+navigation, and an editorial visual system that gives the code room to breathe.
 
 ### What I learned
 
-I learned that the most useful role for a model here is editorial judgment
-inside deterministic boundaries. Git should establish what is true; validators
-should establish what is publishable; GPT-5.6 should decide what is consequential
-and explain why.
+The main lesson was that models work well here when the surrounding program gives
+them a precise job. Git establishes the facts, Codex makes the editorial decision,
+and validators enforce the publication contract. That division made the output
+more useful and made failures easier to understand.
 
-I also learned that developer memory is product data. “Understood,” “watch,” and
-an unresolved question are not cosmetic reactions. They are durable inputs that
-should change what the next review investigates.
+I also learned that developer memory can be treated as structured product input.
+An “Understood” mark, a watched topic, or a question on a code range can guide a
+later review. Once those signals persist across editions, each review can build
+on the last one and develop a working relationship with the reader.
 
-Most importantly, an AI product earns trust as much through what it refuses to
-claim as through what it generates. Baxtori records quiet repositories,
-inaccessible sources, deferred findings, and unmapped areas rather than filling
-those gaps with plausible prose.
+The project also made me more candid about incomplete coverage. Baxtori records
+inaccessible repositories, unmapped areas, deferred findings, and repositories
+that produced no story. Those states tell the reader exactly how far the review
+reached.
 
-### What I am proud of
+### What works today
 
-- A working public product with no login wall
-- Exact commit-addressed code and diff evidence inside the reading flow
-- A real read-only GitHub App and account-isolated source and memory controls
-- Five published stories with sixteen Git-validated excerpts in the current
-  example edition
-- A valid zero-story edition path
-- A versioned Codex review contract, selection ledger, and strict finalization
-  protocol
-- 165 unit and validation tests plus 14 desktop/mobile browser tests
-- A distinctive product experience instead of a generic AI chat or dashboard
+The public application includes a complete example with five stories and sixteen
+Git-validated excerpts. Readers can inspect exact source and diffs, mark stories
+understood, watch topics, ask questions on code ranges, browse repository maps,
+and search four editions of memory. The GitHub App provides real read-only account
+connection, source modes, and synchronized reader state. The repository currently
+passes 165 unit and validation tests plus 14 desktop/mobile browser tests.
 
 ### What's next
 
-The next proof is one complete personalized loop: a connected repository changes,
-Codex selects one consequence, the reader watches or questions it, and the next
-private edition visibly responds. That requires unattended GitHub App
-installation-token access, isolated temporary source caches, per-account
-scheduling, and an explicit usage and consent model. I want to prove that loop
-before adding teams, billing, or a broader all-in-one review surface.
+The next milestone is a complete personalized cycle: a connected repository
+changes, Codex selects one consequence, the reader responds to it, and the next
+edition visibly uses that response. I plan to build the installation-token
+collector, isolated temporary caches, and per-account scheduler required for that
+cycle. After people use it repeatedly, I will have enough evidence to make the
+right decisions about teams, hosted usage, and pricing.
 
 ## Built with
 
@@ -148,25 +145,22 @@ Copy these as Devpost tags (18 total):
 
 ### Fastest judging path
 
-1. Open [https://www.baxtori.com](https://www.baxtori.com) in a modern desktop or
-   mobile browser. No account or sample-data import is required.
-2. Read the first story and open **Evidence** to inspect its exact commit, file,
-   lines, source view, and diff.
-3. Mark a story **Understood**, mark another **Watch**, and open **Memory** to see
-   how reader intent persists across the journal.
-4. Open **System** to inspect repository maps, reviewed source files, walkthroughs,
-   and open questions.
-5. GitHub connection is optional. If used, authorize only repositories you are
-   comfortable exposing to the read-only GitHub App, then open **Sources** and
-   change one repository between Pinned, Automatic, and Muted.
+1. Open [https://www.baxtori.com](https://www.baxtori.com) in Chrome or Edge.
+   The public example opens immediately.
+2. Read the first story and open **Evidence** to inspect its commits, file, line
+   range, source, and diff.
+3. Mark one story **Understood**, mark another **Watch**, and open **Memory** to
+   see the same topic across earlier editions.
+4. Open **System** to inspect repository maps, reviewed files, walkthroughs, and
+   open questions.
+5. To test account features, connect the read-only GitHub App, open **Sources**,
+   and change a repository between Pinned, Automatic, and Muted.
 
 ### Supported platforms
 
-- Hosted responsive web application intended for modern browsers
-- Automated coverage on current desktop Chromium and a Pixel 7 mobile profile;
-  Chrome or Edge is the simplest judging path
-- Local development on macOS, Linux, or Windows through WSL with Node.js 22.13
-  or newer
+- Hosted responsive web application for modern browsers
+- Automated coverage on current desktop Chromium and a Pixel 7 mobile profile
+- Local development on macOS, Linux, or Windows through WSL with Node.js 22.13+
 
 ### Local installation
 
@@ -178,10 +172,9 @@ cp .env.example .env.local
 npm run dev
 ```
 
-The signed-out public reader runs without GitHub or Convex credentials. To test
-account features, create a GitHub App and populate the variables documented in
-`.env.example`. The App needs only **Contents: Read-only** and **Metadata:
-Read-only** repository permissions.
+The public reader starts with the included edition data. Account features use the
+GitHub App and Convex values documented in `.env.example`. The GitHub App requires
+**Contents: Read-only** and **Metadata: Read-only** repository permissions.
 
 ### Verification
 
@@ -192,6 +185,6 @@ npm run test:visual
 npx next build
 ```
 
-The test suite covers evidence parsing, OAuth and request boundaries, repository
-identity and modes, account-state behavior, edition selection and validation,
-repository maps, and the complete desktop/mobile reader path.
+The suite covers evidence parsing, OAuth and request boundaries, repository
+identity and modes, account state, edition selection and validation, repository
+maps, and the full desktop/mobile reader flow.

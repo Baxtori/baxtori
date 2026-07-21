@@ -249,7 +249,7 @@ test("the default reader turns the review into a finite field journal", async ({
 
   await page.locator("#trail-end").scrollIntoViewIfNeeded();
   await expect(page.getByRole("heading", { name: "Caught up." })).toBeVisible();
-  await expect(page.getByText("Quiet repos")).toBeVisible();
+  await expect(page.getByText("Other repos")).toBeVisible();
   await expect(page.getByText("Reading · 7 of 7")).toHaveText("Reading · 7 of 7");
   await capture(page, testInfo, "field-journal-clearing", false, "allow");
   const endGrowth = await fernGrowth();

@@ -139,7 +139,7 @@ export function SourcesView({
           <div className="review-preview-metrics" aria-label="Scheduled review preview">
             <div><strong>{recentCommitCount}{hasTruncatedActivity ? "+" : ""}</strong><span>candidate commits</span></div>
             <div><strong>{candidateRepositoryCount}</strong><span>active sources</span></div>
-            <div><strong>{quietRepositoryCount}</strong><span>quiet sources</span></div>
+            <div><strong>{quietRepositoryCount}</strong><span>with no new commits</span></div>
           </div>
         </div>
 

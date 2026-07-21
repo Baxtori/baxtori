@@ -376,7 +376,7 @@ export function TrailReader({
               <div><dt>Understood</dt><dd>{understoodCount}</dd></div>
               <div><dt>Watching</dt><dd>{watchedCount}</dd></div>
               <div><dt>Minutes</dt><dd>{session.plannedMinutes}</dd></div>
-              <div><dt>Quiet repos</dt><dd>{endScene.quietRepositories.length}</dd></div>
+              <div><dt>Other repos</dt><dd>{endScene.quietRepositories.length}</dd></div>
             </dl>
             <div className={styles.endActions}>
               <button className={styles.primaryAction} onClick={onOpenMemory} type="button">Memory</button>

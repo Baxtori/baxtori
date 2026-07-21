@@ -22,7 +22,7 @@ It is not a replacement for GitHub, an IDE, or pull-request review.
 | Memory | Search prior editions, watches, and open questions. |
 | Sources | Choose which repositories the next review may inspect. |
 
-Edition records explain what was published, deferred, excluded, quiet, or
+Edition records explain what was published, deferred, excluded, produced no story, or
 inaccessible. They are supporting records, not a primary navigation category.
 
 ## Review loop
@@ -71,7 +71,7 @@ reader-facing follow-ups without review.
 ## Success checks
 
 - A reader can reach the relevant code from a story in one action.
-- Quiet reviews create no artificial work.
+- Reviews publish zero stories when every change falls below the threshold.
 - Watches and questions survive a new edition.
 - Historical code ranges still open after the current edition changes.
 - A reader can identify the important change without reading every commit.

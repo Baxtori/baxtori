@@ -67,7 +67,7 @@ It should own:
 1. GitHub pull request and review context attached to published stories.
 2. A read-only agent/MCP surface for Now, System, Memory, and exact citations.
 3. Mintlify or repository-doc PR handoff for explanations the reader promotes.
-4. Slack/Linear delivery for a single high-signal recommendation or a quiet
+4. Slack/Linear delivery for a single high-signal recommendation or a zero-story
    state, never a mirrored feed.
 5. IDE deep links that reopen the exact evidence and its surviving question.
 
