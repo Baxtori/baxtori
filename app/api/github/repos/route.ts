@@ -1,6 +1,9 @@
 import { feedbackIsConfigured, saveAuthorizedRepositoryInventory } from "@/lib/feedback-store";
 import { getGitHubSession, withSessionCookie } from "@/lib/github-auth";
 import { fetchGitHubRepositoryLibrary, GitHubRepositoryLibraryError } from "@/lib/github-repository-library";
+import { guardRateLimit } from "@/lib/rate-limit";
+
+const REPOSITORY_LIBRARY_LIMIT = { limit: 30, windowMs: 60_000 };
 
 export async function GET(request: Request) {
   const { session, setCookie } = await getGitHubSession(request);
@@ -10,6 +13,8 @@ export async function GET(request: Request) {
       setCookie,
     );
   }
+  const rateLimitError = guardRateLimit("github:repositories", String(session.user.id), REPOSITORY_LIBRARY_LIMIT);
+  if (rateLimitError) return withSessionCookie(rateLimitError, setCookie);
 
   try {
     const library = await fetchGitHubRepositoryLibrary(session.accessToken);
