@@ -1,6 +1,7 @@
 import { buildGitHubCompareUrl, parseCodeDiffRequest, parseGitHubPatch } from "@/lib/code-diff";
 import { getGitHubSession, githubHeaders, withSessionCookie } from "@/lib/github-auth";
 import { demoDiffEvidence } from "@/lib/demo-evidence";
+import { matchPublishedDemoEvidence } from "@/lib/demo-evidence-match";
 import { guardRateLimit } from "@/lib/rate-limit";
 
 type GitHubCompareFile = {
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
         { status: 400 },
       );
     }
-    const published = demoDiffEvidence(evidence);
+    const published = matchPublishedDemoEvidence(evidence, demoDiffEvidence);
     return published
       ? Response.json(published, { headers: { "Cache-Control": "public, max-age=3600" } })
       : Response.json({ error: "This comparison is not part of the published demo." }, { status: 404 });
