@@ -3,13 +3,13 @@ import test from "node:test";
 import { buildGitHubContentsUrl, parseCodeEvidenceRequest, selectCodeLines } from "../lib/code-evidence.ts";
 import { highlightCodeLines } from "../lib/code-highlight.ts";
 
-test("parses a bounded, commit-addressed code excerpt", () => {
+test("parses a bounded, commit-addressed excerpt and canonicalizes historical repositories", () => {
   const request = parseCodeEvidenceRequest(new URL("https://baxtori.test/api/github/code?repo=teamleaderleo%2Fglimpse&commit=05a5bfe&path=lib%2Fgithub-auth.ts&start=57&end=88"));
   assert.deepEqual(request, {
     commit: "05a5bfe",
     endLine: 88,
     path: "lib/github-auth.ts",
-    repository: "teamleaderleo/baxtori",
+    repository: "Baxtori/baxtori",
     startLine: 57,
   });
 });
@@ -26,7 +26,7 @@ test("selects stable line numbers and builds a canonical commit-addressed GitHub
   ]);
   assert.equal(
     buildGitHubContentsUrl("teamleaderleo/glimpse", "app/a file.ts", "05a5bfe").toString(),
-    "https://api.github.com/repos/teamleaderleo/baxtori/contents/app/a%20file.ts?ref=05a5bfe",
+    "https://api.github.com/repos/Baxtori/baxtori/contents/app/a%20file.ts?ref=05a5bfe",
   );
 });
 
