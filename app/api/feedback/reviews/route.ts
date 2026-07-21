@@ -1,10 +1,13 @@
 import { cancelReviewFeedback, feedbackIsConfigured, queueReviewFeedback } from "@/lib/feedback-store";
 import { parseReviewRequest } from "@/lib/feedback-contract";
 import { getGitHubIdentitySession, withSessionCookie } from "@/lib/github-auth";
+import { guardMutationRequest } from "@/lib/request-security";
 
 export async function POST(request: Request) {
   const { session, setCookie } = await getGitHubIdentitySession(request);
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to queue a re-review." }, { status: 401 }), setCookie);
+  const mutationError = guardMutationRequest(request, { requireJson: true });
+  if (mutationError) return withSessionCookie(mutationError, setCookie);
   if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ error: "The review queue is not configured." }, { status: 503 }), setCookie);
 
   let reviewRequest;
@@ -30,6 +33,8 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const { session, setCookie } = await getGitHubIdentitySession(request);
   if (!session) return withSessionCookie(Response.json({ error: "Sign in with GitHub to change the review queue." }, { status: 401 }), setCookie);
+  const mutationError = guardMutationRequest(request, { requireJson: true });
+  if (mutationError) return withSessionCookie(mutationError, setCookie);
   if (!feedbackIsConfigured()) return withSessionCookie(Response.json({ error: "The review queue is not configured." }, { status: 503 }), setCookie);
 
   let requestId: string;
