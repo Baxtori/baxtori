@@ -33,7 +33,6 @@ async function git(repositoryPath, args, { timeout = GIT_TIMEOUT_MS } = {}) {
   const { stdout } = await execFileAsync("git", ["-C", repositoryPath, ...args], {
     encoding: "utf8",
     maxBuffer: 10 * 1024 * 1024,
-    stdio: ["ignore", "pipe", "pipe"],
     timeout,
     windowsHide: true,
   });
