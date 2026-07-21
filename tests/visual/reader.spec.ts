@@ -32,6 +32,13 @@ test("the public home opens the published journal before asking for trust", asyn
 
   await expect(page.getByRole("heading", { name: "Notes from the repositories." })).toBeVisible();
   await waitForReader(page);
+  await expect(page.getByText("public example edition", { exact: true }).last()).toBeVisible();
+  const connect = page.locator("a:visible").filter({ hasText: "Connect" }).first();
+  await expect(connect).toHaveAttribute("href", "/api/auth/github/start");
+  await expect(connect.locator("svg")).toHaveCount(1);
+  const connectBox = await connect.boundingBox();
+  expect(connectBox?.height ?? 0).toBeGreaterThanOrEqual(24);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
   await capture(page, testInfo, "public-journal");
   expect(errors).toEqual([]);
 });

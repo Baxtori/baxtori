@@ -254,7 +254,9 @@ export function EditionHistory({
                           <div>
                             <div className="history-story-meta">
                               <span>{entry.story.project}</span>
-                              <span>{entry.repository ? repositoryLabel(entry.repository) : "Repository unavailable"}</span>
+                              {entry.repository && repositoryLabel(entry.repository).toLocaleLowerCase() !== entry.story.project.toLocaleLowerCase()
+                                ? <span>{repositoryLabel(entry.repository)}</span>
+                                : !entry.repository ? <span>Repository unavailable</span> : null}
                               {(topicEditionCounts.get(entry.story.topicId) ?? 1) > 1 && <span className="is-thread">Thread · {topicEditionCounts.get(entry.story.topicId)} editions</span>}
                               {watched && <span className="is-attention">Watching</span>}
                               {openQuestions > 0 && <span className="is-attention">{openQuestions} open {openQuestions === 1 ? "question" : "questions"}</span>}

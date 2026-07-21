@@ -14,37 +14,75 @@ Solo developers and small, AI-heavy teams can now produce more code than they ca
 
 Baxtori does not replace GitHub, Codex, CodeRabbit, Greptile, or a repository graph. It edits their evidence into maintained human understanding.
 
-## Two-and-a-half minute demo
+## Demo video script — approximately 2:50
 
-### 0:00 — Enter without ceremony
+Record the product full-screen and use deliberate cuts rather than waiting for
+OAuth or page loads. The words below are the voiceover; italic text describes
+what should be visible.
 
-Open `https://www.baxtori.com`. The published edition is the home page; no login wall or product tour appears. Point out that it is finite, editorial, and scroll-first rather than an activity dashboard. A valid review may publish zero stories.
+### 0:00–0:18 — The problem
 
-### 0:25 — Show a consequential change
+*Open `https://www.baxtori.com` at the top of Now. Let the title and contents
+remain still for a moment.*
 
-Open the first story, read the brief and “Why it matters,” then open Evidence. The claim is tied to an exact repository, full base commit, full head commit, file, and line range. Publication validation checks the Git objects, ancestry, changed path, file existence, and line bounds when the source cache is available.
+> Coding agents can now change several repositories faster than one developer can absorb them. Pull-request review checks whether a change can merge. It does not preserve the author's understanding after it merges. Baxtori is a quiet continuity layer for that gap.
 
-### 0:55 — Show the human feedback loop
+### 0:18–0:43 — The product
 
-Mark a story Understood, Watch another, and open Memory. Explain that questions, watches, comprehension, and re-review intent are durable account state. The next Codex review consumes those explicit signals instead of treating every edition as a blank prompt.
+*Scroll through the finite contents and stop on the first story.*
 
-### 1:25 — Connect a real account
+> Codex reviews accepted changes and selects only the few that should alter my mental model. Baxtori publishes those findings as a finite field journal—not another notification feed. This is a public example edition, so a judge can read it without an account. A valid review can also publish nothing when nothing is important enough.
 
-Choose Connect GitHub, install the read-only GitHub App on selected repositories, and open Sources. Repository visibility, source modes, activity, reader state, and memory are isolated by numeric GitHub user ID. Select Pinned, Automatic, or Muted for one repository and refresh to show persistence.
+### 0:43–1:12 — Exact evidence
 
-Be precise: the visible edition is a published example. Connecting an account does not pretend that a private edition has already been compiled. It proves safe multi-user source selection and memory; unattended per-account source retrieval and compilation remain the next boundary.
+*Open Evidence. Show the full base and head commits, file and line range, then
+briefly switch between code and diff.*
 
-### 2:00 — Show the Codex implementation
+> Every claim is attached to exact Git evidence: repository, full commits, changed file, and line range. Before publication, validators check the Git objects, ancestry, changed path, file existence, and line bounds. The prose is useful, but it never asks you to trust an unsupported summary.
 
-Show `codex/review-instructions.md`, deterministic cursor-based collection, ignored `data/candidates.json`, ignored `data/review-run.json`, a published edition in `data/latest.json`, and immutable receipts in `data/review-runs/`. The scheduled Codex task performs the judgment-heavy work: clustering related changes, suppressing noise, checking exact evidence, incorporating human memory, and publishing nothing when no change deserves attention.
+### 1:12–1:39 — Memory changes the next review
 
-Finish with: “Review agents help code get merged. Baxtori helps the author remain able to explain what the merged system became.”
+*Mark the story Understood, Watch another, then open Memory and show the watched
+thread across editions.*
+
+> I can mark what I understand, watch a concern, or leave a question on exact code. Memory carries those decisions across editions. The next Codex review receives that explicit human context instead of beginning from a blank prompt every week.
+
+### 1:39–2:02 — Connect GitHub honestly
+
+*Show the GitHub connection button, then cut to an already connected account and
+open Sources. Change one repository between Pinned, Automatic, and Muted.*
+
+> Connect GitHub uses a read-only GitHub App. Repository access and reader memory are isolated by numeric GitHub user ID. The current journal remains clearly labeled as the public example: connection proves safe source selection and durable account memory, while unattended private compilation is the next product boundary.
+
+### 2:02–2:38 — Codex and GPT-5.6
+
+*Show the primary Codex task with `/status` visible, then
+`codex/review-instructions.md`, `scripts/collect-backstory.mjs`,
+`scripts/finalize-review-run.mjs`, and one passing validation result.*
+
+> I built Baxtori with Codex and GPT-5.6. GPT-5.6 helped me challenge the product boundary, trace security and data-flow risks, implement the reader and GitHub workflows, and verify the result. Inside the product workflow, deterministic scripts collect bounded Git evidence; a local Codex review does the judgment-heavy selection and explanation; then strict code, edition, and map validators decide whether it can be published. The hosted app never sends a connected user's private code to my model account.
+
+### 2:38–2:50 — Close
+
+*Return to the journal and end on an open story with its evidence visible.*
+
+> Review agents help code get merged. Baxtori helps the author remain able to explain what the merged system became.
+
+## Recording preflight
+
+- Keep the final edit under three minutes; aim for 2:45–2:50.
+- Use a public YouTube upload and include audible narration.
+- Run `/status` in the primary build task and show the Session ID plus the exact GPT-5.6 model name. Submit that same Session ID in the form.
+- Confirm the demo URL is running the intended Git commit before recording.
+- Start with a clean public browser session, then cut to an already connected test account rather than spending video time inside OAuth.
+- Do not imply that connecting GitHub already compiles a private edition.
+- Do not show `data/review-runs/` as proof until it contains a genuine completed receipt. Show the receipt protocol and passing validators instead.
 
 ## Judging criteria
 
 | Criterion | What the demo proves |
 | --- | --- |
-| Technological implementation | A non-trivial Codex workflow sits between deterministic Git evidence collection and strict edition/map validators. The versioned instruction contract and hashed run receipt identify inputs, source heads, model/runtime, processed feedback, human edits, output, and validation results. |
+| Technological implementation | A non-trivial Codex workflow sits between deterministic Git evidence collection and strict edition/map validators. The versioned instruction contract and receipt protocol can identify inputs, source heads, model/runtime, processed feedback, human edits, output, and validation results for a finalized run. |
 | Design | Anonymous entry goes directly to a coherent botanical field journal. The same Now, System, Memory, Evidence, and Sources loop works on desktop and mobile, with account connection introduced in context. |
 | Potential impact | The audience is specific: developers overseeing agent-generated work across repositories. Baxtori reduces comprehension debt rather than adding another notification or review queue. |
 | Quality of the idea | It treats code understanding as an edited, longitudinal publication. The novelty is selection plus continuity: what the human understood, questioned, or watched changes what Codex reviews next. |

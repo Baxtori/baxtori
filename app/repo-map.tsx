@@ -257,14 +257,6 @@ export function RepoMap({ attentionBudget, data, onAttentionBudgetChange, onQues
                 </div>
               </summary>
               <div className="map-area-detail">
-                <div className="signal-grid" aria-label={`${area.name} coverage signals`}>
-                  {(["breadth", "depth", "confidence", "freshness"] as const).map((signal) => (
-                    <div key={signal}>
-                      <span>{signal}</span><strong>{area[signal]}%</strong>
-                      <i aria-hidden="true"><b style={{ width: `${area[signal]}%` }} /></i>
-                    </div>
-                  ))}
-                </div>
                 <div className="map-columns">
                   <div>
                     <span className="eyebrow">Assessment</span>
@@ -285,7 +277,7 @@ export function RepoMap({ attentionBudget, data, onAttentionBudgetChange, onQues
                   <button aria-pressed={state === "understood"} onClick={() => onStateChange(area, "understood")} type="button">Understood</button>
                   <button aria-pressed={state === "revisit"} onClick={() => onStateChange(area, "revisit")} type="button">Study again</button>
                   <button aria-pressed={state === "skipped"} onClick={() => onStateChange(area, "skipped")} type="button">Hide area</button>
-                  <small>Private and editable. Choose another state at any time.</small>
+                  <small>Editable. Saved to this device or your connected account.</small>
                 </div>
                 {area.walkthrough ? (
                   <details className="walkthrough" id={`walkthrough-${area.id}`} tabIndex={-1}>
@@ -336,14 +328,14 @@ export function RepoMap({ attentionBudget, data, onAttentionBudgetChange, onQues
                   <button aria-pressed={disposition === "open"} onClick={() => onQuestionChange(question, "open")} type="button">Keep open</button>
                   <button aria-pressed={disposition === "irrelevant"} onClick={() => onQuestionChange(question, "irrelevant")} type="button">Dismiss</button>
                 </div>
-                <small className="question-state-note">Saved to your private reader state. Choose another status to undo it.</small>
+                <small className="question-state-note">Saved to this device or your connected account. Choose another status to undo it.</small>
               </article>
             );
           })}
         </div>
       </section>
 
-      <p className="coverage-note">Reading states are private and editable. A later review may reopen an area when its source files change.</p>
+      <p className="coverage-note">Reading states are editable and follow your connected account when signed in. A later review may reopen an area when its source files change.</p>
     </section>
   );
 }

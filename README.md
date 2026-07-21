@@ -18,13 +18,29 @@ searches earlier editions and reader notes.
 - Repository maps with reviewed areas, source files, walkthroughs, and open questions
 - Search and filters across prior editions
 - Cursor-based collection from the last reviewed commit, with explicit history-rewrite fallback
-- Versioned Codex review instructions and immutable run receipts
+- Versioned Codex review instructions and an immutable run-receipt protocol
 - A signed-out demo that does not require GitHub access
 - Desktop and mobile browser tests
 
 Baxtori does not write to connected repositories. The hosted app fetches code
 from GitHub only when a reader opens an excerpt. It does not run a model over a
 connected user's private code.
+
+## Built with Codex and GPT-5.6
+
+Baxtori was developed with Codex and GPT-5.6 during OpenAI Build Week. Codex
+helped inspect the repository, challenge the product boundary, implement the
+GitHub and account flows, refine the editorial reader, and repeatedly run the
+project's tests and evidence validators. GPT-5.6 was used for the judgment-heavy
+work: deciding which accepted changes deserve a developer's attention, tracing
+their consequences across files, and turning exact Git evidence into a finite
+reading edition.
+
+The product workflow also uses a scheduled local Codex review. Deterministic
+scripts collect bounded Git evidence; Codex performs selection and explanation;
+strict validators check the resulting commit, path, range, archive, and map
+claims before publication. The hosted demo itself does not invoke a model API or
+send a connected reader's private code to the project owner's model account.
 
 ## Run locally
 
