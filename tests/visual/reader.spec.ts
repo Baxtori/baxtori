@@ -78,7 +78,13 @@ test("the default reader turns the review into a finite field journal", async ({
   expect(fernCenter).toBeLessThan(viewportWidth * (viewportWidth <= 760 ? 0.08 : 0.16));
   expect((fernBox?.x ?? 0) + (fernBox?.width ?? 0)).toBeGreaterThan(viewportWidth * 0.4);
   await expect(fernPlate.locator("image").first()).toHaveAttribute("href", "/botanical/fern-frond.webp");
-  await expect(fernPlate.locator("[data-fern-pinna]")).toHaveCount(8);
+  await expect(fernPlate.locator("[data-fern-pinna]")).toHaveCount(16);
+  await expect(fernPlate.locator("mask[id^='fern-branchlet-mask-']")).toHaveCount(16);
+  await expect(fernPlate.locator("clipPath")).toHaveCount(0);
+  await expect(fernPlate.locator("#fern-mask-feather feGaussianBlur")).toHaveAttribute("stdDeviation", "13");
+  await expect(fernPlate.locator("mask path[filter='url(#fern-mask-feather)']")).toHaveCount(16);
+  await expect(fernPlate.locator("[data-fern-branchlet='lower-left']")).toHaveCount(1);
+  await expect(fernPlate.locator("[data-fern-branchlet='crozier']")).toHaveCount(1);
   await expect(fernPlate.locator("[data-fern-pinna='0']")).toBeVisible();
   const navigation = page.getByRole("complementary", { name: "Baxtori navigation" });
   const navigationBox = await navigation.boundingBox();
@@ -121,7 +127,7 @@ test("the botanical trail becomes a complete static specimen with reduced motion
   await expect(specimen).toHaveAttribute("data-growth", "1.000");
   expect(await specimen.evaluate((element) => element.style.getPropertyValue("--fern-stem-dash"))).toBe("0.000");
   expect(await specimen.evaluate((element) => element.style.getPropertyValue("--fern-stage-0"))).toBe("1.000");
-  expect(await specimen.evaluate((element) => element.style.getPropertyValue("--fern-stage-7"))).toBe("1.000");
+  expect(await specimen.evaluate((element) => element.style.getPropertyValue("--fern-stage-15"))).toBe("1.000");
 });
 
 test("memory makes a concern legible across real editions", async ({ page }, testInfo) => {

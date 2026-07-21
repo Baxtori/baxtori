@@ -8,15 +8,23 @@ type BotanicalUnfurlProps = {
 const RACHIS_PATH = "M 82 1492 C 218 1270 300 1084 390 860 C 468 665 486 525 590 382 C 708 220 842 170 912 106";
 const VERTICAL_FROND_TRANSFORM = "rotate(-30.5 512 768)";
 
-const PINNA_STAGES = [
-  { anchor: [132, 1364], ellipse: [192, 1334, 210, 178, 24] },
-  { anchor: [222, 1180], ellipse: [282, 1160, 326, 202, 17] },
-  { anchor: [312, 990], ellipse: [352, 974, 388, 194, 8] },
-  { anchor: [390, 810], ellipse: [408, 792, 370, 174, -2] },
-  { anchor: [456, 642], ellipse: [470, 626, 336, 160, -7] },
-  { anchor: [526, 486], ellipse: [544, 470, 306, 148, -12] },
-  { anchor: [622, 326], ellipse: [646, 314, 300, 142, -17] },
-  { anchor: [786, 190], ellipse: [770, 194, 274, 158, -24] },
+const PINNA_BRANCHLETS = [
+  { id: "lower-bud", anchor: [144, 1360], path: "M 150 1360 C 208 1370 274 1398 346 1434", width: 132 },
+  { id: "lower-left", anchor: [218, 1174], path: "M 230 1170 C 164 1138 94 1070 28 1004", width: 194 },
+  { id: "lower-right", anchor: [226, 1178], path: "M 236 1180 C 360 1200 520 1255 704 1334", width: 202 },
+  { id: "low-mid-left", anchor: [296, 986], path: "M 305 984 C 236 966 132 928 44 884", width: 182 },
+  { id: "low-mid-right", anchor: [304, 990], path: "M 316 990 C 438 1004 586 1050 734 1120", width: 184 },
+  { id: "middle-left", anchor: [366, 824], path: "M 376 820 C 292 792 190 742 94 680", width: 172 },
+  { id: "middle-right", anchor: [374, 826], path: "M 386 824 C 500 830 624 854 748 892", width: 172 },
+  { id: "middle-high-left", anchor: [428, 678], path: "M 438 674 C 350 648 252 600 146 536", width: 162 },
+  { id: "middle-high-right", anchor: [436, 680], path: "M 448 678 C 548 682 654 706 756 742", width: 158 },
+  { id: "upper-low-left", anchor: [486, 548], path: "M 496 544 C 414 516 324 466 216 396", width: 150 },
+  { id: "upper-low-right", anchor: [494, 550], path: "M 506 548 C 598 556 688 578 770 614", width: 146 },
+  { id: "upper-left", anchor: [548, 426], path: "M 558 422 C 486 390 408 338 316 266", width: 140 },
+  { id: "upper-right", anchor: [556, 428], path: "M 568 426 C 650 434 730 454 806 486", width: 136 },
+  { id: "crown-left", anchor: [622, 322], path: "M 632 316 C 574 280 518 218 468 132", width: 130 },
+  { id: "crown-right", anchor: [632, 324], path: "M 644 320 C 726 326 810 346 892 386", width: 128 },
+  { id: "crozier", anchor: [700, 250], path: "M 688 278 C 746 176 840 96 920 104 C 958 108 964 188 916 278", width: 138 },
 ] as const;
 
 export function BotanicalUnfurl({
@@ -47,14 +55,37 @@ export function BotanicalUnfurl({
           <feFlood floodColor="#315f46" result="fern-ink" />
           <feComposite in="fern-ink" in2="fern-alpha" operator="in" />
         </filter>
-        {PINNA_STAGES.map(({ ellipse }, index) => {
-          const [cx, cy, rx, ry, rotation] = ellipse;
-          return (
-            <clipPath id={`fern-pinna-clip-${index}`} key={index} clipPathUnits="userSpaceOnUse">
-              <ellipse cx={cx} cy={cy} rx={rx} ry={ry} transform={`rotate(${rotation} ${cx} ${cy})`} />
-            </clipPath>
-          );
-        })}
+        <filter id="fern-mask-feather" colorInterpolationFilters="sRGB" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="13" />
+        </filter>
+        {PINNA_BRANCHLETS.map(({ id, path, width }) => (
+          <mask
+            id={`fern-branchlet-mask-${id}`}
+            key={id}
+            maskUnits="userSpaceOnUse"
+            x="-120"
+            y="-120"
+            width="1264"
+            height="1776"
+          >
+            <path
+              d={path}
+              fill="none"
+              filter="url(#fern-mask-feather)"
+              opacity="0.72"
+              stroke="white"
+              strokeLinecap="round"
+              strokeWidth={width + 38}
+            />
+            <path
+              d={path}
+              fill="none"
+              stroke="white"
+              strokeLinecap="round"
+              strokeWidth={width}
+            />
+          </mask>
+        ))}
       </defs>
       <g transform="translate(1024 0) scale(-1 1)">
         <g transform={VERTICAL_FROND_TRANSFORM}>
@@ -76,12 +107,13 @@ export function BotanicalUnfurl({
             strokeLinecap="round"
             strokeWidth="9"
           />
-          {PINNA_STAGES.map(({ anchor }, index) => {
+          {PINNA_BRANCHLETS.map(({ anchor, id }, index) => {
             const [anchorX, anchorY] = anchor;
             return (
-              <g key={index} transform={`translate(${anchorX} ${anchorY})`}>
+              <g key={id} transform={`translate(${anchorX} ${anchorY})`}>
                 <g
                   className={pinnaGrowthClassName}
+                  data-fern-branchlet={id}
                   data-fern-pinna={index}
                   style={{
                     opacity: `var(--fern-stage-opacity-${index})`,
@@ -89,7 +121,7 @@ export function BotanicalUnfurl({
                   }}
                 >
                   <g
-                    clipPath={`url(#fern-pinna-clip-${index})`}
+                    mask={`url(#fern-branchlet-mask-${id})`}
                     transform={`translate(${-anchorX} ${-anchorY})`}
                   >
                     <image
