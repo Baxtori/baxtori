@@ -9,10 +9,9 @@
   min-height: 100vh;
   color: var(--trail-ink);
   background:
-    repeating-linear-gradient(0deg, transparent 0 22px, rgb(54 73 59 / 1.6%) 23px),
-    radial-gradient(circle at 12% 18%, rgb(76 116 84 / 8%), transparent 28rem),
-    radial-gradient(circle at 88% 72%, rgb(122 83 55 / 5%), transparent 24rem),
-    linear-gradient(90deg, #eee7da, var(--trail-paper) 14%, var(--trail-paper) 86%, #eee7da);
+    radial-gradient(circle at 8% 14%, rgb(76 116 84 / 7%), transparent 34rem),
+    radial-gradient(circle at 90% 76%, rgb(122 83 55 / 3.5%), transparent 30rem),
+    var(--trail-paper);
 }
 
 :global(html:has(.trailShell)) {
@@ -86,115 +85,63 @@
 .botanicalProgress {
   position: fixed;
   z-index: 1;
-  bottom: 0;
-  left: max(-9rem, calc((100vw - 84rem) / 2 - 12rem));
-  width: clamp(38rem, 52vw, 58rem);
-  height: calc(100svh - 3.7rem);
-  min-height: 42rem;
+  bottom: -5vh;
+  left: max(-11rem, calc((100vw - 88rem) / 2 - 13rem));
+  width: clamp(45rem, 57vw, 64rem);
+  height: 105svh;
   margin: 0;
   overflow: hidden;
   pointer-events: none;
   mix-blend-mode: multiply;
-  mask-image: linear-gradient(90deg, #000 0 82%, rgb(0 0 0 / 90%) 89%, transparent 100%);
+  mask-image: linear-gradient(90deg, #000 0 76%, rgb(0 0 0 / 88%) 85%, transparent 98%);
 }
 
-.botanicalPlateGhost,
-.botanicalPlateReveal,
-.botanicalPlate {
-  position: absolute;
-  inset: 0;
+.fernStudy {
+  display: block;
   width: 100%;
   height: 100%;
+  overflow: visible;
 }
 
-.botanicalPlateGhost,
-.botanicalPlate {
-  object-fit: contain;
-  object-position: center bottom;
+.fernGhost,
+.fernLive {
+  fill: rgb(49 95 70 / 62%);
+  stroke: rgb(37 84 55 / 88%);
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.botanicalPlateGhost {
-  opacity: 0.07;
-  filter: grayscale(1) sepia(0.15) contrast(0.85);
+.fernGhost { opacity: 0.09; }
+.fernLive { opacity: 0.84; filter: drop-shadow(0 8px 18px rgb(32 66 44 / 8%)); }
+
+.fernRachis,
+.fernPinnaStem,
+.fernFiddlehead {
+  fill: none;
+  vector-effect: non-scaling-stroke;
 }
 
-.botanicalPlateReveal {
-  overflow: hidden;
-  clip-path: inset(0);
-}
-
-.botanicalPlate {
-  opacity: 0.68;
-  filter: sepia(0.16) saturate(0.74) contrast(0.95);
-  transform-origin: center bottom;
-}
-
-.botanicalCaption {
-  position: absolute;
-  right: 6rem;
-  bottom: 1.4rem;
-  display: grid;
-  gap: 0.18rem;
-  color: rgb(49 95 70 / 54%);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.58rem;
-  font-weight: 740;
-  letter-spacing: 0.12em;
-  line-height: 1.35;
-  text-align: right;
-  text-transform: uppercase;
-}
-
-.botanicalCaption em {
-  font-family: var(--serif);
-  font-size: 0.84rem;
-  font-style: italic;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: none;
-}
-
-.botanicalCaption small { color: rgb(79 92 82 / 48%); font-size: 0.48rem; }
-
-@supports (animation-timeline: scroll()) {
-  .botanicalPlateReveal {
-    clip-path: inset(100% 0 0);
-    animation: botanical-plate-reveal 1ms linear both;
-    animation-timeline: scroll(root block);
-    animation-range: 2% 94%;
-  }
-
-  .botanicalPlate {
-    animation: botanical-plate-ink 1ms linear both;
-    animation-timeline: scroll(root block);
-    animation-range: 2% 94%;
-  }
-}
-
-@supports not (animation-timeline: scroll()) {
-  .botanicalPlateReveal { clip-path: inset(100% 0 0); }
-  .botanicalPlate { transform: translateY(7%) scale(0.94); }
-}
-
-@keyframes botanical-plate-reveal { to { clip-path: inset(0); } }
-@keyframes botanical-plate-ink {
-  from { filter: sepia(0.3) saturate(0.58) contrast(0.88); transform: translateY(7%) scale(0.94); }
-  to { filter: sepia(0.12) saturate(0.82) contrast(0.98); transform: translateY(0) scale(1); }
-}
+.fernRachis { stroke-width: 3.4; }
+.fernPinnaStem { stroke-width: 1.3; }
+.fernFiddlehead { stroke-width: 2.2; }
+.fernLive .fernRachis,
+.fernLive .fernFiddlehead { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.fernPinnaGrowth { opacity: 0.08; scale: 0.035; transform-box: fill-box; transform-origin: 0 0; }
+.fernPinnule { opacity: 0; scale: 0.04; transform-box: fill-box; transform-origin: 0 50%; }
 
 .journal {
   position: relative;
   z-index: 2;
-  width: min(100%, 84rem);
+  width: min(100%, 88rem);
   margin: 0 auto;
-  padding: 4.2rem clamp(1.2rem, 3vw, 3rem) 18vh clamp(22rem, 31vw, 28rem);
+  padding: 4.2rem clamp(1.2rem, 3vw, 3rem) 18vh clamp(24rem, 34vw, 31rem);
 }
 
 .journal::before {
   position: absolute;
   top: 6rem;
   bottom: 8rem;
-  left: calc(clamp(22rem, 31vw, 28rem) - 2.4rem);
+  left: calc(clamp(24rem, 34vw, 31rem) - 2.4rem);
   width: 1px;
   background: linear-gradient(transparent, rgb(49 95 70 / 13%) 8rem, rgb(49 95 70 / 13%) calc(100% - 8rem), transparent);
   content: "";
@@ -226,14 +173,13 @@
 }
 
 .openingScene h1 { max-width: 47rem; font-size: clamp(3.6rem, 8vw, 6.7rem); line-height: 0.93; }
-.storyScene h2,
+.storyScene h2 { max-width: 46rem; font-size: clamp(2.6rem, 4.8vw, 4.4rem); line-height: 0.98; }
 .studyScene h2 { max-width: 44rem; font-size: clamp(2.6rem, 6vw, 5.1rem); line-height: 0.98; }
 .endScene h2 { max-width: 44rem; font-size: clamp(3.2rem, 7vw, 5.8rem); line-height: 0.96; }
 
 .openingMeta,
 .storyMeta,
-.storyHeader,
-.openingFooter {
+.storyHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -241,7 +187,7 @@
 }
 
 .openingMeta {
-  margin-bottom: clamp(3rem, 8vh, 6rem);
+  margin-bottom: clamp(4rem, 12vh, 8rem);
   color: var(--trail-muted);
   font-size: 0.62rem;
   font-weight: 780;
@@ -249,49 +195,31 @@
   text-transform: uppercase;
 }
 
-.kicker {
-  margin: 0 0 1.15rem;
-  color: var(--trail-green);
-  font-size: 0.66rem;
-  font-weight: 820;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-}
-
-.openingDek,
-.endDek {
+.openingDek {
   max-width: 40rem;
-  margin: 1.4rem 0 0;
-  color: var(--trail-soft);
-  font-family: var(--serif);
-  font-size: clamp(1.1rem, 2vw, 1.35rem);
-  line-height: 1.45;
+  margin: 1.2rem 0 0;
+  color: var(--trail-muted);
+  font-size: 0.72rem;
+  font-weight: 760;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .firstStop {
   position: relative;
-  display: grid;
-  gap: 0.45rem;
+  display: block;
   width: min(100%, 42rem);
-  margin-top: clamp(2rem, 6vh, 4rem);
-  padding: 1.25rem 4.5rem 1.25rem 1.35rem;
+  margin-top: clamp(3rem, 9vh, 6rem);
+  padding: 1.2rem 4.5rem 1.2rem 0;
   color: var(--trail-ink);
   text-align: left;
-  background: rgb(251 248 240 / 66%);
-  border: 1px solid var(--trail-line);
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--trail-line);
   cursor: pointer;
 }
-.firstStop > span { color: var(--trail-green); font-size: 0.58rem; font-weight: 820; letter-spacing: 0.1em; text-transform: uppercase; }
 .firstStop strong { font-family: var(--serif); font-size: clamp(1.45rem, 3vw, 2rem); font-weight: 520; }
-.firstStop small { max-width: 34rem; color: var(--trail-muted); font-size: 0.72rem; line-height: 1.4; }
 .firstStop i { position: absolute; right: 1.3rem; bottom: 1.2rem; color: var(--trail-green); font-family: var(--serif); font-size: 2rem; font-style: normal; }
-
-.openingFooter {
-  margin-top: auto;
-  padding-top: clamp(2rem, 5vh, 4rem);
-  color: var(--trail-muted);
-  font-size: 0.6rem;
-}
 
 .sceneNumber {
   position: absolute;
@@ -303,58 +231,47 @@
 }
 
 .storyHeader {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(12rem, 17vw, 15rem);
-  align-items: start;
-  gap: clamp(2rem, 4vw, 4.5rem);
-  margin-bottom: clamp(2.4rem, 6vh, 4.5rem);
+  position: relative;
+  display: block;
+  margin-bottom: clamp(1.8rem, 5vh, 3.5rem);
+  padding-right: clamp(10rem, 15vw, 13rem);
 }
 .storyLead { min-width: 0; padding-top: clamp(1rem, 3vh, 2.2rem); }
 .storyLead h2 { margin-top: clamp(1.4rem, 4vh, 2.8rem); }
-.specimenBearing { display: grid; align-items: start; gap: 0.8rem; }
-.specimenBearing > p {
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  padding-top: 0.65rem;
-  overflow-wrap: anywhere;
-  color: var(--trail-muted);
-  border-top: 1px solid rgb(49 95 70 / 24%);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.54rem;
-  line-height: 1.45;
-  text-align: left;
-}
-.botanicalDetail { width: 100%; margin: 0; mix-blend-mode: multiply; }
-.botanicalDetail > div {
-  height: clamp(13rem, 31vh, 18rem);
-  overflow: hidden;
-  background: rgb(238 232 218 / 24%);
-  border-block: 1px solid rgb(49 95 70 / 18%);
-}
-.botanicalDetail img {
+.specimenBearing { position: absolute; top: 0; right: 0; width: clamp(10rem, 13vw, 12rem); height: 100%; }
+.botanicalDetail {
+  position: relative;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  opacity: 0.72;
-  filter: sepia(0.08) saturate(0.82) contrast(0.96);
+  min-height: 18rem;
+  margin: 0;
+  color: rgb(49 95 70 / 68%);
+  mix-blend-mode: multiply;
 }
+.botanicalDetail svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 18rem;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.35;
+  vector-effect: non-scaling-stroke;
+}
+.botanicalDetail .specimenLeaf { fill: rgb(49 95 70 / 5%); }
 .botanicalDetail figcaption {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.65rem;
-  padding-top: 0.5rem;
-  color: rgb(49 95 70 / 62%);
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  color: rgb(49 95 70 / 38%);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.5rem;
   font-weight: 760;
   letter-spacing: 0.1em;
-  line-height: 1.25;
-  text-align: left;
-  text-transform: uppercase;
 }
-.botanicalDetail figcaption em { font-family: var(--serif); font-size: 0.72rem; font-style: italic; font-weight: 500; letter-spacing: 0; text-align: right; text-transform: none; }
 .storyMeta { justify-content: flex-start; color: var(--trail-green); font-size: 0.6rem; font-weight: 820; letter-spacing: 0.09em; text-transform: uppercase; }
 .storyMeta span + span::before { margin-right: 1rem; color: rgb(49 95 70 / 35%); content: "·"; }
 
@@ -367,10 +284,9 @@
   line-height: 1.48;
 }
 
-.whyNow,
 .meaning {
   display: grid;
-  grid-template-columns: 8.5rem minmax(0, 1fr);
+  grid-template-columns: 6.5rem minmax(0, 1fr);
   gap: 1.4rem;
   max-width: 45rem;
   margin-top: 2rem;
@@ -378,7 +294,6 @@
   border-top: 1px solid var(--trail-line);
 }
 
-.whyNow > span,
 .meaning > span,
 .fieldNotes section > span {
   color: var(--trail-green);
@@ -387,23 +302,17 @@
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
-.whyNow p,
 .meaning p { margin: 0; color: var(--trail-soft); font-size: 0.8rem; line-height: 1.55; }
-.whyNow p { font-family: var(--serif); font-size: 0.9rem; font-style: italic; }
 
 .evidenceBearing {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-  gap: 1rem;
+  display: block;
   margin-top: 0.7rem;
   padding: 0.85rem 0;
-  border-block: 1px solid var(--trail-line);
+  border-top: 1px solid var(--trail-line);
 }
 .evidenceBearing > div { display: grid; gap: 0.24rem; }
 .evidenceBearing span { color: var(--trail-muted); font-size: 0.56rem; font-weight: 780; letter-spacing: 0.08em; text-transform: uppercase; }
 .evidenceBearing strong { overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.65rem; font-weight: 600; }
-.evidenceBearing code { max-width: 18rem; color: var(--trail-muted); font-family: var(--serif); font-size: 0.72rem; text-align: right; }
 
 .storyActions,
 .endActions {
@@ -427,6 +336,7 @@
   font-size: 0.7rem;
   font-weight: 760;
 }
+.storyActions button { display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; }
 
 .storyActions .primaryAction,
 .endActions .primaryAction,
@@ -483,21 +393,12 @@
 .studyScene .primaryAction { margin-top: 1.2rem; }
 
 .endScene { align-items: flex-start; }
-.clearingMark { position: relative; width: 5rem; height: 4rem; margin-bottom: 2rem; }
-.clearingMark span { position: absolute; bottom: 0; left: 50%; width: 1px; height: 3.5rem; background: var(--trail-green); transform-origin: bottom; }
-.clearingMark span:nth-child(1) { transform: rotate(-42deg); }
-.clearingMark span:nth-child(2) { transform: rotate(0); }
-.clearingMark span:nth-child(3) { transform: rotate(42deg); }
-.clearingMark span::after { position: absolute; top: -0.3rem; left: -0.3rem; width: 0.6rem; height: 0.6rem; background: var(--trail-green); border-radius: 50% 0 50% 50%; content: ""; transform: rotate(-35deg); }
-
 .endSummary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; margin: clamp(2rem, 6vh, 4rem) 0 0; border-block: 1px solid var(--trail-line); }
 .endSummary > div { display: flex; flex-direction: column-reverse; gap: 0.3rem; padding: 1rem; border-right: 1px solid var(--trail-line); }
 .endSummary > div:first-child { padding-left: 0; }
 .endSummary > div:last-child { border-right: 0; }
 .endSummary dt { color: var(--trail-muted); font-size: 0.56rem; font-weight: 780; letter-spacing: 0.08em; text-transform: uppercase; }
 .endSummary dd { margin: 0; font-family: var(--serif); font-size: 2rem; }
-.deferNote { max-width: 35rem; margin: 1rem 0 2rem; color: var(--trail-muted); font-family: var(--serif); font-size: 0.92rem; font-style: italic; line-height: 1.55; }
-
 .sceneNav {
   position: fixed;
   z-index: 10;
@@ -532,9 +433,9 @@
   .journal { width: min(100%, 60rem); padding-left: clamp(1.1rem, 4vw, 3rem); }
   .journal::before { display: none; }
   .botanicalProgress {
-    left: max(-15rem, calc((100vw - 60rem) / 2 - 15rem));
-    width: clamp(31rem, 48vw, 39rem);
-    opacity: 0.8;
+    left: max(-17rem, calc((100vw - 60rem) / 2 - 17rem));
+    width: clamp(38rem, 56vw, 46rem);
+    opacity: 0.76;
   }
 }
 
@@ -550,33 +451,30 @@
   .openingScene h1 { font-size: clamp(3.15rem, 14vw, 4.35rem); }
   .storyScene h2,
   .studyScene h2 { font-size: clamp(2.65rem, 12vw, 4rem); }
-  .storyHeader { grid-template-columns: 1fr; gap: 2rem; }
-  .storyLead { padding-top: 0; }
+  .storyHeader { position: relative; display: block; min-height: 24rem; padding-right: 0; }
+  .storyLead { position: relative; z-index: 1; padding-top: 0; }
   .storyLead h2 { margin-top: 1.4rem; }
-  .specimenBearing { justify-items: end; width: 100%; }
-  .specimenBearing > p { width: min(78vw, 18rem); }
-  .botanicalDetail { width: min(78vw, 18rem); }
-  .botanicalDetail > div { height: 14rem; }
+  .specimenBearing { position: absolute; z-index: 0; top: -2.5rem; right: -1.5rem; width: 12rem; height: 18rem; opacity: 0.42; }
+  .botanicalDetail,
+  .botanicalDetail svg { min-height: 18rem; }
   .storyMeta { flex-wrap: wrap; }
-  .whyNow,
   .meaning { grid-template-columns: 1fr; gap: 0.4rem; }
   .evidenceBearing { grid-template-columns: 1fr; align-items: start; }
   .evidenceBearing code { max-width: none; text-align: left; }
   .fieldNotes > div { grid-template-columns: 1fr; }
-  .storyActions { display: grid; grid-template-columns: 1fr 1fr; }
+  .storyActions { display: grid; grid-template-columns: repeat(3, 1fr); }
   .storyActions button { min-height: 3rem; }
   .evidenceLayer { width: calc(100% + 2.3rem); margin-inline: -1.15rem; }
   .sceneNumber { top: 1rem; left: 0; font-size: 1rem; }
   .sceneNav { display: none; }
   .botanicalProgress {
-    left: -11rem;
-    width: 32rem;
-    height: calc(100svh - 3.7rem);
-    min-height: 32rem;
-    opacity: 0.58;
-    mask-image: linear-gradient(90deg, #000 0 64%, rgb(0 0 0 / 80%) 76%, transparent 98%);
+    bottom: -8vh;
+    left: -14rem;
+    width: 40rem;
+    height: 110svh;
+    opacity: 0.52;
+    mask-image: linear-gradient(90deg, #000 0 68%, rgb(0 0 0 / 82%) 78%, transparent 99%);
   }
-  .botanicalCaption { display: none; }
   .endSummary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .endSummary > div { border-bottom: 1px solid var(--trail-line); }
   .endSummary > div:nth-child(2) { border-right: 0; }
@@ -587,8 +485,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .botanicalPlateReveal { clip-path: inset(0) !important; animation: none !important; }
-  .botanicalPlate { filter: sepia(0.12) saturate(0.82) contrast(0.98) !important; transform: none !important; animation: none !important; }
   .evidenceLayer,
   .notice:not(:empty) { animation: none; }
   .sceneNav button span { transition: none; }

@@ -168,7 +168,7 @@ export function TrailReader({
           <span>{Math.min(activeIndex + 1, session.scenes.length)} of {session.scenes.length}</span>
           <progress max={session.scenes.length} value={activeIndex + 1} />
         </div>
-        <button className={styles.exitButton} onClick={onExit} type="button">Classic reader</button>
+        <button className={styles.exitButton} onClick={onExit} type="button">Standard</button>
       </header>
 
       <nav aria-label="Trail progress" className={styles.sceneNav}>
@@ -188,28 +188,21 @@ export function TrailReader({
       <main className={styles.journal} id="trail-reading">
         <section className={`${styles.scene} ${styles.openingScene}`} data-trail-scene id="trail-opening" tabIndex={-1}>
           <div className={styles.openingMeta}>
-            <span>Field notes · {sourceLabel}</span>
-            <span>{formatDay(edition.periodStart)}–{formatDay(edition.periodEnd)}</span>
+            <span>{sourceLabel}</span>
+            <span>{formatDay(edition.periodStart)}–{formatDay(edition.periodEnd)} · {formatGenerated(edition.generatedAt)}</span>
           </div>
-          <p className={styles.kicker}>A finite walk through what changed</p>
-          <h1>Stay close to the code without living inside it.</h1>
+          <h1>What changed.</h1>
           <p className={styles.openingDek}>
             {readingScenes.length
-              ? `${readingScenes.length} ${readingScenes.length === 1 ? "stop" : "stops"}, chosen for a ${session.budgetMinutes}-minute attention window.`
-              : "Nothing useful is asking for your attention. The trail is quiet."}
+              ? `${readingScenes.length} ${readingScenes.length === 1 ? "item" : "items"} · ${session.plannedMinutes} min`
+              : "Nothing needs your attention."}
           </p>
           {firstReadingScene && (
             <button className={styles.firstStop} onClick={() => moveTo(1)} type="button">
-              <span>First on the trail</span>
               <strong>{firstReadingScene.item.title}</strong>
-              <small>{firstReadingScene.item.reason}</small>
               <i aria-hidden="true">↓</i>
             </button>
           )}
-          <footer className={styles.openingFooter}>
-            <span>Generated {formatGenerated(edition.generatedAt)}</span>
-            <span>Use J/K or the arrow keys to move</span>
-          </footer>
         </section>
 
         {session.scenes.map((scene, index) => {
@@ -219,11 +212,11 @@ export function TrailReader({
             return (
               <section className={`${styles.scene} ${styles.studyScene}`} data-trail-scene id={scene.id} key={scene.id} tabIndex={-1}>
                 <div className={styles.sceneNumber} aria-hidden="true">{String(index).padStart(2, "0")}</div>
-                <div className={styles.storyMeta}><span>Side path · {scene.item.kind}</span><span>{scene.item.minutes} min</span></div>
+                <div className={styles.storyMeta}><span>{scene.item.kind}</span><span>{scene.item.minutes} min</span></div>
                 <h2>{scene.item.title}</h2>
                 <p className={styles.storyBrief}>{scene.item.reason}</p>
                 <p className={styles.repositoryBearing}>{scene.item.repository}</p>
-                <button className={styles.primaryAction} onClick={() => onOpenContinueItem(scene.item)} type="button">Open this path <span aria-hidden="true">→</span></button>
+                <button className={styles.primaryAction} onClick={() => onOpenContinueItem(scene.item)} type="button">Open <span aria-hidden="true">→</span></button>
               </section>
             );
           }
@@ -239,59 +232,50 @@ export function TrailReader({
                   <div className={styles.storyMeta}>
                     <span>{scene.story.project}</span>
                     <span>{scene.item.minutes} min</span>
-                    <span>{scene.story.timing}</span>
                   </div>
                   <h2>{scene.story.title}</h2>
                   <p className={styles.storyBrief}>{scene.story.brief}</p>
                 </div>
                 <div className={styles.specimenBearing}>
                   <BotanicalDetail stage={index} />
-                  <p>{scene.story.repository ?? scene.item.repository}</p>
                 </div>
               </header>
 
-              <div className={styles.whyNow}>
-                <span>Why now</span>
-                <p>{scene.item.reason}</p>
-              </div>
-
-              <section className={styles.meaning} aria-label="Why this change matters">
-                <span>What changes in your understanding</span>
+              <section className={styles.meaning} aria-label="Why it matters">
+                <span>Why it matters</span>
                 <p>{scene.story.whyItMatters}</p>
               </section>
 
               <div className={styles.evidenceBearing}>
                 <div>
-                  <span>{scene.story.codeEvidence?.length ?? 0} exact {scene.story.codeEvidence?.length === 1 ? "excerpt" : "excerpts"}</span>
+                  <span>{scene.story.codeEvidence?.length ?? 0} {scene.story.codeEvidence?.length === 1 ? "excerpt" : "excerpts"}</span>
                   <strong>{bearing ?? scene.story.evidence}</strong>
                 </div>
-                {bearing && <code>{scene.story.codeEvidence?.[0]?.title}</code>}
               </div>
 
               <div className={styles.storyActions} aria-label={`Actions for ${scene.story.title}`}>
                 <button aria-pressed={state.understood} className={styles.primaryAction} onClick={() => onUnderstand(scene.story)} type="button">
-                  <span aria-hidden="true">{state.understood ? "✓" : "○"}</span>{state.understood ? "Understood" : "Mark understood"}
+                  <span aria-hidden="true">{state.understood ? "✓" : "○"}</span>Understood
                 </button>
                 <button aria-pressed={state.watching} onClick={() => onWatch(scene.story)} type="button">{state.watching ? "Watching" : "Watch"}</button>
                 <button aria-expanded={evidenceOpen} onClick={() => setOpenEvidence((current) => ({ ...current, [scene.story.id]: !evidenceOpen }))} type="button">
                   {evidenceOpen ? "Close evidence" : "Evidence"}
                 </button>
-                <button aria-expanded={evidenceOpen} onClick={() => setOpenEvidence((current) => ({ ...current, [scene.story.id]: true }))} type="button">Ask</button>
               </div>
 
               {evidenceOpen && <div className={styles.evidenceLayer}>{renderEvidence(scene.story)}</div>}
 
               <details className={styles.fieldNotes}>
-                <summary>Verification, tradeoff, and full field notes</summary>
+                <summary>Details</summary>
                 <div>
-                  <section><span>What changed</span><p>{scene.story.whatChanged}</p></section>
-                  <section><span>Check this</span><p>{scene.story.verify}</p></section>
+                  <section><span>Changed</span><p>{scene.story.whatChanged}</p></section>
+                  <section><span>Verify</span><p>{scene.story.verify}</p></section>
                   <section><span>Tradeoff</span><p>{scene.story.tradeoff}</p></section>
                 </div>
               </details>
 
               <button className={styles.nextCue} onClick={() => moveTo(index + 1)} type="button">
-                Continue down the trail <span aria-hidden="true">↓</span>
+                Next <span aria-hidden="true">↓</span>
               </button>
             </article>
           );
@@ -299,27 +283,17 @@ export function TrailReader({
 
         {endScene?.kind === "end" && (
           <section className={`${styles.scene} ${styles.endScene}`} data-trail-scene id="trail-end" tabIndex={-1}>
-            <div className={styles.clearingMark} aria-hidden="true"><span /><span /><span /></div>
-            <p className={styles.kicker}>{readingScenes.length ? "The clearing" : "A quiet edition"}</p>
-            <h2>{readingScenes.length ? "You reached the end of this walk." : "Nothing needs tending today."}</h2>
-            <p className={styles.endDek}>
-              {readingScenes.length
-                ? "Your decisions stay with the next review. The published evidence stays exactly as it was."
-                : "Baxtori found no useful reading for this attention window. Silence is part of the editorial decision."}
-            </p>
+            <h2>{readingScenes.length ? "Caught up." : "Nothing new."}</h2>
             <dl className={styles.endSummary}>
               <div><dt>Understood</dt><dd>{understoodCount}</dd></div>
               <div><dt>Watching</dt><dd>{watchedCount}</dd></div>
-              <div><dt>Minutes walked</dt><dd>{session.plannedMinutes}</dd></div>
-              <div><dt>Quiet repositories</dt><dd>{endScene.quietRepositories.length}</dd></div>
+              <div><dt>Minutes</dt><dd>{session.plannedMinutes}</dd></div>
+              <div><dt>Quiet repos</dt><dd>{endScene.quietRepositories.length}</dd></div>
             </dl>
-            {endScene.deferredCount > 0 && (
-              <p className={styles.deferNote}>More paths remain available whenever you choose another attention window.</p>
-            )}
             <div className={styles.endActions}>
-              <button className={styles.primaryAction} onClick={onOpenMemory} type="button">Open working memory</button>
-              <button onClick={onOpenSystem} type="button">Walk the system model</button>
-              <button onClick={onExit} type="button">Return to classic reader</button>
+              <button className={styles.primaryAction} onClick={onOpenMemory} type="button">Memory</button>
+              <button onClick={onOpenSystem} type="button">System</button>
+              <button onClick={onExit} type="button">Standard reader</button>
             </div>
           </section>
         )}

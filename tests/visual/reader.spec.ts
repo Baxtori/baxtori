@@ -55,21 +55,17 @@ test("the trail turns the same review into a finite field journal", async ({ pag
   const errors = collectBrowserErrors(page);
   await page.goto("/?demo=1&reader=trail");
 
-  const reveal = page.locator("[data-botanical-reveal]");
-  const revealInset = () => reveal.evaluate((element) => {
-    const match = getComputedStyle(element).clipPath.match(/inset\(([-\d.]+)/);
-    return Number.parseFloat(match?.[1] ?? "0");
-  });
   const progressSpecimen = page.locator("[data-botanical-progress]");
+  const fernGrowth = () => progressSpecimen.evaluate((element) => Number(element.getAttribute("data-growth") ?? 0));
   await expect(progressSpecimen).toBeVisible();
   const progressBox = await progressSpecimen.boundingBox();
   expect(progressBox).not.toBeNull();
   expect(progressBox?.width ?? 0).toBeGreaterThan(480);
-  await expect(page.locator("[data-botanical-plate]")).toHaveAttribute("src", "/art/male-fern-nature-print.png");
-  const openingRevealInset = await revealInset();
-  await expect(page.getByRole("heading", { name: "Stay close to the code without living inside it." })).toBeVisible();
-  await expect(page.getByRole("button", { name: /First on the trail/ })).toBeVisible();
-  await page.getByRole("button", { name: /First on the trail/ }).click();
+  await expect(page.locator("svg[data-botanical-plate]")).toBeVisible();
+  expect(await page.locator("[data-fern-pinna]").count()).toBeGreaterThan(20);
+  const openingGrowth = await fernGrowth();
+  await expect(page.getByRole("heading", { name: "What changed." })).toBeVisible();
+  await page.getByRole("button", { name: "Repository access and reader attention became explicit plans.", exact: true }).click();
 
   await expect(page.getByRole("heading", { name: "Repository access and reader attention became explicit plans." })).toBeVisible();
   const storySpecimen = page.locator("[data-botanical-detail]").first();
@@ -78,17 +74,20 @@ test("the trail turns the same review into a finite field journal", async ({ pag
   expect(storySpecimenBox).not.toBeNull();
   expect(storySpecimenBox?.width ?? 0).toBeGreaterThan(180);
   expect(storySpecimenBox?.height ?? 0).toBeGreaterThan(200);
-  await expect.poll(revealInset).toBeLessThan(openingRevealInset);
+  await expect.poll(fernGrowth).toBeGreaterThan(openingGrowth);
   await page.getByRole("button", { name: "Evidence", exact: true }).first().click();
   await expect(page.getByText("Code evidence 1/3")).toBeVisible();
   await expect(page.locator(".diff-line.is-addition").first()).toBeVisible();
   await capture(page, testInfo, "field-journal-trail", true, "allow");
 
   await page.locator("#trail-end").scrollIntoViewIfNeeded();
-  await expect(page.getByRole("heading", { name: "You reached the end of this walk." })).toBeVisible();
-  await expect(page.getByText("Quiet repositories")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Caught up." })).toBeVisible();
+  await expect(page.getByText("Quiet repos")).toBeVisible();
   await expect(page.getByText("5 of 5")).toBeVisible();
   await capture(page, testInfo, "field-journal-clearing", false, "allow");
+  const endGrowth = await fernGrowth();
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "auto" }));
+  await expect.poll(fernGrowth).toBeLessThan(endGrowth);
   expect(errors).toEqual([]);
 });
 
@@ -96,10 +95,10 @@ test("the botanical trail becomes a complete static specimen with reduced motion
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?demo=1&reader=trail");
 
-  const reveal = page.locator("[data-botanical-reveal]");
-  await expect(page.locator("[data-botanical-progress]")).toBeVisible();
-  expect(await reveal.evaluate((element) => getComputedStyle(element).clipPath)).toMatch(/^inset\(0(px|%|\b)/);
-  expect(await page.locator("[data-botanical-plate]").evaluate((element) => getComputedStyle(element).transform)).toBe("none");
+  const specimen = page.locator("[data-botanical-progress]");
+  await expect(specimen).toBeVisible();
+  await expect(specimen).toHaveAttribute("data-growth", "1.000");
+  expect(await page.locator("[data-fern-stem]").evaluate((element) => getComputedStyle(element).strokeDashoffset)).toBe("0px");
 });
 
 test("memory makes a concern legible across real editions", async ({ page }, testInfo) => {
