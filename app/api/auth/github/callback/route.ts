@@ -3,11 +3,13 @@ import {
   cookieHeader,
   githubHeaders,
   githubIsConfigured,
+  githubOAuthTokenBody,
   GitHubSession,
   SESSION_COOKIE,
   parseCookies,
   sealSession,
   STATE_COOKIE,
+  validateGitHubOAuthState,
   type TokenResponse,
 } from "@/lib/github-auth";
 
@@ -33,20 +35,17 @@ export async function GET(request: Request) {
   const state = url.searchParams.get("state");
   const expectedState = parseCookies(request).get(STATE_COOKIE);
   const clearState = clearCookieHeader(request, STATE_COOKIE);
+  const statelessStateValid = state ? await validateGitHubOAuthState(state) : false;
+  const legacyCookieStateValid = Boolean(state && expectedState && state === expectedState);
 
-  if (!code || !state || !expectedState || state !== expectedState) {
+  if (!code || (!statelessStateValid && !legacyCookieStateValid)) {
     return redirectHome(request, "state-error", [clearState]);
   }
 
   const response = await fetch("https://github.com/login/oauth/access_token", {
     method: "POST",
     headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      client_id: process.env.GITHUB_CLIENT_ID?.trim() ?? "",
-      client_secret: process.env.GITHUB_CLIENT_SECRET?.trim() ?? "",
-      code,
-      redirect_uri: new URL("/api/auth/github/callback", request.url).toString(),
-    }),
+    body: githubOAuthTokenBody(code),
     cache: "no-store",
   });
   const token = (await response.json()) as TokenResponse;

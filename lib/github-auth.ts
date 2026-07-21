@@ -23,6 +23,8 @@ export type TokenResponse = {
 
 export const SESSION_COOKIE = "baxtori_github_session";
 export const STATE_COOKIE = "baxtori_github_state";
+const OAUTH_STATE_MAX_AGE_MS = 10 * 60 * 1000;
+const OAUTH_STATE_CLOCK_SKEW_MS = 60 * 1000;
 
 export function githubIsConfigured() {
   return Boolean(
@@ -30,6 +32,21 @@ export function githubIsConfigured() {
       process.env.GITHUB_CLIENT_SECRET?.trim() &&
       process.env.GITHUB_SESSION_SECRET?.trim(),
   );
+}
+
+export function githubOAuthAuthorizeUrl(clientId: string, state: string) {
+  const authorize = new URL("https://github.com/login/oauth/authorize");
+  authorize.searchParams.set("client_id", clientId);
+  authorize.searchParams.set("state", state);
+  return authorize;
+}
+
+export function githubOAuthTokenBody(code: string) {
+  return new URLSearchParams({
+    client_id: process.env.GITHUB_CLIENT_ID?.trim() ?? "",
+    client_secret: process.env.GITHUB_CLIENT_SECRET?.trim() ?? "",
+    code,
+  });
 }
 
 export function parseCookies(request: Request) {
@@ -72,14 +89,14 @@ async function sessionKey() {
   return crypto.subtle.importKey("raw", digest, "AES-GCM", false, ["encrypt", "decrypt"]);
 }
 
-export async function sealSession(session: GitHubSession) {
+async function sealValue(value: unknown) {
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const plaintext = new TextEncoder().encode(JSON.stringify(session));
+  const plaintext = new TextEncoder().encode(JSON.stringify(value));
   const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await sessionKey(), plaintext);
   return `${bytesToBase64Url(iv)}.${bytesToBase64Url(new Uint8Array(encrypted))}`;
 }
 
-async function openSession(value: string) {
+async function openValue(value: string): Promise<unknown> {
   try {
     const [iv, encrypted] = value.split(".");
     if (!iv || !encrypted) return null;
@@ -88,10 +105,30 @@ async function openSession(value: string) {
       await sessionKey(),
       base64UrlToBytes(encrypted),
     );
-    return JSON.parse(new TextDecoder().decode(plaintext)) as GitHubSession;
+    return JSON.parse(new TextDecoder().decode(plaintext)) as unknown;
   } catch {
     return null;
   }
+}
+
+export async function sealSession(session: GitHubSession) {
+  return sealValue(session);
+}
+
+async function openSession(value: string) {
+  return (await openValue(value)) as GitHubSession | null;
+}
+
+export async function createGitHubOAuthState(now = Date.now()) {
+  return sealValue({ issuedAt: now, nonce: crypto.randomUUID(), version: 1 });
+}
+
+export async function validateGitHubOAuthState(value: string, now = Date.now()) {
+  const payload = await openValue(value);
+  if (!payload || typeof payload !== "object") return false;
+  const { issuedAt, nonce, version } = payload as Record<string, unknown>;
+  if (version !== 1 || typeof issuedAt !== "number" || typeof nonce !== "string" || !nonce) return false;
+  return issuedAt <= now + OAUTH_STATE_CLOCK_SKEW_MS && issuedAt >= now - OAUTH_STATE_MAX_AGE_MS;
 }
 
 export function cookieHeader(request: Request, name: string, value: string, maxAge: number) {

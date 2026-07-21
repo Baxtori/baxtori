@@ -36,9 +36,10 @@ test("server-renders the Baxtori briefing", async () => {
 });
 
 test("keeps GitHub credentials and feedback storage behind the server session", async () => {
-  const [page, authLibrary, callbackRoute, repositoriesRoute, activityRoute, diffRoute, feedbackStateRoute, feedbackReviewsRoute, feedbackTopicsRoute, feedbackQuestionsRoute, feedbackStore, envExample, hosting] = await Promise.all([
+  const [page, authLibrary, startRoute, callbackRoute, repositoriesRoute, activityRoute, diffRoute, feedbackStateRoute, feedbackReviewsRoute, feedbackTopicsRoute, feedbackQuestionsRoute, feedbackStore, envExample, hosting] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../lib/github-auth.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/auth/github/start/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/auth/github/callback/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/github/repos/route.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/api/github/activity/route.ts", import.meta.url), "utf8"),
@@ -55,7 +56,12 @@ test("keeps GitHub credentials and feedback storage behind the server session", 
   assert.doesNotMatch(page, /accessToken|GITHUB_CLIENT_SECRET|GITHUB_SESSION_SECRET/);
   assert.match(authLibrary, /AES-GCM/);
   assert.match(authLibrary, /HttpOnly; SameSite=Lax/);
+  assert.match(startRoute, /githubOAuthAuthorizeUrl/);
+  assert.doesNotMatch(startRoute, /redirect_uri/);
   assert.match(callbackRoute, /sealSession/);
+  assert.match(callbackRoute, /validateGitHubOAuthState/);
+  assert.match(callbackRoute, /githubOAuthTokenBody/);
+  assert.doesNotMatch(callbackRoute, /redirect_uri/);
   assert.match(repositoriesRoute, /getGitHubSession/);
   assert.match(activityRoute, /getGitHubSession/);
   assert.match(diffRoute, /getGitHubSession/);
