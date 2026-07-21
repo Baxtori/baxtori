@@ -18,3 +18,7 @@ export const BRANCHLET_GROWTH = [
 ] as const;
 
 export const BRANCHLET_REVEAL_DURATION = 0.36;
+
+// Finish before the literal final scroll pixel. Mobile browsers can reserve
+// scroll range for collapsing chrome, otherwise leaving the crown half-furled.
+export const FERN_COMPLETION_PROGRESS = 0.82;

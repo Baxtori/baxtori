@@ -536,6 +536,16 @@ export default function Home() {
   const selectedRepositoryData = sortRepositoriesByMode(repositories.filter((repository) =>
     selectedRepositories.includes(repository.fullName),
   ), repositoryModes);
+  const systemSources = selectedRepositoryData.length
+    ? selectedRepositoryData.map((repository) => {
+        const published = REVIEW_SCOPE.repositories.find((source) => source.fullName === repository.fullName);
+        return published ?? {
+          fullName: repository.fullName,
+          mapStatus: "unmapped" as const,
+          name: repository.name,
+        };
+      })
+    : REVIEW_SCOPE.repositories;
   const repositoryCounts = repositoryModeCounts(repositories, repositoryModes);
   const scheduledRepositorySet = new Set(SCHEDULED_REPOSITORIES);
   const selectedRepositorySet = new Set(selectedRepositories);
@@ -716,7 +726,7 @@ export default function Home() {
     const messages: Record<QuestionDisposition, string> = {
       irrelevant: "Removed from your open questions.",
       open: "Question kept visible for a future review.",
-      resolved: "Question marked resolved on this device.",
+      resolved: feedbackConfigured ? "Question marked resolved and queued for account sync." : "Question marked resolved on this device.",
     };
     setNotice(messages[state]);
   };
@@ -911,42 +921,73 @@ export default function Home() {
     return <SignedOutShell authMessage={authMessage} configured={auth.configured} onExploreDemo={() => setDemoMode(true)} />;
   }
 
-  if (hasHydrated && view === "briefing") {
-    const actualStory = (trailStory: TrailStory) => STORIES.find((story) => story.id === trailStory.id);
-    const renderTrailEvidence = (trailStory: TrailStory) => {
-      const story = actualStory(trailStory);
-      if (!story?.repository || !story.codeEvidence?.length) {
-        return <div className="code-state">This published note does not include an exact excerpt.</div>;
-      }
-      if (demoMode && story.repository !== "teamleaderleo/baxtori") {
-        return <div className="code-state">Sign in to inspect this repository&apos;s exact comparison. The published summary remains available in the trail.</div>;
-      }
-      return (
-        <StoryCode
-          demoMode={demoMode}
-          defaultQuestionLens={REVIEW_POLICY.defaultLens}
-          editionId={EDITION.id}
-          evidence={story.codeEvidence}
-          feedbackConfigured={feedbackConfigured}
-          onQuestionSaved={saveThreadQuestion}
-          onQuestionUpdated={updateThreadQuestion}
-          questionLenses={REVIEW_POLICY.lenses}
-          questions={threadQuestions}
-          repository={story.repository}
-          storyId={story.id}
-          storyTitle={story.title}
-          topicId={story.topicId}
-          topicThread={topicThreadFor(topicThreads, story)}
-        />
-      );
-    };
+  const actualStory = (trailStory: TrailStory) => STORIES.find((story) => story.id === trailStory.id);
+  const renderTrailEvidence = (trailStory: TrailStory) => {
+    const story = actualStory(trailStory);
+    if (!story?.repository || !story.codeEvidence?.length) {
+      return <div className="code-state">This published note does not include an exact excerpt.</div>;
+    }
+    if (demoMode && story.repository !== "teamleaderleo/baxtori") {
+      return <div className="code-state">Sign in to inspect this repository&apos;s exact comparison. The published summary remains available in the trail.</div>;
+    }
+    return (
+      <StoryCode
+        demoMode={demoMode}
+        defaultQuestionLens={REVIEW_POLICY.defaultLens}
+        editionId={EDITION.id}
+        evidence={story.codeEvidence}
+        feedbackConfigured={feedbackConfigured}
+        onQuestionSaved={saveThreadQuestion}
+        onQuestionUpdated={updateThreadQuestion}
+        questionLenses={REVIEW_POLICY.lenses}
+        questions={threadQuestions}
+        repository={story.repository}
+        storyId={story.id}
+        storyTitle={story.title}
+        topicId={story.topicId}
+        topicThread={topicThreadFor(topicThreads, story)}
+      />
+    );
+  };
+
+  if (hasHydrated && (view === "briefing" || view === "map" || view === "history")) {
+    const primaryContent = view === "map" ? (
+      <RepositoryMaps
+        activeRepository={activeMapRepository}
+        attentionBudget={continueBudget}
+        data={REPOSITORY_MAPS}
+        onActiveRepositoryChange={setActiveMapRepository}
+        onQuestionChange={updateQuestion}
+        onStateChange={updateUnderstanding}
+        onAttentionBudgetChange={setContinueBudget}
+        questionStates={questionStates}
+        sources={systemSources}
+        states={mapStates}
+      />
+    ) : view === "history" ? (
+      <EditionHistory
+        demoMode={demoMode}
+        defaultQuestionLens={REVIEW_POLICY.defaultLens}
+        editions={HISTORY_EDITIONS}
+        feedbackConfigured={feedbackConfigured}
+        onQuestionSaved={saveThreadQuestion}
+        onQuestionUpdated={updateThreadQuestion}
+        questionLenses={REVIEW_POLICY.lenses}
+        questions={threadQuestions}
+        topicThreads={topicThreads}
+      />
+    ) : undefined;
 
     return (
       <TrailReader
+        activeView={view}
         edition={EDITION}
         notice={notice}
+        onOpenEditionRecord={() => setView("timeline")}
         onOpenContinueItem={openContinueItem}
         onOpenMemory={() => setView("history")}
+        onOpenNow={() => setView("briefing")}
+        onOpenRepositories={demoMode ? undefined : openRepositoryControls}
         onOpenSystem={() => setView("map")}
         onUnderstand={(trailStory) => {
           const story = actualStory(trailStory);
@@ -956,7 +997,16 @@ export default function Home() {
           const story = actualStory(trailStory);
           if (story) void toggleWatch(story);
         }}
+        primaryContent={primaryContent}
+        primaryDescription={view === "map"
+          ? "Evidence-backed bearings, uncertainty, and the next useful thing to understand. Newly selected repositories stay honest until a reviewed map is published."
+          : "Return to unresolved intent and reopen the exact evidence that shaped earlier understanding."}
+        primaryHeading={view === "map" ? "Know the system." : "Working memory."}
+        primaryKicker={view === "map"
+          ? `${systemSources.length} ${systemSources.length === 1 ? "repository" : "repositories"}`
+          : `${HISTORY_EDITION_COUNT} immutable ${HISTORY_EDITION_COUNT === 1 ? "edition" : "editions"}`}
         renderEvidence={renderTrailEvidence}
+        repositoryCount={selectedRepositories.length}
         session={trailSession}
         sourceLabel={demoMode ? "published demo" : `${selectedRepositories.length} ${selectedRepositories.length === 1 ? "repository" : "repositories"}`}
         storyState={(trailStory) => {
@@ -1487,7 +1537,12 @@ export default function Home() {
                   <div className="scope-empty"><strong>No repositories selected.</strong><span>Add a source below or restore the published scope.</span></div>
                 )}
               </div>
-              <p className="scope-boundary">Modes sync to your account. They influence the activity pass and priority, but a repository still needs configured source access before Baxtori can publish code claims.</p>
+              <p className="scope-boundary">
+                <span className={`sync-status is-${feedbackStatus}`}>
+                  {feedbackStatus === "loading" ? "Loading state" : feedbackStatus === "saving" ? "Saving modes" : feedbackStatus === "saved" ? "Modes saved to account" : "Modes saved on this device"}
+                </span>
+                {" · "}Changes apply to the next scheduled review. A repository still needs configured source access before Baxtori can publish code claims or a trustworthy system map.
+              </p>
             </section>
 
             <div className="repo-toolbar">

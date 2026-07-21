@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { BRANCHLET_GROWTH, BRANCHLET_REVEAL_DURATION } from "./botanical-growth";
+import {
+  BRANCHLET_GROWTH,
+  BRANCHLET_REVEAL_DURATION,
+  FERN_COMPLETION_PROGRESS,
+} from "./botanical-growth";
 import { BotanicalUnfurl } from "./botanical-unfurl";
 import styles from "./trail-reader.module.css";
 
@@ -25,7 +29,8 @@ export function BotanicalProgress() {
       return Math.max(0, Math.min(1, window.scrollY / scrollRange));
     };
 
-    const applyProgress = (progress: number) => {
+    const applyProgress = (rawProgress: number) => {
+      const progress = Math.min(1, rawProgress / FERN_COMPLETION_PROGRESS);
       const stemReveal = 0.22 + progress * 0.78;
       root.dataset.growth = progress.toFixed(3);
       root.style.setProperty("--scroll-progress", progress.toFixed(5));
@@ -86,7 +91,6 @@ export function BotanicalProgress() {
           className={styles.primaryFern}
           growthStrokeClassName={styles.fernGrowthStroke}
           pinnaGrowthClassName={styles.fernPinnaGrowth}
-          stemGhostClassName={styles.fernStemGhost}
         />
       </div>
     </figure>

@@ -98,6 +98,36 @@
 .railProgress progress::-webkit-progress-value { background: var(--trail-green); }
 .railProgress progress::-moz-progress-bar { background: var(--trail-green); }
 
+.railSection {
+  margin: 1.5rem 0 0;
+  color: var(--trail-muted);
+  font-size: 0.53rem;
+  font-weight: 760;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.trailSecondaryNav {
+  display: grid;
+  gap: 0.45rem;
+  margin-top: 1.25rem;
+}
+.trailSecondaryNav button {
+  display: flex;
+  justify-content: space-between;
+  padding: 0;
+  color: var(--trail-muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font-size: 0.58rem;
+  text-align: left;
+}
+.trailSecondaryNav button:hover { color: var(--trail-ink); }
+.trailSecondaryNav small { font-size: inherit; }
+
+.mobileTools { display: none; }
+
 .railEdition { margin: auto 0 0; color: var(--trail-muted); font-size: 0.52rem; font-weight: 710; letter-spacing: 0.06em; line-height: 1.7; text-transform: uppercase; }
 
 .botanicalProgress {
@@ -138,8 +168,6 @@
 
 .fernGrowthStroke { stroke-dashoffset: var(--fern-stem-dash); }
 
-.fernStemGhost { opacity: 0.72; }
-
 .fernPinnaGrowth {
   transform-origin: 0 0;
   transform-box: view-box;
@@ -178,6 +206,7 @@
     .fernGrowthStroke {
       animation: fern-native-stem 1ms linear both;
       animation-timeline: scroll(root block);
+      animation-range: 0% 82%;
     }
 
     .primaryFern {
@@ -204,6 +233,41 @@
   background: linear-gradient(transparent, rgb(49 95 70 / 13%) 8rem, rgb(49 95 70 / 13%) calc(100% - 8rem), transparent);
   content: "";
 }
+
+.primaryJournal { min-height: 100vh; padding-top: clamp(4rem, 9vh, 7rem); }
+.primaryMasthead {
+  position: relative;
+  padding: 0 0 clamp(2rem, 5vw, 4rem);
+  border-bottom: 1px solid var(--trail-ink);
+}
+.primaryMasthead > span {
+  color: var(--trail-green);
+  font-size: 0.62rem;
+  font-weight: 780;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.primaryMasthead h1 {
+  max-width: 46rem;
+  margin: 1rem 0 0;
+  font-family: var(--serif);
+  font-size: clamp(3.5rem, 7vw, 6.3rem);
+  font-weight: 500;
+  letter-spacing: -0.06em;
+  line-height: 0.9;
+  text-wrap: balance;
+}
+.primaryMasthead p {
+  max-width: 38rem;
+  margin: 1.5rem 0 0;
+  color: var(--trail-soft);
+  font-family: var(--serif);
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  line-height: 1.45;
+}
+.primaryContent { padding-block: clamp(2rem, 5vw, 4rem) 10vh; }
+.primaryContent :global(.history-view),
+.primaryContent :global(.map-view) { padding-top: 0; }
 
 .scene {
   position: relative;
@@ -527,6 +591,41 @@
   .trailPrimaryNav { display: flex; gap: 0.55rem; margin: 0 0 0 auto; border: 0; }
   .trailPrimaryNav button { min-height: auto; border: 0; font-size: 0.62rem; }
   .trailPrimaryNav button small { display: none; }
+  .trailSecondaryNav,
+  .railSection { display: none; }
+  .mobileTools { position: relative; display: block; margin-left: 0.1rem; }
+  .mobileTools summary {
+    color: var(--trail-muted);
+    cursor: pointer;
+    font-size: 0.58rem;
+    font-weight: 740;
+    list-style: none;
+  }
+  .mobileTools summary::-webkit-details-marker { display: none; }
+  .mobileTools > div {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 1rem);
+    right: -0.25rem;
+    display: grid;
+    width: 10.5rem;
+    padding: 0.45rem;
+    background: rgb(244 239 229 / 98%);
+    border: 1px solid var(--trail-line);
+    box-shadow: 0 0.8rem 2rem rgb(25 36 29 / 12%);
+  }
+  .mobileTools button {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.7rem;
+    color: var(--trail-ink);
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--trail-line);
+    font-size: 0.64rem;
+    text-align: left;
+  }
+  .mobileTools button:last-child { border-bottom: 0; }
   .railProgress { position: absolute; right: 0; bottom: -1px; left: 0; display: block; margin: 0; }
   .railProgress span { display: none; }
   .railProgress progress { display: block; width: 100%; height: 2px; }
@@ -559,6 +658,8 @@
   .sceneNumber { top: 1rem; left: 0; font-size: 1rem; }
   .sceneNav { display: none; }
   .primaryFern { left: 5vw; height: 118vh; opacity: 0.17; }
+  .primaryJournal { padding-top: 6.4rem; }
+  .primaryMasthead h1 { font-size: clamp(3.2rem, 14.4vw, 4.45rem); }
   .endSummary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .endSummary > div { border-bottom: 1px solid var(--trail-line); }
   .endSummary > div:nth-child(2) { border-right: 0; }

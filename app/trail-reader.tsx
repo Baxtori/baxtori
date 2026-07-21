@@ -18,15 +18,24 @@ type TrailEdition = {
 };
 
 type TrailReaderProps = {
+  activeView: "briefing" | "history" | "map";
   edition: TrailEdition;
   notice: string;
+  onOpenEditionRecord: () => void;
   onOpenContinueItem: (item: ContinueItem) => void;
   onOpenMemory: () => void;
+  onOpenNow: () => void;
+  onOpenRepositories?: () => void;
   onOpenSystem: () => void;
   onUnderstand: (story: TrailStory) => void;
   onWatch: (story: TrailStory) => void;
   renderEvidence: (story: TrailStory) => ReactNode;
   session: ReaderTrail;
+  primaryContent?: ReactNode;
+  primaryDescription?: string;
+  primaryHeading?: string;
+  primaryKicker?: string;
+  repositoryCount?: number;
   sourceLabel: string;
   storyState: (story: TrailStory) => StoryDecisionState;
 };
@@ -45,15 +54,24 @@ function formatGenerated(value: string) {
 }
 
 export function TrailReader({
+  activeView,
   edition,
   notice,
+  onOpenEditionRecord,
   onOpenContinueItem,
   onOpenMemory,
+  onOpenNow,
+  onOpenRepositories,
   onOpenSystem,
   onUnderstand,
   onWatch,
   renderEvidence,
   session,
+  primaryContent,
+  primaryDescription,
+  primaryHeading,
+  primaryKicker,
+  repositoryCount = 0,
   sourceLabel,
   storyState,
 }: TrailReaderProps) {
@@ -77,6 +95,7 @@ export function TrailReader({
   }, [session]);
 
   useEffect(() => {
+    if (activeView !== "briefing") return;
     const elements = session.scenes
       .map((scene) => document.getElementById(scene.id))
       .filter((element): element is HTMLElement => Boolean(element));
@@ -96,9 +115,10 @@ export function TrailReader({
 
     for (const element of elements) observer.observe(element);
     return () => observer.disconnect();
-  }, [session]);
+  }, [activeView, session]);
 
   useEffect(() => {
+    if (activeView !== "briefing") return;
     if (restoredItem.current) return;
     restoredItem.current = true;
     const item = new URLSearchParams(window.location.search).get("item");
@@ -106,9 +126,10 @@ export function TrailReader({
     window.requestAnimationFrame(() => {
       document.getElementById(item)?.scrollIntoView({ behavior: "auto", block: "start" });
     });
-  }, [session]);
+  }, [activeView, session]);
 
   useEffect(() => {
+    if (activeView !== "briefing") return;
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (
@@ -139,7 +160,12 @@ export function TrailReader({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeIndex, moveTo, onUnderstand, session]);
+  }, [activeIndex, activeView, moveTo, onUnderstand, session]);
+
+  useEffect(() => {
+    if (activeView === "briefing") return;
+    window.scrollTo({ behavior: "auto", top: 0 });
+  }, [activeView]);
 
   const endScene = session.scenes.find((scene) => scene.kind === "end");
 
@@ -149,39 +175,68 @@ export function TrailReader({
       <BotanicalProgress />
 
       <aside className={styles.trailRail} aria-label="Baxtori navigation">
-        <button className={styles.brand} onClick={() => moveTo(0)} type="button">
+        <button className={styles.brand} onClick={() => activeView === "briefing" ? moveTo(0) : onOpenNow()} type="button">
           <span aria-hidden="true">B</span>
           <span><strong>Baxtori</strong><small>Stay the author</small></span>
         </button>
 
         <nav className={styles.trailPrimaryNav} aria-label="Primary">
-          <button aria-current="page" onClick={() => moveTo(0)} type="button"><span>Now</span></button>
-          <button onClick={onOpenSystem} type="button"><span>System</span></button>
-          <button onClick={onOpenMemory} type="button"><span>Memory</span></button>
+          <button aria-current={activeView === "briefing" ? "page" : undefined} onClick={() => activeView === "briefing" ? moveTo(0) : onOpenNow()} type="button"><span>Now</span></button>
+          <button aria-current={activeView === "map" ? "page" : undefined} onClick={onOpenSystem} type="button"><span>System</span></button>
+          <button aria-current={activeView === "history" ? "page" : undefined} onClick={onOpenMemory} type="button"><span>Memory</span></button>
         </nav>
 
-        <div className={styles.railProgress} aria-live="polite">
-          <span>Reading · {Math.min(activeIndex + 1, session.scenes.length)} of {session.scenes.length}</span>
-          <progress max={session.scenes.length} value={activeIndex + 1} />
-        </div>
+        {activeView === "briefing" ? (
+          <div className={styles.railProgress} aria-live="polite">
+            <span>Reading · {Math.min(activeIndex + 1, session.scenes.length)} of {session.scenes.length}</span>
+            <progress max={session.scenes.length} value={activeIndex + 1} />
+          </div>
+        ) : (
+          <p className={styles.railSection}>{activeView === "map" ? "Repository bearings" : "Immutable editions"}</p>
+        )}
 
-        <nav aria-label="Edition progress" className={styles.sceneNav}>
-          {session.scenes.map((scene, index) => (
-            <button
-              aria-current={index === activeIndex ? "step" : undefined}
-              aria-label={`Go to ${scene.kind === "opening" ? "the beginning" : scene.kind === "end" ? "the clearing" : scene.item.title}`}
-              key={scene.id}
-              onClick={() => moveTo(index)}
-              type="button"
-            >
-              <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-            </button>
-          ))}
+        {activeView === "briefing" && (
+          <nav aria-label="Edition progress" className={styles.sceneNav}>
+            {session.scenes.map((scene, index) => (
+              <button
+                aria-current={index === activeIndex ? "step" : undefined}
+                aria-label={`Go to ${scene.kind === "opening" ? "the beginning" : scene.kind === "end" ? "the clearing" : scene.item.title}`}
+                key={scene.id}
+                onClick={() => moveTo(index)}
+                type="button"
+              >
+                <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+              </button>
+            ))}
+          </nav>
+        )}
+
+        <nav className={styles.trailSecondaryNav} aria-label="Edition and source tools">
+          <button onClick={onOpenEditionRecord} type="button">Edition record</button>
+          {onOpenRepositories && <button onClick={onOpenRepositories} type="button">Review sources <small>{repositoryCount}</small></button>}
         </nav>
+
+        <details className={styles.mobileTools}>
+          <summary aria-label="Open edition and source tools">More</summary>
+          <div>
+            <button onClick={onOpenEditionRecord} type="button">Edition record</button>
+            {onOpenRepositories && <button onClick={onOpenRepositories} type="button">Review sources <small>{repositoryCount}</small></button>}
+          </div>
+        </details>
 
         <p className={styles.railEdition}>Current edition<br />{formatDay(edition.periodStart)}–{formatDay(edition.periodEnd)}<br />{sourceLabel}</p>
       </aside>
 
+      {activeView !== "briefing" ? (
+        <main className={`${styles.journal} ${styles.primaryJournal}`} id="trail-reading">
+          <header className={styles.primaryMasthead}>
+            <span>{primaryKicker}</span>
+            <h1>{primaryHeading}</h1>
+            <p>{primaryDescription}</p>
+          </header>
+          <div className={styles.primaryContent}>{primaryContent}</div>
+        </main>
+      ) : (
       <main className={styles.journal} id="trail-reading">
         <section className={`${styles.scene} ${styles.openingScene}`} data-trail-scene id="trail-opening" tabIndex={-1}>
           <header className={styles.issueMasthead}>
@@ -297,6 +352,7 @@ export function TrailReader({
           </section>
         )}
       </main>
+      )}
 
       <p className={styles.notice} aria-live="polite" role="status">{notice}</p>
     </div>

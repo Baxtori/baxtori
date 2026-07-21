@@ -1,15 +1,18 @@
 import type { CSSProperties } from "react";
-import { BRANCHLET_GROWTH, BRANCHLET_REVEAL_DURATION } from "./botanical-growth";
+import {
+  BRANCHLET_GROWTH,
+  BRANCHLET_REVEAL_DURATION,
+  FERN_COMPLETION_PROGRESS,
+} from "./botanical-growth";
 
 type BotanicalUnfurlProps = {
   className?: string;
   growthStrokeClassName?: string;
   pinnaGrowthClassName?: string;
-  stemGhostClassName?: string;
 };
 
 const RACHIS_PATH = "M 82 1492 C 218 1270 300 1084 390 860 C 468 665 486 525 590 382 C 708 220 842 170 912 106";
-const VERTICAL_FROND_TRANSFORM = "rotate(-30.5 512 768)";
+const VERTICAL_FROND_TRANSFORM = "rotate(-33 512 768)";
 
 const PINNA_BRANCHLETS = [
   { id: "lower-bud", anchor: [144, 1360], path: "M 150 1360 C 208 1370 274 1398 346 1434", width: 132 },
@@ -34,7 +37,6 @@ export function BotanicalUnfurl({
   className,
   growthStrokeClassName,
   pinnaGrowthClassName,
-  stemGhostClassName,
 }: BotanicalUnfurlProps) {
   return (
     <svg
@@ -58,9 +60,6 @@ export function BotanicalUnfurl({
           <feFlood floodColor="#315f46" result="fern-ink" />
           <feComposite in="fern-ink" in2="fern-alpha" operator="in" />
         </filter>
-        <filter id="fern-mask-feather" colorInterpolationFilters="sRGB" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="13" />
-        </filter>
         <mask id="fern-growth-mask" maskUnits="userSpaceOnUse" x="-120" y="-120" width="1264" height="1776">
           {PINNA_BRANCHLETS.map(({ anchor, id, path, width }, index) => {
             const [anchorX, anchorY] = anchor;
@@ -69,8 +68,8 @@ export function BotanicalUnfurl({
             const growthStyle = {
               "--fern-minimum": minimum,
               "--fern-opening-opacity": openingOpacity,
-              "--fern-range-start": `${start * 100}%`,
-              "--fern-range-end": `${end * 100}%`,
+              "--fern-range-start": `${start * FERN_COMPLETION_PROGRESS * 100}%`,
+              "--fern-range-end": `${end * FERN_COMPLETION_PROGRESS * 100}%`,
               opacity: `var(--fern-stage-opacity-${index}, ${openingOpacity})`,
               transform: `scale(var(--fern-stage-${index}, ${minimum}))`,
             } as CSSProperties;
@@ -85,13 +84,22 @@ export function BotanicalUnfurl({
                 >
                   <g transform={`translate(${-anchorX} ${-anchorY})`}>
                     <path
+                      data-fern-feather="outer"
                       d={path}
                       fill="none"
-                      filter="url(#fern-mask-feather)"
-                      opacity="0.72"
+                      opacity="0.1"
                       stroke="white"
                       strokeLinecap="round"
-                      strokeWidth={width + 38}
+                      strokeWidth={width + 72}
+                    />
+                    <path
+                      data-fern-feather="inner"
+                      d={path}
+                      fill="none"
+                      opacity="0.32"
+                      stroke="white"
+                      strokeLinecap="round"
+                      strokeWidth={width + 36}
                     />
                     <path d={path} fill="none" stroke="white" strokeLinecap="round" strokeWidth={width} />
                   </g>
@@ -103,14 +111,6 @@ export function BotanicalUnfurl({
       </defs>
       <g transform="translate(1024 0) scale(-1 1)">
         <g transform={VERTICAL_FROND_TRANSFORM}>
-          <path
-            className={stemGhostClassName}
-            d={RACHIS_PATH}
-            fill="none"
-            stroke="#315f46"
-            strokeLinecap="round"
-            strokeWidth="7"
-          />
           <path
             className={growthStrokeClassName}
             data-fern-growth-stroke

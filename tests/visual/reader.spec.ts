@@ -48,6 +48,76 @@ test("the published demo opens directly into the calm reading trail", async ({ p
   expect(errors).toEqual([]);
 });
 
+test("repository modes persist and newly selected sources enter the system honestly", async ({ page }) => {
+  const savedStates: Array<Record<string, unknown>> = [];
+  const repository = {
+    archived: false,
+    defaultBranch: "main",
+    description: "A newly connected personal repository",
+    fork: false,
+    fullName: "reader/new-garden",
+    id: 991,
+    language: "TypeScript",
+    name: "new-garden",
+    openIssues: 0,
+    private: true,
+    pushedAt: "2026-07-21T10:00:00Z",
+    updatedAt: "2026-07-21T10:00:00Z",
+    url: "https://github.com/reader/new-garden",
+  };
+
+  await page.route("**/api/auth/github/status", (route) => route.fulfill({
+    body: JSON.stringify({
+      appSlug: "baxtori-test",
+      authenticated: true,
+      configured: true,
+      user: { avatarUrl: "", id: 42, login: "reader", name: "Reader" },
+    }),
+    contentType: "application/json",
+  }));
+  await page.route("**/api/feedback/state", async (route) => {
+    if (route.request().method() === "PUT") {
+      savedStates.push(route.request().postDataJSON() as Record<string, unknown>);
+      await route.fulfill({ body: JSON.stringify({ configured: true, revision: savedStates.length }), contentType: "application/json" });
+      return;
+    }
+    await route.fulfill({
+      body: JSON.stringify({ configured: true, reviewRequests: [], revision: 0, state: null, threadQuestions: [], topicThreads: [] }),
+      contentType: "application/json",
+    });
+  });
+  await page.route("**/api/github/repos", (route) => route.fulfill({
+    body: JSON.stringify({ inventorySaved: true, repositories: [repository], truncated: false }),
+    contentType: "application/json",
+  }));
+  await page.route("**/api/github/activity?**", (route) => route.fulfill({
+    body: JSON.stringify({ commits: [], repository: repository.fullName, truncated: false }),
+    contentType: "application/json",
+  }));
+
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Notes from the repositories." })).toBeVisible();
+  const reviewSources = page.getByRole("button", { name: /Review sources/ });
+  if (!await reviewSources.isVisible()) {
+    await page.locator("summary[aria-label='Open edition and source tools']").click();
+  }
+  await reviewSources.click();
+  const modeControl = page.getByRole("group", { name: `Review mode for ${repository.fullName}` }).first();
+  await expect(modeControl).toBeVisible();
+  await modeControl.getByRole("button", { name: "Pinned" }).click();
+
+  await expect.poll(() => savedStates.some((state) =>
+    (state.repositoryModes as Record<string, string> | undefined)?.[repository.fullName] === "pinned"
+  )).toBe(true);
+  await expect(page.getByText("Modes saved to account")).toBeVisible();
+
+  await page.getByLabel("Primary").getByRole("button", { name: /^Now/ }).click();
+  await page.getByLabel("Primary").getByRole("button", { name: "System", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Know the system." })).toBeVisible();
+  await expect(page.getByRole("tab", { name: /new-garden Not mapped/ })).toBeVisible();
+  await expect(page.getByText("No invented coverage.")).toBeVisible();
+});
+
 test("the default reader turns the review into a finite field journal", async ({ page }, testInfo) => {
   const errors = collectBrowserErrors(page);
   await page.goto("/?demo=1");
@@ -89,8 +159,9 @@ test("the default reader turns the review into a finite field journal", async ({
   await expect(fernPlate.locator("[data-fern-pinna]")).toHaveCount(16);
   await expect(fernPlate.locator("#fern-growth-mask")).toHaveCount(1);
   await expect(fernPlate.locator("clipPath")).toHaveCount(0);
-  await expect(fernPlate.locator("#fern-mask-feather feGaussianBlur")).toHaveAttribute("stdDeviation", "13");
-  await expect(fernPlate.locator("#fern-growth-mask path[filter='url(#fern-mask-feather)']")).toHaveCount(16);
+  await expect(fernPlate.locator("feGaussianBlur")).toHaveCount(0);
+  await expect(fernPlate.locator("[data-fern-feather='outer']")).toHaveCount(16);
+  await expect(fernPlate.locator("[data-fern-feather='inner']")).toHaveCount(16);
   await expect(fernPlate.locator("[data-fern-branchlet='lower-left']")).toHaveCount(1);
   await expect(fernPlate.locator("[data-fern-branchlet='crozier']")).toHaveCount(1);
   await expect(fernPlate.locator("[data-fern-pinna='0']")).toHaveAttribute(
@@ -128,6 +199,8 @@ test("the default reader turns the review into a finite field journal", async ({
   await expect(page.getByText("5 of 5")).toContainText("5 of 5");
   await capture(page, testInfo, "field-journal-clearing", false, "allow");
   const endGrowth = await fernGrowth();
+  await expect.poll(() => fernStage(15)).toBeGreaterThan(0.99);
+  await expect.poll(fernDash).toBeLessThan(0.01);
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: "auto" }));
   await expect.poll(fernGrowth).toBeLessThan(endGrowth);
   expect(errors).toEqual([]);
