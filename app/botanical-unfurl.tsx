@@ -1,3 +1,5 @@
+import { BRANCHLET_GROWTH } from "./botanical-growth";
+
 type BotanicalUnfurlProps = {
   className?: string;
   growthStrokeClassName?: string;
@@ -109,6 +111,7 @@ export function BotanicalUnfurl({
           />
           {PINNA_BRANCHLETS.map(({ anchor, id }, index) => {
             const [anchorX, anchorY] = anchor;
+            const { minimum, openingOpacity } = BRANCHLET_GROWTH[index];
             return (
               <g key={id} transform={`translate(${anchorX} ${anchorY})`}>
                 <g
@@ -116,8 +119,8 @@ export function BotanicalUnfurl({
                   data-fern-branchlet={id}
                   data-fern-pinna={index}
                   style={{
-                    opacity: `var(--fern-stage-opacity-${index})`,
-                    transform: `scale(var(--fern-stage-${index}))`,
+                    opacity: `var(--fern-stage-opacity-${index}, ${openingOpacity})`,
+                    transform: `scale(var(--fern-stage-${index}, ${minimum}))`,
                   }}
                 >
                   <g

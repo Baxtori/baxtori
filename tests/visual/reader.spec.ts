@@ -70,6 +70,7 @@ test("the default reader turns the review into a finite field journal", async ({
   expect(fernFrameBox?.width ?? 0).toBeGreaterThanOrEqual(viewportWidth - 20);
   const fernPlate = progressSpecimen.locator("[data-botanical-plate]");
   await expect(fernPlate).toBeVisible();
+  await expect(progressSpecimen).toHaveAttribute("data-growth-mode", "continuous");
   const fernBox = await fernPlate.boundingBox();
   expect(fernBox).not.toBeNull();
   expect(fernBox?.x ?? 0).toBeLessThan(0);
@@ -86,6 +87,14 @@ test("the default reader turns the review into a finite field journal", async ({
   await expect(fernPlate.locator("[data-fern-branchlet='lower-left']")).toHaveCount(1);
   await expect(fernPlate.locator("[data-fern-branchlet='crozier']")).toHaveCount(1);
   await expect(fernPlate.locator("[data-fern-pinna='0']")).toBeVisible();
+  await expect(fernPlate.locator("[data-fern-pinna='0']")).toHaveAttribute(
+    "style",
+    /var\(--fern-stage-opacity-0, 0\.66\).*var\(--fern-stage-0, 0\.38\)/,
+  );
+  await expect(fernPlate.locator("[data-fern-pinna='15']")).toHaveAttribute(
+    "style",
+    /var\(--fern-stage-opacity-15, 0\).*var\(--fern-stage-15, 0\.08\)/,
+  );
   const navigation = page.getByRole("complementary", { name: "Baxtori navigation" });
   const navigationBox = await navigation.boundingBox();
   expect(navigationBox?.x ?? -1).toBe(0);
@@ -125,9 +134,9 @@ test("the botanical trail becomes a complete static specimen with reduced motion
   const specimen = page.locator("[data-botanical-progress]");
   await expect(specimen).toBeVisible();
   await expect(specimen).toHaveAttribute("data-growth", "1.000");
-  expect(await specimen.evaluate((element) => element.style.getPropertyValue("--fern-stem-dash"))).toBe("0.000");
-  expect(await specimen.evaluate((element) => element.style.getPropertyValue("--fern-stage-0"))).toBe("1.000");
-  expect(await specimen.evaluate((element) => element.style.getPropertyValue("--fern-stage-15"))).toBe("1.000");
+  expect(Number(await specimen.evaluate((element) => element.style.getPropertyValue("--fern-stem-dash")))).toBe(0);
+  expect(Number(await specimen.evaluate((element) => element.style.getPropertyValue("--fern-stage-0")))).toBe(1);
+  expect(Number(await specimen.evaluate((element) => element.style.getPropertyValue("--fern-stage-15")))).toBe(1);
 });
 
 test("memory makes a concern legible across real editions", async ({ page }, testInfo) => {
