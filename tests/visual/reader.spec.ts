@@ -59,10 +59,17 @@ test("the trail turns the same review into a finite field journal", async ({ pag
   const fernGrowth = () => progressSpecimen.evaluate((element) => Number(element.getAttribute("data-growth") ?? 0));
   await expect(progressSpecimen).toBeVisible();
   const progressBox = await progressSpecimen.boundingBox();
+  const viewportWidth = page.viewportSize()?.width ?? 0;
   expect(progressBox).not.toBeNull();
-  expect(progressBox?.width ?? 0).toBeGreaterThan(480);
-  await expect(page.locator("svg[data-botanical-plate]")).toBeVisible();
+  expect(progressBox?.width ?? 0).toBeGreaterThanOrEqual(viewportWidth);
+  const fernPlate = page.locator("svg[data-botanical-plate]");
+  await expect(fernPlate).toBeVisible();
+  const fernBox = await fernPlate.boundingBox();
+  expect(fernBox?.x ?? 0).toBeLessThan(0);
+  expect(fernBox?.width ?? 0).toBeGreaterThan(viewportWidth * 0.75);
+  await expect(page.locator("svg[data-botanical-bloom]")).toBeVisible();
   expect(await page.locator("[data-fern-pinna]").count()).toBeGreaterThan(20);
+  expect(await page.locator("[data-bloom-petal]").count()).toBeGreaterThan(10);
   const openingGrowth = await fernGrowth();
   await expect(page.getByRole("heading", { name: "What changed." })).toBeVisible();
   await page.getByRole("button", { name: "Repository access and reader attention became explicit plans.", exact: true }).click();
@@ -99,6 +106,7 @@ test("the botanical trail becomes a complete static specimen with reduced motion
   await expect(specimen).toBeVisible();
   await expect(specimen).toHaveAttribute("data-growth", "1.000");
   expect(await page.locator("[data-fern-stem]").evaluate((element) => getComputedStyle(element).strokeDashoffset)).toBe("0px");
+  expect(await page.locator("[data-bloom-petal]").first().evaluate((element) => getComputedStyle(element).scale)).toBe("1");
 });
 
 test("memory makes a concern legible across real editions", async ({ page }, testInfo) => {

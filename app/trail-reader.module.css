@@ -85,34 +85,48 @@
 .botanicalProgress {
   position: fixed;
   z-index: 1;
-  bottom: -5vh;
-  left: max(-11rem, calc((100vw - 88rem) / 2 - 13rem));
-  width: clamp(45rem, 57vw, 64rem);
-  height: 105svh;
+  inset: 0;
   margin: 0;
   overflow: hidden;
   pointer-events: none;
   mix-blend-mode: multiply;
-  mask-image: linear-gradient(90deg, #000 0 76%, rgb(0 0 0 / 88%) 85%, transparent 98%);
 }
 
-.fernStudy {
+.fernStudy,
+.bloomStudy {
+  position: absolute;
   display: block;
-  width: 100%;
-  height: 100%;
   overflow: visible;
 }
 
+.fernStudy {
+  bottom: -10vh;
+  left: -34vw;
+  width: 80vw;
+  height: 118svh;
+}
+
+.bloomStudy {
+  right: -20vw;
+  bottom: -22vh;
+  width: 65vw;
+  height: 96svh;
+}
+
 .fernGhost,
-.fernLive {
+.fernLive,
+.bloomGhost,
+.bloomLive {
   fill: rgb(49 95 70 / 62%);
   stroke: rgb(37 84 55 / 88%);
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.fernGhost { opacity: 0.09; }
-.fernLive { opacity: 0.84; filter: drop-shadow(0 8px 18px rgb(32 66 44 / 8%)); }
+.fernGhost { opacity: 0.035; }
+.fernLive { opacity: 0.64; filter: drop-shadow(0 12px 28px rgb(32 66 44 / 9%)); }
+.bloomGhost { opacity: 0.018; }
+.bloomLive { opacity: 0.18; filter: drop-shadow(0 18px 35px rgb(32 66 44 / 7%)); }
 
 .fernRachis,
 .fernPinnaStem,
@@ -121,13 +135,33 @@
   vector-effect: non-scaling-stroke;
 }
 
-.fernRachis { stroke-width: 3.4; }
-.fernPinnaStem { stroke-width: 1.3; }
-.fernFiddlehead { stroke-width: 2.2; }
+.fernRachis { stroke-width: 4.4; }
+.fernPinnaStem { stroke-width: 1.55; }
+.fernFiddlehead { stroke-width: 3; }
 .fernLive .fernRachis,
 .fernLive .fernFiddlehead { stroke-dasharray: 1; stroke-dashoffset: 1; }
-.fernPinnaGrowth { opacity: 0.08; scale: 0.035; transform-box: fill-box; transform-origin: 0 0; }
-.fernPinnule { opacity: 0; scale: 0.04; transform-box: fill-box; transform-origin: 0 50%; }
+.fernPinnaGrowth { opacity: 0.04; scale: 0.025; transform-box: fill-box; transform-origin: 0 0; }
+.fernPinnule { opacity: 0; scale: 0.025; transform-box: fill-box; transform-origin: 0 50%; }
+.fernGhost .fernPinnaGrowth,
+.fernGhost .fernPinnule { opacity: 1; scale: 1; }
+
+.bloomStem { fill: none; stroke-width: 3.2; vector-effect: non-scaling-stroke; }
+.bloomLive > .bloomStem:first-child { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.bloomPetal,
+.bloomBud,
+.bloomLeaf,
+.bloomHeart { transform-box: fill-box; transform-origin: center bottom; }
+.bloomPetal,
+.bloomBud,
+.bloomLeaf { opacity: 0; scale: 0.035; }
+.bloomPetal { fill: rgb(60 105 73 / 34%); stroke-width: 1.2; }
+.bloomBud,
+.bloomLeaf { fill: rgb(49 95 70 / 28%); stroke-width: 1.5; }
+.bloomHeart { fill: rgb(82 112 65 / 42%); opacity: 0; scale: 0.1; transform-origin: center; }
+.bloomGhost .bloomPetal,
+.bloomGhost .bloomBud,
+.bloomGhost .bloomLeaf,
+.bloomGhost .bloomHeart { opacity: 1; scale: 1; }
 
 .journal {
   position: relative;
@@ -432,11 +466,10 @@
 @media (max-width: 1080px) {
   .journal { width: min(100%, 60rem); padding-left: clamp(1.1rem, 4vw, 3rem); }
   .journal::before { display: none; }
-  .botanicalProgress {
-    left: max(-17rem, calc((100vw - 60rem) / 2 - 17rem));
-    width: clamp(38rem, 56vw, 46rem);
-    opacity: 0.76;
-  }
+  .fernStudy { left: -53vw; width: 110vw; }
+  .bloomStudy { right: -38vw; width: 92vw; }
+  .fernLive { opacity: 0.42; }
+  .bloomLive { opacity: 0.13; }
 }
 
 @media (max-width: 760px) {
@@ -467,14 +500,10 @@
   .evidenceLayer { width: calc(100% + 2.3rem); margin-inline: -1.15rem; }
   .sceneNumber { top: 1rem; left: 0; font-size: 1rem; }
   .sceneNav { display: none; }
-  .botanicalProgress {
-    bottom: -8vh;
-    left: -14rem;
-    width: 40rem;
-    height: 110svh;
-    opacity: 0.52;
-    mask-image: linear-gradient(90deg, #000 0 68%, rgb(0 0 0 / 82%) 78%, transparent 99%);
-  }
+  .fernStudy { bottom: -6vh; left: -128vw; width: 176vw; height: 112svh; }
+  .bloomStudy { right: -72vw; bottom: -18vh; width: 148vw; height: 88svh; }
+  .fernLive { opacity: 0.3; }
+  .bloomLive { opacity: 0.1; }
   .endSummary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .endSummary > div { border-bottom: 1px solid var(--trail-line); }
   .endSummary > div:nth-child(2) { border-right: 0; }
