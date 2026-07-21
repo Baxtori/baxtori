@@ -2,19 +2,19 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { buildGitHubCompareUrl, parseCodeDiffRequest, parseGitHubPatch } from "../lib/code-diff.ts";
 
-test("parses an exact commit comparison request", () => {
+test("parses an exact commit comparison request and canonicalizes historical repositories", () => {
   const request = parseCodeDiffRequest(new URL("https://baxtori.test/api/github/diff?repo=teamleaderleo%2Fglimpse&base=5c813ff&head=05a5bfe&path=lib%2Fgithub-auth.ts&start=57&end=88"));
   assert.deepEqual(request, {
     base: "5c813ff",
     endLine: 88,
     head: "05a5bfe",
     path: "lib/github-auth.ts",
-    repository: "teamleaderleo/baxtori",
+    repository: "Baxtori/baxtori",
     startLine: 57,
   });
   assert.equal(
     buildGitHubCompareUrl("teamleaderleo/glimpse", "5c813ff", "05a5bfe").toString(),
-    "https://api.github.com/repos/teamleaderleo/baxtori/compare/5c813ff...05a5bfe",
+    "https://api.github.com/repos/Baxtori/baxtori/compare/5c813ff...05a5bfe",
   );
 });
 
