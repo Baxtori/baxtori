@@ -1,8 +1,11 @@
 import { buildGitHubContentsUrl, parseCodeEvidenceRequest, selectCodeLines } from "@/lib/code-evidence";
 import { getGitHubSession, githubHeaders, withSessionCookie } from "@/lib/github-auth";
 import { demoCodeEvidence } from "@/lib/demo-evidence";
+import { matchPublishedDemoEvidence } from "@/lib/demo-evidence-match";
+import { guardRateLimit } from "@/lib/rate-limit";
 
 const MAX_SOURCE_BYTES = 250_000;
+const CODE_LIMIT = { limit: 120, windowMs: 60_000 };
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -17,7 +20,7 @@ export async function GET(request: Request) {
         { status: 400 },
       );
     }
-    const published = demoCodeEvidence(evidence);
+    const published = matchPublishedDemoEvidence(evidence, demoCodeEvidence);
     return published
       ? Response.json(published, { headers: { "Cache-Control": "public, max-age=3600" } })
       : Response.json({ error: "This excerpt is not part of the published demo." }, { status: 404 });
@@ -30,6 +33,8 @@ export async function GET(request: Request) {
       setCookie,
     );
   }
+  const rateLimitError = guardRateLimit("github:code", String(session.user.id), CODE_LIMIT);
+  if (rateLimitError) return withSessionCookie(rateLimitError, setCookie);
 
   let evidence;
   try {
