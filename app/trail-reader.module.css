@@ -101,8 +101,7 @@
 .railEdition { margin: auto 0 0; color: var(--trail-muted); font-size: 0.52rem; font-weight: 710; letter-spacing: 0.06em; line-height: 1.7; text-transform: uppercase; }
 
 .botanicalProgress {
-  --fern-dash: 0.5;
-  --fern-reveal: 0.5;
+  --fern-stem-dash: 0.78;
   --scroll-progress: 0;
   position: fixed;
   z-index: 1;
@@ -131,13 +130,21 @@
   filter: saturate(0.68) contrast(0.9);
   mix-blend-mode: multiply;
   pointer-events: none;
-  transform: translate3d(-50%, -50%, 0) translateX(calc(var(--scroll-progress) * 1.25vw)) scale(calc(0.98 + var(--scroll-progress) * 0.04));
+  transform: translate3d(-50%, -50%, 0) translateX(calc(var(--scroll-progress) * 1.25vw));
   transform-origin: center center;
   user-select: none;
   will-change: transform;
 }
 
-.fernGrowthStroke { stroke-dashoffset: var(--fern-dash); }
+.fernGrowthStroke { stroke-dashoffset: var(--fern-stem-dash); }
+
+.fernStemGhost { opacity: 0.72; }
+
+.fernPinnaGrowth {
+  transform-origin: 0 0;
+  transform-box: view-box;
+  will-change: transform, opacity;
+}
 
 .journal {
   position: relative;
@@ -510,7 +517,7 @@
   .evidenceLayer { width: calc(100% + 2.3rem); margin-inline: -1.15rem; }
   .sceneNumber { top: 1rem; left: 0; font-size: 1rem; }
   .sceneNav { display: none; }
-  .primaryFern { left: -10vw; height: 118vh; opacity: 0.17; }
+  .primaryFern { left: 5vw; height: 118vh; opacity: 0.17; }
   .endSummary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .endSummary > div { border-bottom: 1px solid var(--trail-line); }
   .endSummary > div:nth-child(2) { border-right: 0; }
